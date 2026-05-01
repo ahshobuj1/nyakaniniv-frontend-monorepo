@@ -128,6 +128,7 @@ export default function SignupPage() {
                   : 'border border-transparent focus:border-gray-300 shadow-sm'
               }`}
               {...register('email')}
+              suppressHydrationWarning
             />
             {errors.email && (
               <p className="text-red-500 text-xs mt-1.5">
@@ -153,6 +154,7 @@ export default function SignupPage() {
                     : 'border border-transparent focus:border-gray-300 shadow-sm'
                 }`}
                 {...register('password')}
+                suppressHydrationWarning
               />
               <button
                 type="button"
