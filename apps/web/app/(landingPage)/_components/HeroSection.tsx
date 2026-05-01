@@ -34,11 +34,11 @@ export default function Hero() {
   }, []);
 
   return (
-    <section className="bg-[#F5F5F5] pt-20 pb-16 px-6 overflow-hidden">
+    <section className="bg-[#f0f0f0]! pt-20 pb-10 px-6 overflow-hidden">
       <div className="max-w-7xl mx-auto">
-        <h1 className="text-5xl md:text-6xl lg:text-[5rem] leading-[1.1] font-bold text-[#111620] mb-12 tracking-tight">
+        <h1 className="text-3xl md:text-3xl lg:text-[5rem] leading-[1.1] font-bold text-[#111620] mb-12 tracking-tight">
           Power Your DJ Brand{' '}
-          <span className="text-[#F63131]">
+          <span className="text-primary">
             Across
             <br />
             Africa...
@@ -71,9 +71,9 @@ export default function Hero() {
             onClick={nextSlide}
             className="flex items-center group cursor-pointer focus:outline-none"
             aria-label="Next slide">
-            <div className="w-16 md:w-24 h-[1.5px] bg-[#F63131] transition-all duration-500 ease-out group-hover:w-32 group-hover:bg-[#d62828] origin-left"></div>
+            <div className="w-16 md:w-24 h-[1.5px] bg-primary transition-all duration-500 ease-out group-hover:w-32 group-hover:bg-[#d62828] origin-left"></div>
 
-            <div className="w-14 h-14 bg-white rounded-full flex items-center justify-center shadow-[0_4px_20px_rgba(0,0,0,0.06)] transform -translate-x-4 transition-all duration-300 group-hover:shadow-lg group-hover:scale-110 active:scale-95 text-[#F63131] relative z-10">
+            <div className="w-14 h-14 bg-white rounded-full flex items-center justify-center shadow-[0_4px_20px_rgba(0,0,0,0.06)] transform -translate-x-4 transition-all duration-300 group-hover:shadow-lg group-hover:scale-110 active:scale-95 text-primary relative z-10">
               <ArrowRight className="w-6 h-6 stroke-[1.5] transform transition-transform duration-300 group-hover:translate-x-1" />
             </div>
           </button>

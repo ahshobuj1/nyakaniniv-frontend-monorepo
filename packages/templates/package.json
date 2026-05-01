@@ -9,8 +9,11 @@
     "./*": "./*"
   },
   "dependencies": {
+    "@repo/types": "workspace:*",
+    "framer-motion": "^12.38.0",
+    "lucide-react": "^0.479.0",
     "react": "^19.2.0",
-    "@repo/types": "workspace:*"
+    "next": "16.2.4"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",

@@ -56,12 +56,12 @@ const featuresData: FeatureItem[] = [
 
 export default function Features() {
   return (
-    <section className="bg-[#F5F5F5] py-24 px-6">
+    <section className="bg-[#f0f0f0] py-24 px-6" id="features">
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-semibold text-[#111620] mb-4">
             One platform for your entire <br className="hidden md:block" />
-            <span className="text-[#F63131]">DJ business</span>
+            <span className="text-primary">DJ business</span>
           </h2>
           <p className="text-gray-500 text-lg max-w-2xl mx-auto mt-6">
             Stop juggling tools. UpBeat Africa brings everything together{' '}
@@ -78,14 +78,14 @@ export default function Features() {
               <div
                 key={index}
                 className="bg-white p-10 group cursor-pointer shadow-sm hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] transition-all duration-500 ease-out transform hover:-translate-y-2">
-                <div className="w-14 h-14 bg-[#F5F5F5] flex items-center justify-center mb-8 transition-colors duration-300 group-hover:bg-[#F63131]/10">
+                <div className="w-14 h-14 bg-[#f0f0f0] flex items-center justify-center mb-8 transition-colors duration-300 group-hover:bg-primary/10">
                   <Icon
-                    className="w-11 h-11 text-gray-400 group-hover:text-[#F63131] group-hover:scale-110 transition-all duration-300"
+                    className="w-11 h-11 text-gray-400 group-hover:text-primary group-hover:scale-110 transition-all duration-300"
                     strokeWidth={1.5}
                   />
                 </div>
 
-                <h3 className="text-xl font-semibold text-[#111620] mb-4 group-hover:text-[#F63131] transition-colors duration-300">
+                <h3 className="text-xl font-semibold text-[#111620] mb-4 group-hover:text-primary transition-colors duration-300">
                   {feature.title}
                 </h3>
 

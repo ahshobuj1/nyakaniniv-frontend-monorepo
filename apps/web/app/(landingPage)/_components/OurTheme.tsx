@@ -47,11 +47,11 @@ export default function OurThemes() {
   };
 
   return (
-    <section className="bg-[#F5F5F5] py-24 px-6">
+    <section className="bg-[#f0f0f0] py-24 px-6" id="themes">
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-semibold text-[#111620] mb-6">
-            Our <span className="text-[#F63131]">Themes</span>
+            Our <span className="text-primary">Themes</span>
           </h2>
           <p className="text-gray-500 text-lg max-w-2xl mx-auto">
             Find the perfect design to showcase your talent. Choose from our
