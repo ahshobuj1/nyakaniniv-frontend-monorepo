@@ -1,11 +1,13 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 @theme {
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --font-mono:
+    var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, Monaco,
+    Consolas, monospace;
 }
 
-@import "@repo/ui/globals.css";
+@import '@repo/ui/globals.css';
 
 @source "../../../packages/ui/src/**/*.tsx";
 @source "../../../packages/templates/**/*.tsx";
