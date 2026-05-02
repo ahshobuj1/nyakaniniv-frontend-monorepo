@@ -120,7 +120,7 @@ export function Header() {
           <Link href={'/auth/login'}>
             <Button
               size="lg"
-              className="bg-primary px-10 py-4 text-lg font-semibold text-white hover:bg-[#e02a30]">
+              className="bg-primary rounded-[2px] px-10 py-4 text-lg font-semibold text-white hover:bg-[#e02a30]">
               Log In
             </Button>
           </Link>

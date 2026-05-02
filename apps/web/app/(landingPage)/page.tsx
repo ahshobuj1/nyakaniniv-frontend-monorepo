@@ -1,5 +1,4 @@
-
-import { FAQSection } from './_components/FAQSection';
+import {FAQSection} from './_components/FAQSection';
 import Features from './_components/Features';
 import Hero from './_components/HeroSection';
 import HowItWorks from './_components/HowItWorks';

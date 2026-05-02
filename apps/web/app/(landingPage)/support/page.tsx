@@ -4,7 +4,7 @@ import React from 'react';
 import {useForm} from 'react-hook-form';
 import {zodResolver} from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import {Toaster, toast} from 'sonner';
+import {toast} from 'sonner';
 
 const formSchema = z.object({
   fullName: z.string().min(2, 'Full name is required'),
@@ -34,8 +34,6 @@ export default function ContactSection() {
 
   return (
     <section className="bg-[#f2f2f2] min-h-screen py-20 px-6 flex items-center justify-center font-sans">
-      <Toaster position="top-right" richColors />
-
       <div className="max-w-250 w-full mx-auto grid md:grid-cols-[1fr_1.2fr] gap-12 lg:gap-20 items-start">
         <div className="pt-4">
           <h2 className="text-[32px] font-semibold text-gray-900 mb-4 tracking-tight">

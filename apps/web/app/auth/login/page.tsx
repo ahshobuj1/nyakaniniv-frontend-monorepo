@@ -36,7 +36,7 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen w-full flex flex-col items-center justify-center p-4 font-sans">
-      <div className="w-full md:min-w-150">
+      <div className="w-full md:max-w-150 mx-auto">
         <div className="flex flex-col items-center mb-6">
           <Link className="rounded-md p-2 hover:bg-muted/50 py-4" href="/">
             <Image
