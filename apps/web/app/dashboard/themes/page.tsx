@@ -1,89 +1,79 @@
-import React from 'react';
-import Link from 'next/link';
+'use client';
 
-const themes = [
-  {
-    id: 'azura',
-    name: 'Azura',
-    description: 'A modern, high-energy theme for professional DJs. Focuses on mixes and bold typography.',
-    previewImage: 'https://images.unsplash.com/photo-1571266028243-3716f02d2d2e?q=80&w=2070&auto=format&fit=crop',
-    color: '#F63131',
-  },
-  {
-    id: 'kenzo',
-    name: 'Kenzo (Coming Soon)',
-    description: 'Minimalist and elegant. Perfect for wedding and event DJs who want a clean look.',
-    previewImage: 'https://images.unsplash.com/photo-1493225255756-d9584f8606e9?q=80&w=2070&auto=format&fit=crop',
-    color: '#10b981',
-    disabled: true,
-  },
-];
+import {Check, ArrowRight, ChevronDown} from 'lucide-react';
+import {ThemeCard} from './_components/Themecard';
 
-export default function ThemesPage() {
-  // Mock current user
-  const username = 'shobuj';
-  const siteUrl = 'http://localhost:3001';
+export default function WebsiteThemesPage() {
+  // Mock Data for the themes
+  const themes = [
+    {
+      id: '1',
+      title: 'Solar Flare',
+      description: 'Bright and energetic with orange and yellow hues',
+      // Replace with your actual image path
+      imageUrl: '/theme/Theme1.png',
+    },
+    {
+      id: '2',
+      title: 'Abyss',
+      description: 'Sleek and modern with deep blues and blacks',
+      // Replace with your actual image path
+      imageUrl: '/theme/Theme2.png',
+    },
+  ];
 
   return (
-    <div className="max-w-6xl mx-auto py-12 px-6">
-      <div className="mb-12">
-        <h1 className="text-4xl font-bold text-gray-900">Choose Your Theme</h1>
-        <p className="mt-4 text-lg text-gray-600">
-          Select a design that matches your DJ style. You can preview each theme with your actual content before making it live.
-        </p>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {themes.map((theme) => (
-          <div 
-            key={theme.id} 
-            className={`group bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm transition-all hover:shadow-xl ${theme.disabled ? 'opacity-75' : ''}`}
-          >
-            <div className="aspect-video relative overflow-hidden">
-              <img 
-                src={theme.previewImage} 
-                alt={theme.name}
-                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-              />
-              <div className="absolute top-4 left-4">
-                <span 
-                  className="px-3 py-1 rounded-full text-xs font-bold text-white shadow-sm"
-                  style={{ backgroundColor: theme.color }}
-                >
-                  {theme.id.toUpperCase()}
-                </span>
-              </div>
-            </div>
-            
-            <div className="p-6">
-              <h3 className="text-xl font-bold text-gray-900">{theme.name}</h3>
-              <p className="mt-2 text-gray-600 line-clamp-2 min-h-[3rem]">
-                {theme.description}
-              </p>
-              
-              <div className="mt-6 flex items-center gap-3">
-                {theme.disabled ? (
-                  <button disabled className="flex-1 bg-gray-100 text-gray-400 py-3 rounded-xl font-semibold cursor-not-allowed">
-                    Coming Soon
-                  </button>
-                ) : (
-                  <>
-                    <Link 
-                      href={`${siteUrl}/${username}?templateId=${theme.id}`}
-                      target="_blank"
-                      className="flex-1 text-center border border-gray-200 text-gray-700 py-3 rounded-xl font-semibold hover:bg-gray-50 transition-colors"
-                    >
-                      Preview
-                    </Link>
-                    <button className="flex-1 bg-gray-900 text-white py-3 rounded-xl font-semibold hover:bg-gray-800 transition-colors">
-                      Select
-                    </button>
-                  </>
-                )}
-              </div>
-            </div>
+    <div className="w-full bg-[#f4f6f8] min-h-screen p-6 font-sans">
+      <div className="w-full mx-auto space-y-6">
+        {/* Header Section */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 mb-1">
+              Website Themes
+            </h1>
+            <p className="text-sm text-gray-500">
+              Choose a template for your public DJ website
+            </p>
           </div>
-        ))}
+
+          <button className="bg-primary hover:bg-red-600 text-white text-sm font-medium py-2.5 px-5 rounded-lg shadow-sm transition-colors flex items-center justify-center gap-2">
+            View My Website <ArrowRight className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* Active Theme Banner */}
+        <div className="bg-[#fff1f2] border border-red-100 rounded-xl p-4 flex items-center gap-3">
+          <div className="bg-[#fecdd3] p-1 rounded-md">
+            <Check className="w-4 h-4 text-red-600" strokeWidth={3} />
+          </div>
+          <p className="text-[14px] text-gray-600">
+            <span className="font-bold text-gray-900">
+              Active Theme: Solar Flare
+            </span>{' '}
+            Currently live on your website
+          </p>
+        </div>
+
+        {/* Filter Dropdown */}
+        <div className="pt-2">
+          <button className="bg-transparent border border-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm flex items-center gap-2 hover:bg-gray-50 transition-colors">
+            Latest Templates <ChevronDown className="w-4 h-4 text-gray-500" />
+          </button>
+        </div>
+
+        {/* Themes Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pt-2">
+          {themes.map((theme) => (
+            <ThemeCard
+              key={theme.id}
+              title={theme.title}
+              description={theme.description}
+              imageUrl={theme.imageUrl}
+              onApply={() => console.log(`Applying ${theme.title}`)}
+              onPreview={() => console.log(`Previewing ${theme.title}`)}
+            />
+          ))}
+        </div>
       </div>
     </div>
   );

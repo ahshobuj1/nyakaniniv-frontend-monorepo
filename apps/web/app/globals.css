@@ -9,6 +9,8 @@
 
 @import '@repo/ui/globals.css';
 
+/* Fix paths to reach the root from apps/web/app */
+@source "../**/*.{js,ts,jsx,tsx,mdx}";
 @source "../../../packages/ui/src/**/*.tsx";
 @source "../../../packages/templates/**/*.tsx";
 @source "../../../packages/builder/**/*.tsx";

@@ -143,7 +143,8 @@ export function Sidebar() {
         <div
           className={`p-4 border-t border-gray-100 ${isCollapsed ? 'md:flex md:flex-col md:items-center' : ''}`}>
           <Link
-            href="http://localhost:3001/aura"
+            href="https://subdomainafrica.vercel.app/aura"
+            target="_blank"
             className={`flex items-center justify-center gap-2 w-full bg-[#fff0f0] text-primary ${isCollapsed ? 'md:py-3' : 'py-2.5'} rounded-md text-sm font-semibold hover:bg-[#ffe5e5] transition-colors mb-4`}
             title={isCollapsed ? 'View My Website' : ''}>
             <ExternalLink size={isCollapsed ? 20 : 16} className="shrink-0" />
