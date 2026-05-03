@@ -4,10 +4,10 @@ import React from 'react';
 import Link from 'next/link';
 import {usePathname, useSearchParams} from 'next/navigation';
 
-export default function Navbar({content, onViewChange}: any) {
+export default function Navbar({content, view, onViewChange}: any) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const isPreview = pathname?.includes('/themes/preview');
+  const isPreviewPage = pathname?.includes('/themes/preview');
   const themeId = searchParams?.get('themeId');
   
   const handleBookingClick = (e: React.MouseEvent) => {
@@ -24,21 +24,17 @@ export default function Navbar({content, onViewChange}: any) {
     }
   };
 
-  const bookingLink = isPreview 
+  const bookingLink = isPreviewPage 
     ? `/themes/preview?themeId=${themeId}&view=booking` 
     : '/book';
 
-  const homeLink = isPreview 
+  const homeLink = isPreviewPage 
     ? `/themes/preview?themeId=${themeId}&view=landing` 
     : '/';
 
   return (
     <nav className="h-24 px-10 flex items-center justify-between border-b border-white/10 bg-black text-white">
-      <Link 
-        href={homeLink} 
-        onClick={handleHomeClick}
-        className="text-2xl font-black tracking-tighter uppercase italic"
-      >
+      <Link href={homeLink} onClick={handleHomeClick} className="text-2xl font-black tracking-tighter uppercase italic">
         {content?.djName || 'KENZO'}
       </Link>
       

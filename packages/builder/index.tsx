@@ -42,7 +42,8 @@ export default function TemplateRenderer({
           content={content} 
           theme={theme} 
           isPreview={true} 
-          onViewChange={onViewChange} 
+          view={view}
+          onViewChange={onViewChange}
         />
       </div>
     );
@@ -56,7 +57,8 @@ export default function TemplateRenderer({
           <Component 
             key={section.id} 
             content={content} 
-            onViewChange={onViewChange} 
+            view={view}
+            onViewChange={onViewChange}
           />
         );
       })}

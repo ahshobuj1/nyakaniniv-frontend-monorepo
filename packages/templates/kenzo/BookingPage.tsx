@@ -5,18 +5,10 @@ import {Content, Theme} from '@repo/types';
 import BookingForm from '../shared/BookingForm';
 import Navbar from './Navbar';
 
-export default function KenzoBookingPage({
-  content,
-  theme,
-  onViewChange,
-}: {
-  content: Content;
-  theme: Theme;
-  onViewChange?: (view: 'landing' | 'booking') => void;
-}) {
+export default function KenzoBookingPage({content, theme}: {content: Content, theme: Theme}) {
   return (
     <div className="min-h-screen bg-black font-sans text-white">
-      <Navbar content={content} onViewChange={onViewChange} />
+      <Navbar content={content} />
       
       <main className="py-24 px-6">
         <div className="max-w-[1440px] mx-auto text-center mb-20">

@@ -5,18 +5,10 @@ import {Content, Theme} from '@repo/types';
 import BookingForm from '../shared/BookingForm';
 import Navbar from './Navbar';
 
-export default function AzuraBookingPage({
-  content,
-  theme,
-  onViewChange,
-}: {
-  content: Content;
-  theme: Theme;
-  onViewChange?: (view: 'landing' | 'booking') => void;
-}) {
+export default function AzuraBookingPage({content, theme}: {content: Content, theme: Theme}) {
   return (
     <div className="min-h-screen bg-[#f8fafc] font-sans">
-      <Navbar content={content} onViewChange={onViewChange} />
+      <Navbar content={content} />
       
       <main className="py-20 px-6">
         <div className="max-w-[1440px] mx-auto text-center mb-16">

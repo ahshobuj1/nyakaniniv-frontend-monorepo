@@ -5,16 +5,13 @@ import Link from 'next/link';
 import {usePathname, useSearchParams} from 'next/navigation';
 import {Logo} from './constants';
 
-export default function Nav({content, onViewChange}: any) {
+export default function Nav({content, view, onViewChange}: any) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const isPreview = pathname?.includes('/themes/preview');
+  const isPreviewPage = pathname?.includes('/themes/preview');
   const themeId = searchParams?.get('themeId');
   
-  // Logic for booking link: 
-  // If we have onViewChange (Editor Mode), use it.
-  // Else if we are in Preview Mode, link to the preview URL with view=booking.
-  // Else (Live Mode), link to /book.
+  // Logic for internal state change (Editor/Preview mode) or external navigation (Live site)
   const handleBookingClick = (e: React.MouseEvent) => {
     if (onViewChange) {
       e.preventDefault();
@@ -29,11 +26,11 @@ export default function Nav({content, onViewChange}: any) {
     }
   };
 
-  const bookingLink = isPreview 
+  const bookingLink = isPreviewPage 
     ? `/themes/preview?themeId=${themeId}&view=booking` 
     : '/book';
 
-  const homeLink = isPreview 
+  const homeLink = isPreviewPage 
     ? `/themes/preview?themeId=${themeId}&view=landing` 
     : '/';
 
@@ -45,9 +42,9 @@ export default function Nav({content, onViewChange}: any) {
       transition={{duration: 0.6, ease: [0.22, 1, 0.36, 1]}}
       className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-[#f0f0f0]">
       <div className="max-w-[1440px] mx-auto h-[100px] px-6 lg:px-[80px] flex items-center justify-between">
-        <div onClick={handleHomeClick} className="cursor-pointer">
+        <Link href={homeLink} onClick={handleHomeClick}>
           <Logo name={content?.djName} />
-        </div>
+        </Link>
 
         <div className="flex items-center gap-[48px]">
           <nav className="hidden md:flex items-center gap-[40px] font-sans">
@@ -57,7 +54,7 @@ export default function Nav({content, onViewChange}: any) {
                 href={i === 0 ? homeLink : `${homeLink}#${l.toLowerCase()}`}
                 onClick={i === 0 ? handleHomeClick : undefined}
                 className={`text-[16px] transition-colors ${
-                  i === 0
+                  (view === 'landing' && i === 0)
                     ? 'bg-[#f0f0f0] text-[var(--primary)] px-[14px] py-[6px] rounded-[28px] font-medium'
                     : 'text-[#787878] hover:text-[var(--primary)] font-normal'
                 }`}>

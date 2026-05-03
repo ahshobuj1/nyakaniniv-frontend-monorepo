@@ -10,8 +10,6 @@ import { Button } from '@repo/ui';
 function ThemePreviewContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const [viewport, setViewport] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
-  
   const themeId = searchParams.get('themeId') || 'azura';
   const view = (searchParams.get('view') as 'landing' | 'booking') || 'landing';
   const template = templates[themeId as keyof typeof templates];
@@ -21,7 +19,7 @@ function ThemePreviewContent() {
       <div className="flex flex-col items-center justify-center min-h-screen bg-slate-50 text-slate-500">
         <p className="text-lg font-semibold">Template not found</p>
         <button 
-          onClick={() => router.push('/')}
+          onClick={() => router.back()}
           className="mt-4 text-primary font-bold hover:underline"
         >
           Go Back
@@ -29,12 +27,6 @@ function ThemePreviewContent() {
       </div>
     );
   }
-
-  const viewportWidths = {
-    desktop: '100%',
-    tablet: '768px',
-    mobile: '375px',
-  };
 
   return (
     <div className="flex flex-col h-screen bg-[#f1f5f9]">
@@ -58,24 +50,15 @@ function ThemePreviewContent() {
           </div>
         </div>
 
-        {/* Viewport Switcher */}
+        {/* Viewport Switcher (Visual Only) */}
         <div className="hidden md:flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200">
-          <button 
-            onClick={() => setViewport('desktop')}
-            className={`p-2 rounded-lg transition-all ${viewport === 'desktop' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-400 hover:text-slate-600'}`}
-          >
+          <button className="p-2 bg-white shadow-sm rounded-lg text-slate-900">
             <Laptop className="w-4 h-4" />
           </button>
-          <button 
-            onClick={() => setViewport('tablet')}
-            className={`p-2 rounded-lg transition-all ${viewport === 'tablet' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-400 hover:text-slate-600'}`}
-          >
+          <button className="p-2 hover:bg-white/50 rounded-lg text-slate-400">
             <Tablet className="w-4 h-4" />
           </button>
-          <button 
-            onClick={() => setViewport('mobile')}
-            className={`p-2 rounded-lg transition-all ${viewport === 'mobile' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-400 hover:text-slate-600'}`}
-          >
+          <button className="p-2 hover:bg-white/50 rounded-lg text-slate-400">
             <Smartphone className="w-4 h-4" />
           </button>
         </div>
