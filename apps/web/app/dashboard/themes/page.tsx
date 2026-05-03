@@ -1,26 +1,35 @@
 'use client';
 
 import {Check, ArrowRight, ChevronDown} from 'lucide-react';
+import {useRouter} from 'next/navigation';
 import {ThemeCard} from './_components/Themecard';
 
 export default function WebsiteThemesPage() {
-  // Mock Data for the themes
+  const router = useRouter();
+
+  // Mock Data for the themes - IDs updated to match template keys
   const themes = [
     {
-      id: '1',
+      id: 'azura',
       title: 'Solar Flare',
       description: 'Bright and energetic with orange and yellow hues',
-      // Replace with your actual image path
       imageUrl: '/theme/Theme1.png',
     },
     {
-      id: '2',
+      id: 'kenzo',
       title: 'Abyss',
       description: 'Sleek and modern with deep blues and blacks',
-      // Replace with your actual image path
       imageUrl: '/theme/Theme2.png',
     },
   ];
+
+  const handleApplyTheme = (themeId: string) => {
+    router.push(`/dashboard/manage-theme?themeId=${themeId}`);
+  };
+
+  const handlePreviewTheme = (themeId: string) => {
+    router.push(`/themes/preview?themeId=${themeId}`);
+  };
 
   return (
     <div className="w-full bg-[#f4f6f8] min-h-screen p-6 font-sans">
@@ -69,8 +78,8 @@ export default function WebsiteThemesPage() {
               title={theme.title}
               description={theme.description}
               imageUrl={theme.imageUrl}
-              onApply={() => console.log(`Applying ${theme.title}`)}
-              onPreview={() => console.log(`Previewing ${theme.title}`)}
+              onApply={() => handleApplyTheme(theme.id)}
+              onPreview={() => handlePreviewTheme(theme.id)}
             />
           ))}
         </div>

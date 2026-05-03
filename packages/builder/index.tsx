@@ -6,6 +6,8 @@ interface TemplateRendererProps {
   templateId: string;
   content: Content;
   theme: Theme;
+  view?: 'landing' | 'booking';
+  onViewChange?: (view: 'landing' | 'booking') => void;
 }
 
 function hexToRgb(hex: string) {
@@ -15,23 +17,48 @@ function hexToRgb(hex: string) {
     : '0, 0, 0';
 }
 
-export default function TemplateRenderer({templateId, content, theme}: TemplateRendererProps) {
+export default function TemplateRenderer({
+  templateId,
+  content,
+  theme,
+  view = 'landing',
+  onViewChange,
+}: TemplateRendererProps) {
   const template = templates[templateId as keyof typeof templates];
 
   if (!template) return <div>Template not found</div>;
 
+  const style = {
+    '--primary': theme.primaryColor,
+    '--primary-rgb': hexToRgb(theme.primaryColor),
+    fontFamily: theme.fontFamily,
+  } as React.CSSProperties;
+
+  if (view === 'booking' && template.BookingPage) {
+    const BookingPage = template.BookingPage;
+    return (
+      <div style={style}>
+        <BookingPage 
+          content={content} 
+          theme={theme} 
+          isPreview={true} 
+          onViewChange={onViewChange} 
+        />
+      </div>
+    );
+  }
+
   return (
-    <div
-      style={
-        {
-          '--primary': theme.primaryColor,
-          '--primary-rgb': hexToRgb(theme.primaryColor),
-          fontFamily: theme.fontFamily,
-        } as React.CSSProperties
-      }>
+    <div style={style}>
       {template.sections.map((section: any) => {
         const Component = section.component;
-        return <Component key={section.id} content={content} />;
+        return (
+          <Component 
+            key={section.id} 
+            content={content} 
+            onViewChange={onViewChange} 
+          />
+        );
       })}
     </div>
   );

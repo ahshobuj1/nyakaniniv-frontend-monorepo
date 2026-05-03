@@ -1,136 +1,153 @@
 'use client';
 
-import {MousePointer2, Hand, Upload, ChevronDown} from 'lucide-react';
-import Image from 'next/image';
+import React, {useState, Suspense} from 'react';
+import {useSearchParams} from 'next/navigation';
+import {
+  Upload,
+  ChevronDown,
+  Type,
+  Image as ImageIcon,
+  Palette,
+  Eye,
+  Settings2,
+} from 'lucide-react';
+import TemplateRenderer from '@repo/builder';
+import {templates} from '@repo/templates';
+import {Content, Theme} from '@repo/types';
 
-export default function ManageWebsite() {
+// ==========================================
+// 1. Section Editor Configuration
+// ==========================================
+const SECTION_EDITORS: Record<
+  string,
+  {
+    label: string;
+    fields: {label: string; key: string; type: 'text' | 'textarea' | 'list'}[];
+  }
+> = {
+  hero: {
+    label: 'Hero Section',
+    fields: [
+      {label: 'Main Title', key: 'heroTitle', type: 'text'},
+      {label: 'Sub Description', key: 'heroDescription', type: 'textarea'},
+      {label: 'Background Image URL', key: 'heroImage', type: 'text'},
+    ],
+  },
+  'behind-decks': {
+    label: 'Behind the Decks',
+    fields: [
+      {label: 'Section Title', key: 'behindDecksTitle', type: 'text'},
+      {label: 'Biography', key: 'behindDecksBio', type: 'textarea'},
+      {label: 'Featured Image', key: 'behindDecksImage', type: 'text'},
+    ],
+  },
+  about: {
+    label: 'About Section',
+    fields: [{label: 'About Content', key: 'aboutText', type: 'textarea'}],
+  },
+  contact: {
+    label: 'Contact Info',
+    fields: [
+      {label: 'Email Address', key: 'email', type: 'text'},
+      {label: 'Phone Number', key: 'phone', type: 'text'},
+      {label: 'Location', key: 'location', type: 'text'},
+    ],
+  },
+};
+
+function ManageThemeContent() {
+  const searchParams = useSearchParams();
+  const themeId = searchParams.get('themeId') || 'azura';
+  const template =
+    templates[themeId as keyof typeof templates] || templates.azura;
+
+  // State for content and theme settings initialized with template defaults
+  const [content, setContent] = useState<Content>(template.defaultContent);
+  const [themeSettings, setThemeSettings] = useState<Theme>(
+    template.defaultTheme,
+  );
+  const [view, setView] = useState<'landing' | 'booking'>('landing');
+
+  const handleContentChange = (key: string, value: string) => {
+    setContent((prev) => ({...prev, [key]: value}));
+  };
+
+  const handleThemeChange = (key: keyof Theme, value: string) => {
+    setThemeSettings((prev) => ({...prev, [key]: value}));
+  };
+
   return (
-    <div className="min-h-screen bg-[#f4f6f8] p-4 font-sans text-gray-800">
-      <div className="max-w-400 mx-auto">
-        {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900">Manage website</h1>
-          <p className="text-sm text-gray-500 mt-1">
-            Edit content, change fonts and choose your color paletteW
-          </p>
-        </div>
+    <div className="min-h-screen bg-[#f8fafc] p-4 lg:p-6 font-sans text-slate-800">
+      <div className="max-w-425 mx-auto flex flex-col h-[calc(100vh-48px)]">
+        {/* Header Bar */}
+        <header className="flex items-center justify-between mb-6 shrink-0">
+          <div className="flex items-center gap-4">
+            <div className="bg-white p-2.5 rounded-xl shadow-sm border border-slate-200">
+              <Settings2 className="w-5 h-5 text-primary" />
+            </div>
+            <div>
+              <h1 className="text-xl font-bold text-slate-900 leading-none">
+                Theme Editor
+              </h1>
+              <p className="text-xs text-slate-500 mt-1.5 font-medium">
+                Editing:{' '}
+                <span className="text-primary">{themeId.toUpperCase()}</span>{' '}
+                Template
+              </p>
+            </div>
+          </div>
 
-        {/* Main Interface Layout */}
-        <div className="bg-white rounded-3xl shadow-sm border border-gray-200 p-3 flex flex-col lg:flex-row gap-4 h-[calc(100vh-140px)] min-h-175">
+          <div className="flex items-center gap-3">
+            <button className="hidden md:flex items-center gap-2 px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">
+              <Eye className="w-4 h-4" /> Preview Site
+            </button>
+            <div className="h-6 w-px bg-slate-200 mx-1 hidden md:block" />
+            <button className="bg-slate-900 hover:bg-slate-800 text-white px-6 py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-slate-200 transition-all active:scale-95">
+              Save Changes
+            </button>
+          </div>
+        </header>
+
+        {/* Main Work Area */}
+        <div className="flex-1 flex flex-col lg:flex-row gap-6 min-h-0">
           {/* ========================================== */}
-          {/* LEFT SIDE: SCROLLABLE LANDING PAGE PREVIEW */}
+          {/* LEFT SIDE: DEVICE PREVIEW (SCROLLABLE) */}
           {/* ========================================== */}
-          <div className="flex-1 bg-[#c5c7cb] rounded-2xl p-4 md:p-8 flex flex-col overflow-hidden">
-            {/* The Scrollable Window */}
-            <div className="bg-[#f9fafb] w-full h-full rounded-t-lg shadow-lg overflow-y-auto relative scroll-smooth border border-gray-100">
-              {/* --- Landing Page Content Starts Here --- */}
-              <div className="min-h-375">
-                {' '}
-                {/* Extra height to demonstrate scrolling */}
-                {/* Navbar */}
-                <nav className="flex items-center justify-between px-8 py-6 bg-white sticky top-0 z-10 shadow-sm">
-                  <div className="text-3xl font-black tracking-tight text-primary">
-                    DJ AURA
-                  </div>
-                  <div className="hidden md:flex items-center gap-6 text-[13px] font-semibold text-gray-500">
-                    <span className="bg-red-50 text-primary px-4 py-1.5 rounded-full">
-                      Home
-                    </span>
-                    <span className="hover:text-gray-900 cursor-pointer transition-colors">
-                      About
-                    </span>
-                    <span className="hover:text-gray-900 cursor-pointer transition-colors">
-                      Music
-                    </span>
-                    <span className="hover:text-gray-900 cursor-pointer transition-colors">
-                      Events
-                    </span>
-                    <span className="hover:text-gray-900 cursor-pointer transition-colors">
-                      Gallery
-                    </span>
-                  </div>
-                  <button className="bg-primary hover:bg-red-600 text-white px-6 py-2.5 rounded-lg text-sm font-semibold transition-colors shadow-md shadow-red-200">
-                    Book Now
-                  </button>
-                </nav>
-                {/* Hero Section */}
-                <div className="px-8 py-16 flex flex-col xl:flex-row items-center gap-12 bg-white">
-                  {/* Hero Text */}
-                  <div className="flex-1 space-y-6">
-                    <div className="inline-flex items-center gap-2 bg-gray-50 border border-gray-200 px-3 py-1.5 rounded-full text-[10px] font-bold tracking-wider text-gray-500 uppercase">
-                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
-                      Available for Booking
-                    </div>
+          <div className="flex-1 bg-slate-200/50 rounded-4xl p-6 lg:p-10 flex flex-col items-center justify-center relative overflow-hidden border border-slate-200">
+            {/* Perspective Background Decoration */}
+            <div className="absolute inset-0 opacity-10 pointer-events-none">
+              <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(#000_1px,transparent_1px)] bg-size-[20px_20px]" />
+            </div>
 
-                    <h1 className="text-5xl lg:text-[64px] leading-[1.1] font-black text-gray-900 tracking-tight">
-                      Bringing the <br /> energy to every <br /> dancefloor.
-                    </h1>
-
-                    <p className="text-gray-500 text-base max-w-100 leading-relaxed">
-                      Afrobeat, Amapiano, and Deep House specialist. Creating
-                      unforgettable rhythmic experiences across Africa and
-                      beyond.
-                    </p>
-
-                    <div className="flex gap-4 pt-2">
-                      <button className="bg-primary hover:bg-red-600 text-white px-7 py-3 rounded-lg text-sm font-semibold transition-colors">
-                        Book The DJ
-                      </button>
-                      <button className="bg-[#e5e7eb] hover:bg-gray-300 text-gray-800 px-7 py-3 rounded-lg text-sm font-semibold transition-colors">
-                        Listen to Mixes
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Hero Image Area (Mock) */}
-                  <div className="flex-1 w-full flex justify-end">
-                    <div className="relative w-[90%] aspect-4/4 bg-gray-900 rounded-[40px] rounded-tl-[120px] rounded-br-[120px] overflow-hidden shadow-2xl">
-                      <Image
-                        src="/public/theme/Theme1.png"
-                        alt="DJ playing music"
-                        className="w-full h-full object-cover opacity-80 mix-blend-overlay"
-                        width={1000}
-                        height={1000}
-                      />
-                      <div className="absolute inset-0 bg-linear-to-tr from-primary/20 to-transparent"></div>
-                      {/* Decorative Neon Text Mock */}
-                      <div className="absolute right-8 bottom-1/3 text-right">
-                        <p className="text-red-400 font-bold text-xl drop-shadow-[0_0_8px_rgba(246,49,49,0.8)] tracking-widest leading-tight">
-                          YOU <br /> EXACTLY <br /> YOU N <br /> TO
-                        </p>
-                      </div>
-                    </div>
-                  </div>
+            {/* Browser/Device Shell */}
+            <div className="w-full h-full max-w-300 bg-white rounded-2xl shadow-[0_20px_50px_-12px_rgba(0,0,0,0.15)] flex flex-col overflow-hidden relative border border-white">
+              {/* Browser Header */}
+              <div className="bg-slate-50 border-b border-slate-100 px-5 py-3.5 flex items-center gap-4 shrink-0">
+                <div className="flex gap-1.5">
+                  <div className="w-3 h-3 rounded-full bg-slate-200" />
+                  <div className="w-3 h-3 rounded-full bg-slate-200" />
+                  <div className="w-3 h-3 rounded-full bg-slate-200" />
                 </div>
-                {/* --- Dummy Content for Scroll Testing --- */}
-                <div className="bg-[#f9fafb] px-8 py-20">
-                  <div className="text-center mb-12">
-                    <h2 className="text-3xl font-black text-gray-900">
-                      Featured Mixes
-                    </h2>
-                    <p className="text-gray-500 mt-2">
-                      Listen to the latest sets from recent tours.
-                    </p>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {[1, 2, 3].map((item) => (
-                      <div
-                        key={item}
-                        className="bg-white h-64 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-center text-gray-400">
-                        SoundCloud Player Mock
-                      </div>
-                    ))}
-                  </div>
+                <div className="flex-1 max-w-md mx-auto h-7 bg-white rounded-lg border border-slate-200 flex items-center px-3 gap-2">
+                  <div className="w-2 h-2 rounded-full bg-emerald-400" />
+                  <span className="text-[10px] text-slate-400 font-mono truncate">
+                    https://your-stage-url.upbeat.africa
+                  </span>
                 </div>
-                <div className="bg-gray-900 px-8 py-24 text-center">
-                  <h2 className="text-4xl font-black text-white mb-6">
-                    Ready to bring the vibe?
-                  </h2>
-                  <button className="bg-primary hover:bg-red-600 text-white px-8 py-4 rounded-xl text-base font-bold transition-colors shadow-lg shadow-primary/30">
-                    Book DJ AURA Now
-                  </button>
+                <div className="w-20" /> {/* Spacer */}
+              </div>
+
+              {/* Scrollable Preview Area */}
+              <div className="flex-1 overflow-y-auto bg-slate-50 relative custom-scrollbar">
+                <div className="origin-top transition-transform duration-300">
+                  <TemplateRenderer
+                    templateId={themeId}
+                    content={content}
+                    theme={themeSettings}
+                    view={view}
+                    onViewChange={setView}
+                  />
                 </div>
-                {/* --- End Landing Page Content --- */}
               </div>
             </div>
           </div>
@@ -138,119 +155,180 @@ export default function ManageWebsite() {
           {/* ========================================== */}
           {/* RIGHT SIDE: EDITOR SIDEBAR */}
           {/* ========================================== */}
-          <div className="w-full lg:w-85 xl:w-95 bg-[#f8f9fa] rounded-2xl p-6 flex flex-col border border-gray-100 overflow-y-auto">
-            <div className="border-b border-gray-200 pb-5 mb-5">
-              <h2 className="font-bold text-gray-900 text-lg">
-                Edit Your Content
+          <aside className="w-full lg:w-105 xl:w-120 bg-white rounded-4xl border border-slate-200 shadow-xl shadow-slate-100/50 flex flex-col overflow-hidden shrink-0">
+            {/* Sidebar Tabs/Header */}
+            <div className="p-6 border-b border-slate-50 bg-slate-50/50">
+              <h2 className="text-lg font-bold text-slate-900 mb-1">
+                Customize Theme
               </h2>
-              <p className="text-xs text-gray-500 mt-1 leading-relaxed">
-                Switch your text and image! Choose your favorite primary color
-                and font style.
+              <p className="text-xs text-slate-500 font-medium">
+                Update content and styles below.
               </p>
             </div>
 
-            <div className="space-y-6 flex-1">
-              {/* Interaction Tools */}
-              <div className="flex gap-2">
-                <button className="bg-emerald-400 p-2.5 rounded-lg text-white shadow-sm hover:bg-emerald-500 transition-colors">
-                  <MousePointer2 size={18} strokeWidth={2.5} />
-                </button>
-                <button className="bg-white border border-gray-200 p-2.5 rounded-lg text-gray-500 hover:bg-gray-50 transition-colors shadow-sm">
-                  <Hand size={18} strokeWidth={2.5} />
-                </button>
-              </div>
+            {/* Scrollable Editor Fields */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-10 custom-scrollbar">
+              {/* 1. Global Styles Section */}
+              <section>
+                <div className="flex items-center gap-2 mb-6">
+                  <div className="p-1.5 bg-primary/10 rounded-lg">
+                    <Palette className="w-3.5 h-3.5 text-primary" />
+                  </div>
+                  <h3 className="text-xs font-bold text-slate-900 uppercase tracking-widest">
+                    Design Tokens
+                  </h3>
+                </div>
 
-              {/* Text Input */}
-              <div>
-                <label className="text-[13px] font-bold text-gray-800 mb-2 block">
-                  Text
-                </label>
-                <textarea
-                  className="w-full rounded-xl border border-transparent shadow-sm text-[13px] p-4 h-28 focus:ring-2 focus:ring-red-100 focus:border-red-400 outline-none resize-none placeholder:text-gray-400"
-                  placeholder="Just pick a section of text to swap out..."></textarea>
-              </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-[11px] font-bold text-slate-500 uppercase ml-1">
+                      Brand Color
+                    </label>
+                    <div className="flex items-center gap-3 p-2 bg-slate-50 border border-slate-100 rounded-xl hover:border-slate-200 transition-colors">
+                      <div
+                        className="w-10 h-10 rounded-lg shadow-inner relative overflow-hidden border border-white/20"
+                        style={{backgroundColor: themeSettings.primaryColor}}>
+                        <input
+                          type="color"
+                          value={themeSettings.primaryColor}
+                          onChange={(e) =>
+                            handleThemeChange('primaryColor', e.target.value)
+                          }
+                          className="absolute inset-0 opacity-0 cursor-pointer scale-150"
+                        />
+                      </div>
+                      <span className="text-xs font-mono font-bold text-slate-600 uppercase">
+                        {themeSettings.primaryColor}
+                      </span>
+                    </div>
+                  </div>
 
-              {/* Image Upload */}
-              <div>
-                <label className="text-[13px] font-bold text-gray-800 mb-2 block">
-                  Upload Image
-                </label>
-                <div className="border-2 border-dashed border-gray-300 hover:border-gray-400 rounded-xl p-8 flex flex-col items-center justify-center text-gray-400 bg-white cursor-pointer transition-colors">
-                  <Upload size={22} className="mb-2" strokeWidth={2} />
-                  <span className="text-[11px] font-semibold">
-                    Replace Image
+                  <div className="space-y-2">
+                    <label className="text-[11px] font-bold text-slate-500 uppercase ml-1">
+                      Typography
+                    </label>
+                    <div className="relative">
+                      <select
+                        value={themeSettings.fontFamily}
+                        onChange={(e) =>
+                          handleThemeChange('fontFamily', e.target.value)
+                        }
+                        className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl text-xs font-bold text-slate-700 outline-none appearance-none hover:border-slate-200 transition-colors focus:ring-2 focus:ring-primary/5">
+                        <option>Inter</option>
+                        <option>Mona Sans</option>
+                        <option>Outfit</option>
+                        <option>Poppins</option>
+                      </select>
+                      <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              {/* 2. Content Sections */}
+              {Object.entries(SECTION_EDITORS).map(([sectionId, config]) => (
+                <section key={sectionId}>
+                  <div className="flex items-center gap-2 mb-6">
+                    <div className="p-1.5 bg-slate-100 rounded-lg">
+                      <Type className="w-3.5 h-3.5 text-slate-600" />
+                    </div>
+                    <h3 className="text-xs font-bold text-slate-900 uppercase tracking-widest">
+                      {config.label}
+                    </h3>
+                  </div>
+
+                  <div className="space-y-5">
+                    {config.fields.map((field) => (
+                      <div key={field.key} className="space-y-2">
+                        <label className="text-[11px] font-bold text-slate-500 uppercase ml-1">
+                          {field.label}
+                        </label>
+                        {field.type === 'text' ? (
+                          <input
+                            type="text"
+                            value={content[field.key] || ''}
+                            onChange={(e) =>
+                              handleContentChange(field.key, e.target.value)
+                            }
+                            className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm text-slate-700 focus:bg-white focus:ring-4 focus:ring-primary/5 focus:border-primary/20 outline-none transition-all placeholder:text-slate-300"
+                            placeholder={`Enter ${field.label.toLowerCase()}...`}
+                          />
+                        ) : (
+                          <textarea
+                            value={content[field.key] || ''}
+                            onChange={(e) =>
+                              handleContentChange(field.key, e.target.value)
+                            }
+                            className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm text-slate-700 h-32 focus:bg-white focus:ring-4 focus:ring-primary/5 focus:border-primary/20 outline-none transition-all resize-none placeholder:text-slate-300"
+                            placeholder={`Enter ${field.label.toLowerCase()}...`}
+                          />
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              ))}
+
+              {/* 3. Media Assets */}
+              <section>
+                <div className="flex items-center gap-2 mb-6">
+                  <div className="p-1.5 bg-slate-100 rounded-lg">
+                    <ImageIcon className="w-3.5 h-3.5 text-slate-600" />
+                  </div>
+                  <h3 className="text-xs font-bold text-slate-900 uppercase tracking-widest">
+                    Media Library
+                  </h3>
+                </div>
+                <div className="group border-2 border-dashed border-slate-200 rounded-3xl p-10 flex flex-col items-center justify-center text-slate-400 bg-slate-50 hover:bg-white hover:border-primary/30 transition-all cursor-pointer">
+                  <div className="p-4 bg-white rounded-2xl shadow-sm border border-slate-100 group-hover:scale-110 transition-transform">
+                    <Upload className="w-6 h-6 text-slate-400" />
+                  </div>
+                  <span className="text-[11px] font-bold uppercase tracking-widest mt-4 text-slate-500">
+                    Upload New Asset
                   </span>
                 </div>
-              </div>
-
-              {/* Fonts & Color Section */}
-              <div className="pt-2">
-                <h3 className="text-[13px] font-bold text-gray-800 mb-4 border-b border-gray-200 pb-2">
-                  Fonts & Color
-                </h3>
-
-                <div className="space-y-4">
-                  <div>
-                    <label className="text-[11px] font-bold text-gray-800 mb-1.5 block">
-                      Headlines
-                    </label>
-                    <div className="relative">
-                      <select className="w-full p-2.5 px-3 border border-transparent shadow-sm rounded-lg text-[13px] bg-white appearance-none cursor-pointer focus:ring-2 focus:ring-red-100 outline-none">
-                        <option>Mona Sans</option>
-                        <option>Inter</option>
-                        <option>Outfit</option>
-                      </select>
-                      <ChevronDown
-                        size={14}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="text-[11px] font-bold text-gray-800 mb-1.5 block">
-                      Body
-                    </label>
-                    <div className="relative">
-                      <select className="w-full p-2.5 px-3 border border-transparent shadow-sm rounded-lg text-[13px] bg-white appearance-none cursor-pointer focus:ring-2 focus:ring-red-100 outline-none">
-                        <option>Poppins</option>
-                        <option>Roboto</option>
-                        <option>Open Sans</option>
-                      </select>
-                      <ChevronDown
-                        size={14}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="text-[11px] font-bold text-gray-800 mb-1.5 block">
-                      Primary Color
-                    </label>
-                    <div className="flex gap-2 items-center bg-white p-1 rounded-lg shadow-sm border border-transparent">
-                      <div className="w-8 h-8 rounded-md bg-primary ml-1 shadow-inner"></div>
-                      <input
-                        type="text"
-                        value="#F63131"
-                        readOnly
-                        className="flex-1 p-2 text-[13px] bg-transparent outline-none text-gray-600 font-medium"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
+              </section>
             </div>
 
-            {/* Action Button */}
-            <div className="mt-6 pt-4">
-              <button className="w-full bg-primary hover:bg-red-600 text-white py-3 rounded-xl text-sm font-bold shadow-sm transition-colors">
-                Save changes
+            {/* Sidebar Footer */}
+            <div className="p-6 bg-slate-50/80 border-t border-slate-100">
+              <button className="w-full bg-slate-900 hover:bg-slate-800 text-white py-4 rounded-2xl text-sm font-bold shadow-xl shadow-slate-200 transition-all active:scale-[0.98]">
+                Publish Changes
               </button>
             </div>
-          </div>
+          </aside>
         </div>
       </div>
+
+      {/* Custom Scrollbar Styles */}
+      <style jsx global>{`
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: #e2e8f0;
+          border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: #cbd5e1;
+        }
+      `}</style>
     </div>
+  );
+}
+
+export default function ManageThemePage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center min-h-screen bg-slate-50 text-slate-400 font-medium">
+          Loading theme editor...
+        </div>
+      }>
+      <ManageThemeContent />
+    </Suspense>
   );
 }

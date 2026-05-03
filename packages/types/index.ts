@@ -14,6 +14,9 @@ export type Section = {
 export type Template = {
   id: string;
   sections: Section[];
+  BookingPage: React.ComponentType<any>;
+  defaultContent: Content;
+  defaultTheme: Theme;
 };
 
 export type Content = Record<string, any>;
