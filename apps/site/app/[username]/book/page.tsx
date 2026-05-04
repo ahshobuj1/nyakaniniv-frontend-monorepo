@@ -15,6 +15,7 @@ export default async function BookingPage(props: { params: Promise<{ username: s
       content={template.defaultContent}
       theme={template.defaultTheme}
       view="booking"
+      baseUrl={`/${username}`}
     />
   );
 }

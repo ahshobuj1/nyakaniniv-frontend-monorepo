@@ -10,15 +10,14 @@ import BookingPage from './BookingPage';
 
 export const azuraTemplate: Template = {
   id: 'azura',
-  sections: [
-    {id: 'navbar', component: Navbar},
+  Navbar: Navbar,
+  Footer: Footer,
+  landingSections: [
     {id: 'hero', component: Hero},
     {id: 'behind-decks', component: BehindDecks},
     {id: 'latest-mixes', component: LatestMixes},
     {id: 'about', component: UpcomingEvents},
-    // {id: 'contact', component: Contact},
     {id: 'live-action', component: LiveInAction},
-    {id: 'footer', component: Footer},
   ],
   BookingPage: BookingPage,
   defaultTheme: {

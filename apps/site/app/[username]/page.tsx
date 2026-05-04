@@ -25,6 +25,7 @@ export default async function Page({ params, searchParams }: PageProps) {
       templateId={activeTemplateId}
       content={userData.content}
       theme={userData.theme}
+      baseUrl={`/${username}`}
     />
   );
 }

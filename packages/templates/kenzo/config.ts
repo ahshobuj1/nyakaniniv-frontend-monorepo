@@ -7,11 +7,11 @@ import BookingPage from './BookingPage';
 
 export const kenzoTemplate: Template = {
   id: 'kenzo',
-  sections: [
-    {id: 'navbar', component: Navbar},
+  Navbar: Navbar,
+  Footer: Contact,
+  landingSections: [
     {id: 'hero', component: Hero},
     {id: 'about', component: About},
-    {id: 'contact', component: Contact},
   ],
   BookingPage: BookingPage,
   defaultTheme: {

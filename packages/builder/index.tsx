@@ -8,6 +8,7 @@ interface TemplateRendererProps {
   theme: Theme;
   view?: 'landing' | 'booking';
   onViewChange?: (view: 'landing' | 'booking') => void;
+  baseUrl?: string;
 }
 
 function hexToRgb(hex: string) {
@@ -23,6 +24,7 @@ export default function TemplateRenderer({
   theme,
   view = 'landing',
   onViewChange,
+  baseUrl,
 }: TemplateRendererProps) {
   const template = templates[templateId as keyof typeof templates];
 
@@ -34,34 +36,48 @@ export default function TemplateRenderer({
     fontFamily: theme.fontFamily,
   } as React.CSSProperties;
 
-  if (view === 'booking' && template.BookingPage) {
-    const BookingPage = template.BookingPage;
-    return (
-      <div style={style}>
-        <BookingPage 
-          content={content} 
-          theme={theme} 
-          isPreview={true} 
-          view={view}
-          onViewChange={onViewChange}
-        />
-      </div>
-    );
-  }
+  const Navbar = template.Navbar;
+  const Footer = template.Footer;
 
   return (
     <div style={style}>
-      {template.sections.map((section: any) => {
-        const Component = section.component;
-        return (
-          <Component 
-            key={section.id} 
+      <Navbar 
+        content={content} 
+        theme={theme} 
+        view={view} 
+        onViewChange={onViewChange} 
+        baseUrl={baseUrl}
+      />
+      
+      <main>
+        {view === 'booking' ? (
+          <template.BookingPage 
             content={content} 
+            theme={theme} 
             view={view}
             onViewChange={onViewChange}
           />
-        );
-      })}
+        ) : (
+          template.landingSections.map((section: any) => {
+            const Component = section.component;
+            return (
+              <Component 
+                key={section.id} 
+                content={content} 
+                view={view}
+                onViewChange={onViewChange}
+              />
+            );
+          })
+        )}
+      </main>
+
+      <Footer 
+        content={content} 
+        theme={theme} 
+        view={view} 
+        onViewChange={onViewChange} 
+      />
     </div>
   );
 }

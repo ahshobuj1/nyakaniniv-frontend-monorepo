@@ -5,7 +5,7 @@ import Link from 'next/link';
 import {usePathname, useSearchParams} from 'next/navigation';
 import {Logo} from './constants';
 
-export default function Nav({content, view, onViewChange}: any) {
+export default function Nav({content, view, onViewChange, baseUrl}: any) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const isPreviewPage = pathname?.includes('/themes/preview');
@@ -26,13 +26,13 @@ export default function Nav({content, view, onViewChange}: any) {
     }
   };
 
-  const bookingLink = isPreviewPage 
-    ? `/themes/preview?themeId=${themeId}&view=booking` 
-    : '/book';
-
   const homeLink = isPreviewPage 
     ? `/themes/preview?themeId=${themeId}&view=landing` 
-    : '/';
+    : (baseUrl || '/');
+
+  const bookingLink = isPreviewPage 
+    ? `/themes/preview?themeId=${themeId}&view=booking` 
+    : (baseUrl ? `${baseUrl}/book` : '/book');
 
   const links = content?.navLinks || ['Home', 'About', 'Music', 'Events', 'Gallery'];
   return (

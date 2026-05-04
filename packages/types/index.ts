@@ -13,7 +13,9 @@ export type Section = {
 
 export type Template = {
   id: string;
-  sections: Section[];
+  Navbar: React.ComponentType<any>;
+  Footer: React.ComponentType<any>;
+  landingSections: Section[];
   BookingPage: React.ComponentType<any>;
   defaultContent: Content;
   defaultTheme: Theme;
