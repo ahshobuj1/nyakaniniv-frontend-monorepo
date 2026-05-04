@@ -55,7 +55,7 @@ export default function Footer({content}: FooterProps) {
             </p>
             <div className="flex gap-[12px] mt-2">
               <Link
-                href={footerData.instagram}
+                href={footerData.instagram || '#'}
                 className="w-[40px] h-[40px] rounded-full bg-[#333333] flex items-center justify-center text-white hover:bg-[var(--primary)] transition-colors duration-300">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -73,7 +73,7 @@ export default function Footer({content}: FooterProps) {
                 </svg>
               </Link>
               <Link
-                href={footerData.facebook}
+                href={footerData.facebook || '#'}
                 className="w-[40px] h-[40px] rounded-full bg-[#333333] flex items-center justify-center text-white hover:bg-[var(--primary)] transition-colors duration-300">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -89,7 +89,7 @@ export default function Footer({content}: FooterProps) {
                 </svg>
               </Link>
               <Link
-                href={footerData.linkedin}
+                href={footerData.linkedin || '#'}
                 className="w-[40px] h-[40px] rounded-full bg-[#333333] flex items-center justify-center text-white hover:bg-[var(--primary)] transition-colors duration-300">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
