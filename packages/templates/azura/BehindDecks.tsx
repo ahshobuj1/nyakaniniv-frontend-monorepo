@@ -5,8 +5,14 @@ import Image from 'next/image';
 import {fadeUp} from './constants';
 
 export default function BehindDecks({content}: any) {
-  const tags = content?.tags || ['Afrobeat', 'Amapiano', 'Deep House', 'Gqom', 'Afro-Tech'];
-  const image = content?.behindDecksImage || "https://images.unsplash.com/photo-1598387993441-a364f854c3e1?q=80&w=2076&auto=format&fit=crop";
+  const tags = content?.tags || [
+    'Afrobeat',
+    'Amapiano',
+    'Deep House',
+    'Gqom',
+    'Afro-Tech',
+  ];
+  const image = content?.behindDecksImage || '/theme/aura/decks.png';
 
   return (
     <motion.section
@@ -14,8 +20,8 @@ export default function BehindDecks({content}: any) {
       whileInView="show"
       viewport={{once: true, amount: 0.15}}
       variants={{show: {transition: {staggerChildren: 0.08}}}}
-      className="bg-[#fbfbfb] py-[120px]">
-      <div className="max-w-[1440px] mx-auto px-6 lg:px-[80px] grid grid-cols-1 md:grid-cols-2 gap-[80px] items-center">
+      className="bg-[#fbfbfb] py-8 lg:py-[120px]">
+      <div className="max-w-[1440px] mx-auto px-6 lg:px-[80px] grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-[80px] items-center">
         <motion.div
           variants={fadeUp}
           className="relative w-full aspect-square max-w-[500px] mx-auto">
@@ -88,4 +94,3 @@ export default function BehindDecks({content}: any) {
     </motion.section>
   );
 }
-
