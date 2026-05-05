@@ -43,7 +43,7 @@ export default function Footer({content}: FooterProps) {
   };
 
   return (
-    <footer className="bg-[#151515] pt-[80px] pb-[30px] px-6">
+    <footer className="bg-[#151515] pt-[80px] pb-[30px] px-6 font-sans">
       <div className="max-w-[1200px] mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-[60px] md:gap-[100px] mb-[60px]">
           <div className="flex flex-col gap-[20px]">

@@ -40,7 +40,7 @@ export default function TemplateRenderer({
   const Footer = template.Footer;
 
   return (
-    <div style={style}>
+    <div style={style} className="relative flex flex-col min-h-screen w-full">
       <Navbar 
         content={content} 
         theme={theme} 

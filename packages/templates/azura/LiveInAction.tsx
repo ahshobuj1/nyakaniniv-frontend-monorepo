@@ -3,69 +3,109 @@
 import {motion} from 'framer-motion';
 import Image from 'next/image';
 
-interface CtaProps {
+interface LiveInActionProps {
   content?: {
-    line1?: string;
-    line2Prefix?: string;
-    line2Highlight?: string;
-    buttonText?: string;
-    bgImage?: string;
+    title?: string;
+    subtitle?: string;
+    images?: string[];
   };
 }
 
-export default function CallToAction({content}: CtaProps) {
-  const line1 = content?.line1 || 'Are You Ready For';
-  const line2Prefix = content?.line2Prefix || 'Book, ';
-  const line2Highlight = content?.line2Highlight || 'DJ Aura';
-  const buttonText = content?.buttonText || 'Book Now';
-  const bgImage = content?.bgImage || '/theme/aura/vector-azura.png';
+export default function LiveInAction({content}: LiveInActionProps) {
+  const title = content?.title || 'Live In Action';
+  const subtitle = content?.subtitle || 'Energy from recent performances.';
+  const images = content?.images || [
+    '/theme/aura/live-action-1.png',
+    '/theme/aura/live-action-2.png',
+    '/theme/aura/live-action-3.png',
+    '/theme/aura/live-action-4.png',
+  ];
 
   return (
-    <section className="bg-[#f0f0f0] py-8 lg:py-[80px]">
-      <div className="max-w-7xl mx-auto px-6">
-        <motion.div
-          initial={{opacity: 0, y: 30}}
-          whileInView={{opacity: 1, y: 0}}
-          viewport={{once: true}}
-          transition={{duration: 0.6}}
-          className="relative bg-[#e6e6e6] rounded-[24px] overflow-hidden py-[80px] px-[20px] flex flex-col items-center justify-center text-center">
-          {/* Left Vector - Fixed Size & Position */}
-          <div className="absolute top-1/2 -translate-y-1/2 -left-[50px] md:left-[20px] w-[250px] h-[250px] md:w-[400px] md:h-[400px] z-0 opacity-90 pointer-events-none">
+    <section className="bg-[#f2f2f2] py-[80px]">
+      <div className="max-w-[1140px] mx-auto px-6">
+        <div className="text-center mb-[48px] flex flex-col gap-[8px]">
+          <motion.h2
+            initial={{opacity: 0, y: 20}}
+            whileInView={{opacity: 1, y: 0}}
+            viewport={{once: true}}
+            className="text-[36px] md:text-[40px] font-bold text-[#0f0f0f]">
+            {title}
+          </motion.h2>
+          <motion.p
+            initial={{opacity: 0, y: 20}}
+            whileInView={{opacity: 1, y: 0}}
+            viewport={{once: true}}
+            transition={{delay: 0.1}}
+            className="text-[#787878] text-[16px] font-sans">
+            {subtitle}
+          </motion.p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-[16px]">
+          <motion.div
+            initial={{opacity: 0, y: 30}}
+            whileInView={{opacity: 1, y: 0}}
+            viewport={{once: true}}
+            transition={{duration: 0.6}}
+            className="relative h-[400px] md:h-[600px] w-full rounded-[16px] overflow-hidden">
             <Image
-              src={'/theme/aura/vector-left.png'}
-              alt="Background Vector"
+              src={images[0]}
+              alt="Live Performance Main"
               fill
-              className="object-contain"
-              priority
+              className="object-cover"
+              sizes="(max-width: 768px) 100vw, 50vw"
             />
-          </div>
+          </motion.div>
 
-          {/* Right Vector - Fixed Size & Position */}
-          <div className="absolute top-1/2 -translate-y-1/2 -right-[50px] md:right-[20px] w-[250px] h-[250px] md:w-[400px] md:h-[400px] z-0 opacity-90 pointer-events-none">
-            <Image
-              src={'/theme/aura/vector-azura.png'}
-              alt="Background Vector"
-              fill
-              className="object-contain"
-              priority
-            />
-          </div>
+          <div className="flex flex-col gap-[16px]">
+            <motion.div
+              initial={{opacity: 0, y: 30}}
+              whileInView={{opacity: 1, y: 0}}
+              viewport={{once: true}}
+              transition={{duration: 0.6, delay: 0.1}}
+              className="relative h-[250px] md:h-[292px] w-full rounded-[16px] overflow-hidden">
+              <Image
+                src={images[1]}
+                alt="Live Performance Secondary"
+                fill
+                className="object-cover"
+                sizes="(max-width: 768px) 100vw, 50vw"
+              />
+            </motion.div>
 
-          <div className="relative z-10 flex flex-col items-center gap-[32px]">
-            <h2 className="text-[36px] md:text-[48px] font-bold text-[#111111] leading-tight tracking-tight">
-              {line1} <br />
-              {line2Prefix}{' '}
-              <span className="text-[var(--primary)]">{line2Highlight}</span>
-            </h2>
-
-            <motion.button
-              whileHover={{scale: 1.05}}
-              whileTap={{scale: 0.95}}
-              className="bg-[var(--primary)] text-white px-[36px] py-[14px] rounded-[12px] font-bold text-[18px]">
-              {buttonText}
-            </motion.button>
+            <div className="grid grid-cols-2 gap-[16px] flex-1">
+              <motion.div
+                initial={{opacity: 0, y: 30}}
+                whileInView={{opacity: 1, y: 0}}
+                viewport={{once: true}}
+                transition={{duration: 0.6, delay: 0.2}}
+                className="relative min-h-[200px] w-full rounded-[16px] overflow-hidden">
+                <Image
+                  src={images[2]}
+                  alt="DJ Equipment"
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 768px) 50vw, 25vw"
+                />
+              </motion.div>
+              <motion.div
+                initial={{opacity: 0, y: 30}}
+                whileInView={{opacity: 1, y: 0}}
+                viewport={{once: true}}
+                transition={{duration: 0.6, delay: 0.3}}
+                className="relative min-h-[200px] w-full rounded-[16px] overflow-hidden">
+                <Image
+                  src={images[3]}
+                  alt="Live Performance Detail"
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 768px) 50vw, 25vw"
+                />
+              </motion.div>
+            </div>
           </div>
-        </motion.div>
+        </div>
       </div>
     </section>
   );
