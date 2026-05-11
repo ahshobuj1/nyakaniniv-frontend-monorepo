@@ -161,14 +161,14 @@ export default function BookingsPage() {
           {/* All Tab */}
           <button
             onClick={() => setFilter('All')}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-[14px] font-semibold transition-all border ${
+            className={`flex items-center gap-2 px-2 md:px-5 py-1 md:py-2.5 rounded-md md:rounded-full text-[14px] font-semibold transition-all border ${
               filter === 'All'
                 ? 'border-primary text-primary bg-white'
                 : 'border-transparent bg-white text-[#787878] hover:bg-gray-50'
             }`}>
             All
             <span
-              className={`flex items-center justify-center min-w-5 h-5 px-1.5 text-[11px] rounded-full text-white ${
+              className={`flex items-center justify-center md:min-w-5 md:h-5 px-1.5 text-[11px] rounded-full text-white ${
                 filter === 'All' ? 'bg-primary' : 'bg-[#D1D5DB]'
               }`}>
               {totalCount}
@@ -178,14 +178,14 @@ export default function BookingsPage() {
           {/* Pending Tab */}
           <button
             onClick={() => setFilter('Pending')}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-[14px] font-semibold transition-all border ${
+            className={`flex items-center gap-2 px-2 md:px-5 py-1 md:py-2.5 rounded-md md:rounded-full text-[14px] font-semibold transition-all border ${
               filter === 'Pending'
                 ? 'border-primary text-primary bg-white'
                 : 'border-transparent bg-white text-[#787878] hover:bg-gray-50'
             }`}>
             Pending
             <span
-              className={`flex items-center justify-center min-w-5 h-5 px-1.5 text-[11px] rounded-full text-white ${
+              className={`flex items-center justify-center md:min-w-5 md:h-5 px-1.5 text-[11px] rounded-full text-white ${
                 filter === 'Pending' ? 'bg-primary' : 'bg-[#D1D5DB]'
               }`}>
               {pendingCount}
@@ -195,14 +195,14 @@ export default function BookingsPage() {
           {/* Confirmed Tab */}
           <button
             onClick={() => setFilter('Confirmed')}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-[14px] font-semibold transition-all border ${
+            className={`flex items-center gap-2 px-2 md:px-5 py-1 md:py-2.5 rounded-md md:rounded-full text-[14px] font-semibold transition-all border ${
               filter === 'Confirmed'
                 ? 'border-primary text-primary bg-white'
                 : 'border-transparent bg-white text-[#787878] hover:bg-gray-50'
             }`}>
             Confirmed
             <span
-              className={`flex items-center justify-center min-w-5 h-5 px-1.5 text-[11px] rounded-full text-white ${
+              className={`flex items-center justify-center md:min-w-5 md:h-5 px-1.5 text-[11px] rounded-full text-white ${
                 filter === 'Confirmed' ? 'bg-primary' : 'bg-[#D1D5DB]'
               }`}>
               {confirmedCount}

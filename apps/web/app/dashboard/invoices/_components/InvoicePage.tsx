@@ -151,14 +151,14 @@ export default function InvoicesPage() {
           {/* All Tab */}
           <button
             onClick={() => setFilter('All')}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-[14px] font-semibold transition-all border ${
+            className={`flex items-center gap-2 px-2 md:px-5 py-1 md:py-2.5 rounded-md md:rounded-full text-[14px] font-semibold transition-all border ${
               filter === 'All'
                 ? 'border-primary text-primary bg-white'
                 : 'border-transparent bg-white text-[#787878] hover:bg-gray-50'
             }`}>
             All
             <span
-              className={`flex items-center justify-center min-w-5 h-5 px-1.5 text-[11px] rounded-full text-white ${
+              className={`flex items-center justify-center md:min-w-5 md:h-5 px-1.5 text-[11px] rounded-full text-white ${
                 filter === 'All' ? 'bg-primary' : 'bg-[#D1D5DB]'
               }`}>
               {totalCount}
@@ -168,14 +168,14 @@ export default function InvoicesPage() {
           {/* Paid Tab */}
           <button
             onClick={() => setFilter('Paid')}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-[14px] font-semibold transition-all border ${
+            className={`flex items-center gap-2 px-2 md:px-5 py-1 md:py-2.5 rounded-md md:rounded-full text-[14px] font-semibold transition-all border ${
               filter === 'Paid'
                 ? 'border-primary text-primary bg-white'
                 : 'border-transparent bg-white text-[#787878] hover:bg-gray-50'
             }`}>
             Paid
             <span
-              className={`flex items-center justify-center min-w-5 h-5 px-1.5 text-[11px] rounded-full text-white ${
+              className={`flex items-center justify-center md:min-w-5 md:h-5 px-1.5 text-[11px] rounded-full text-white ${
                 filter === 'Paid' ? 'bg-primary' : 'bg-[#D1D5DB]'
               }`}>
               {paidCount}
@@ -185,14 +185,14 @@ export default function InvoicesPage() {
           {/* Unpaid Tab */}
           <button
             onClick={() => setFilter('Unpaid')}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-[14px] font-semibold transition-all border ${
+            className={`flex items-center gap-2 px-2 md:px-5 py-1 md:py-2.5 rounded-md md:rounded-full text-[14px] font-semibold transition-all border ${
               filter === 'Unpaid'
                 ? 'border-primary text-primary bg-white'
                 : 'border-transparent bg-white text-[#787878] hover:bg-gray-50'
             }`}>
             Unpaid
             <span
-              className={`flex items-center justify-center min-w-5 h-5 px-1.5 text-[11px] rounded-full text-white ${
+              className={`flex items-center justify-center md:min-w-5 md:h-5 px-1.5 text-[11px] rounded-full text-white ${
                 filter === 'Unpaid' ? 'bg-primary' : 'bg-[#D1D5DB]'
               }`}>
               {unpaidCount}

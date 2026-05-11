@@ -130,7 +130,7 @@ export default function EventsPage() {
     <div className="w-full bg-[#F5F5F5] min-h-screen">
       <div className="mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
         {/* Header Section */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="flex flex-row justify-between items-start sm:items-center gap-4">
           <div className="space-y-1">
             <h1 className="text-[28px] font-bold tracking-tight text-[#111620]">
               Events
@@ -157,7 +157,7 @@ export default function EventsPage() {
                 key={f}
                 variant="outline"
                 className={`
-                  cursor-pointer text-[14px] py-2 px-5 font-medium transition-all duration-200 rounded-full border
+                  cursor-pointer text-[14px] px-3 md:px-5 py-1 md:py-2.5 rounded-md md:rounded-full font-medium transition-all duration-200  border
                   ${
                     isActive
                       ? 'bg-white border-primary text-primary shadow-sm'
