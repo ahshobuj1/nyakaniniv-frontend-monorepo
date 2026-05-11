@@ -24,6 +24,7 @@ import {
 } from 'recharts';
 
 import {Card, CardContent, Button} from '@repo/ui';
+import Link from 'next/link';
 
 // ==========================================
 // 1. Dummy Data
@@ -160,10 +161,12 @@ export default function DashboardOverview() {
             </p>
           </div>
 
-          <Button className="bg-primary hover:bg-primary/90 text-white font-semibold px-6 h-11 rounded-lg shadow-sm transition-all active:scale-[0.98]">
-            View My Website
-            <ArrowRight className="w-4 h-4 ml-1 stroke-[2.5]" />
-          </Button>
+          <Link href={'https://subdomainafrica.vercel.app/shobuj'}>
+            <Button className="bg-primary hover:bg-primary/90 text-white font-semibold px-6 h-11 rounded-lg shadow-sm transition-all active:scale-[0.98]">
+              View My Website
+              <ArrowRight className="w-4 h-4 ml-1 stroke-[2.5]" />
+            </Button>
+          </Link>
         </div>
 
         {/* 4 Summary Cards */}

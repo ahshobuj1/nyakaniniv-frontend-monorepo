@@ -19,7 +19,8 @@ export default function Hero({content}: HeroProps) {
   const description =
     content?.hero?.heroDescription ||
     'International DJ and producer bringing the best of Afro-fusion, Amapiano, and Deep House to stages worldwide.';
-  const image = content?.hero?.heroImage || '/theme/kenzo/kenzo-hero.png';
+  const image = '/theme/kenzo/kenzo-hero.png';
+  // const image = content?.hero?.heroImage || '/theme/kenzo/kenzo-hero.png';
   const badgeText = content?.hero?.badgeText || 'AVAILABLE FOR BOOKING';
 
   return (

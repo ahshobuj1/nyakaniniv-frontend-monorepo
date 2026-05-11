@@ -18,7 +18,7 @@ const dummyEvents: EventData[] = [
     price: 80,
     currencySymbol: '₵',
     description: 'A night of pure Afrobeats and Amapiano vibes',
-    image: '/event/event-image.png', // Replace with your actual image paths
+    image: '/event/event.jpg', // Replace with your actual image paths
     status: 'Upcoming',
   },
   {
@@ -30,7 +30,7 @@ const dummyEvents: EventData[] = [
     price: 40,
     currencySymbol: '€',
     description: 'Immerse yourself in the beats of the undergr...',
-    image: '/event/event-image.png',
+    image: '/event/event.jpg',
     status: 'Completed',
   },
   {
@@ -42,7 +42,7 @@ const dummyEvents: EventData[] = [
     price: 60,
     currencySymbol: '$',
     description: 'Celebrating soulful tunes from iconic artists',
-    image: '/event/event-image.png',
+    image: '/event/event.jpg',
     status: 'Completed',
   },
   {
@@ -54,7 +54,7 @@ const dummyEvents: EventData[] = [
     price: 30,
     currencySymbol: 'CAD ',
     description: 'Discover the next big names in indie music',
-    image: '/event/event-image.png',
+    image: '/event/event.jpg',
     status: 'Upcoming',
   },
   {
@@ -66,7 +66,7 @@ const dummyEvents: EventData[] = [
     price: 100,
     currencySymbol: '£',
     description: 'An exquisite night featuring renowned orches...',
-    image: '/event/event-image.png',
+    image: '/event/event.jpg',
     status: 'Upcoming',
   },
   {
@@ -78,7 +78,7 @@ const dummyEvents: EventData[] = [
     price: 250,
     currencySymbol: '£',
     description: 'Showcasing groundbreaking advancements...',
-    image: '/event/event-image.png',
+    image: '/event/event.jpg',
     status: 'Completed',
   },
   {
@@ -90,7 +90,7 @@ const dummyEvents: EventData[] = [
     price: 75,
     currencySymbol: '£',
     description: 'A celebration of contemporary art and creati...',
-    image: '/event/event-image.png',
+    image: '/event/event.jpg',
     status: 'Upcoming',
   },
 ];

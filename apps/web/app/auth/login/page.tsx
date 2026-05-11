@@ -9,6 +9,7 @@ import {Eye, EyeOff} from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import {Button} from '@repo/ui';
+import {useRouter} from 'next/navigation';
 
 const loginSchema = z.object({
   email: z.string().min(1, 'Email is required').email('Invalid email address'),
@@ -18,6 +19,7 @@ const loginSchema = z.object({
 type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
+  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
 
   const {
@@ -32,6 +34,7 @@ export default function LoginPage() {
     console.log(data);
     await new Promise((resolve) => setTimeout(resolve, 1000));
     toast.success('Successfully logged in!');
+    router.push('/dashboard');
   };
 
   return (
