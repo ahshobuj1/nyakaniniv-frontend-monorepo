@@ -1,5 +1,11 @@
+import InvoicesPage from './_components/InvoicePage';
+
 const page = () => {
-  return <div>page</div>;
+  return (
+    <section>
+      <InvoicesPage />
+    </section>
+  );
 };
 
 export default page;
