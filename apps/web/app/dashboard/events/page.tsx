@@ -1,5 +1,11 @@
+import EventsPage from './_components/EventsPage';
+
 const page = () => {
-  return <div>page</div>;
+  return (
+    <section>
+      <EventsPage />
+    </section>
+  );
 };
 
 export default page;

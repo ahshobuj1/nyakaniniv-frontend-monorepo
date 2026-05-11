@@ -1,3 +1,5 @@
+export * from './event';
+
 import React from 'react';
 
 export type Theme = {

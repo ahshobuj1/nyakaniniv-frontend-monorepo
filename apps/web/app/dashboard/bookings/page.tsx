@@ -1,5 +1,11 @@
+import BookingsPage from './_components/BookingsPage';
+
 const page = () => {
-  return <div>page</div>;
+  return (
+    <section>
+      <BookingsPage />
+    </section>
+  );
 };
 
 export default page;
