@@ -206,10 +206,11 @@ export default function DashboardOverview() {
           {/* Revenue Area Chart */}
           <Card className="border-none shadow-[0_2px_20px_rgba(0,0,0,0.03)] rounded-2xl bg-white flex flex-col">
             <CardContent className="p-6 md:p-8 flex-1">
-              <div className="flex justify-between items-center mb-8">
+              <div className="flex flex-col md:flex-row gap-6 justify-between items-center mb-8">
                 <h2 className="text-[18px] font-bold text-[#111620]">
                   Revenue Overview
                 </h2>
+
                 <div className="flex gap-2">
                   <select className="bg-[#F5F5F5] border-transparent text-[#111620] text-[13px] font-medium py-1.5 px-3 rounded-lg outline-none cursor-pointer">
                     <option>Jan - Oct</option>

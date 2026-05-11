@@ -179,7 +179,7 @@ export default function BillingSubscriptionPage() {
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-3 w-full md:w-auto">
+              <div className="flex flex-col md:flex-row items-center gap-3 w-full md:w-auto">
                 <Button
                   variant="secondary"
                   className="flex-1 md:flex-none bg-[#E5E7EB] hover:bg-[#D1D5DB] text-[#111620] font-semibold h-11 rounded-lg">

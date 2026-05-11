@@ -71,17 +71,19 @@ export function Sidebar() {
         `}>
         <div
           className={`h-16 flex items-center ${isCollapsed ? 'md:justify-center px-4' : 'justify-between px-6'} border-b border-gray-100`}>
-          <h1
-            className={`text-xl font-bold text-primary flex items-center gap-3  tracking-wide whitespace-nowrap overflow-hidden ${isCollapsed ? 'md:hidden' : 'block'}`}>
-            <Image
-              src={'/auth.logo.png'}
-              alt="Logo"
-              width={200}
-              height={200}
-              className="w-8"
-            />
-            Kenzo
-          </h1>
+          <Link href={'/'}>
+            <h1
+              className={`text-xl font-bold text-primary flex items-center gap-3  tracking-wide whitespace-nowrap overflow-hidden ${isCollapsed ? 'md:hidden' : 'block'}`}>
+              <Image
+                src={'/auth.logo.png'}
+                alt="Logo"
+                width={200}
+                height={200}
+                className="w-8"
+              />
+              Kenzo
+            </h1>
+          </Link>
           {/* Logo icon for desktop collapsed state */}
           <h1
             className={`hidden text-xl font-bold text-primary ${isCollapsed ? 'md:block' : 'md:hidden'}`}>
