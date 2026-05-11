@@ -1,8 +1,14 @@
-export * from './card';
+// export * from './card';
 export * from './code';
 export * from './shared/Footer';
 export * from './components/header';
 export * from './components/ui/button';
 export * from './components/logo';
+export * from './components/ui/badge';
 export * from './components/pricing-section';
-export { default as NumberFlow } from '@number-flow/react';
+export * from './components/ui/card';
+export * from './components/ui/form';
+export * from './components/ui/dialog';
+export * from './components/ui/input';
+export * from './components/ui/textarea';
+export {default as NumberFlow} from '@number-flow/react';
