@@ -11,4 +11,7 @@ export * from './components/ui/form';
 export * from './components/ui/dialog';
 export * from './components/ui/input';
 export * from './components/ui/textarea';
+export * from './components/ui/command';
+export * from './components/ui/popover';
+export * from './lib/utils';
 export {default as NumberFlow} from '@number-flow/react';

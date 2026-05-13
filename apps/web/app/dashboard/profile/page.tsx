@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable react-hooks/incompatible-library */
 'use client';
 
@@ -7,6 +8,22 @@ import {zodResolver} from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import {toast} from 'sonner';
 import {Button} from '@repo/ui';
+import {Country, City} from 'country-state-city';
+import {useEffect, useState} from 'react';
+import {Check, ChevronsUpDown} from 'lucide-react';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+  cn,
+} from '@repo/ui';
+import Image from 'next/image';
 
 // 1. Validation Schema
 const profileSchema = z
@@ -35,23 +52,23 @@ const profileSchema = z
 type ProfileFormValues = z.infer<typeof profileSchema>;
 
 const ALL_GENRES = [
-  'Afrobeats',
-  'K-Pop',
-  'Indie Rock',
-  'Synthwave',
-  'Lo-fi Hip Hop',
-  'Classic Rock',
-  'Jazz',
-  'Bluegrass',
-  'Pop Punk',
-  'Flamenco',
+  'Afrobeat',
+  'Gengetone',
+  'Afro-fusion',
+  'Amapiano',
+  'Bongo Flava',
+  'Hip Hop',
+  'RnB',
+  'Pop',
+  'Kompa',
+  'Reggae',
+  'Dancehall',
   'Soul',
-  'Funk',
-  'R&B',
-  'Alternative',
-  'Dubstep',
-  'Psychedelic Rock',
-  'Tropical House',
+  'Rock',
+  'Latin',
+  'Jazz',
+  'Country',
+  'Lingala',
 ];
 
 export default function ProfileContent() {
@@ -67,22 +84,43 @@ export default function ProfileContent() {
       firstName: 'DJ Kwame',
       lastName: 'Beats',
       city: 'Accra',
-      country: 'Africa',
+      country: 'GH',
       email: 'kwame@djkwamebeats.com',
       phone: '+233 55 123 4567',
-      genres: [
-        'Afrobeats',
-        'K-Pop',
-        'Indie Rock',
-        'Classic Rock',
-        'Bluegrass',
-        'Pop Punk',
-        'Alternative',
-      ],
+      genres: ['Afrobeat', 'Hip Hop', 'RnB', 'Reggae'],
       currentPassword: '',
       newPassword: '',
     },
   });
+
+  const [countries] = useState(Country.getAllCountries());
+  const selectedCountry = watch('country');
+  const [cities, setCities] = useState<any[]>([]);
+  const [countryOpen, setCountryOpen] = useState(false);
+  const [cityOpen, setCityOpen] = useState(false);
+
+  useEffect(() => {
+    if (selectedCountry) {
+      // Handle both full name and ISO code if necessary, but country-state-city usually uses ISO code
+      // If the default value is 'Africa' (which is not a country), we might need to handle it.
+      const countryCities = City.getCitiesOfCountry(selectedCountry);
+      setCities(countryCities || []);
+    } else {
+      setCities([]);
+    }
+  }, [selectedCountry]);
+
+  // Reset city when country changes
+  useEffect(() => {
+    if (selectedCountry) {
+      const currentCity = watch('city');
+      const countryCities = City.getCitiesOfCountry(selectedCountry);
+      const cityExists = countryCities?.some(c => c.name === currentCity) ?? false;
+      if (!cityExists) {
+        setValue('city', '', { shouldDirty: true });
+      }
+    }
+  }, [selectedCountry, setValue, watch]);
 
   const selectedGenres = watch('genres');
 
@@ -159,13 +197,48 @@ export default function ProfileContent() {
             <div>
               <label className={labelClass}>City</label>
               <div className="relative">
-                <select
-                  {...register('city')}
-                  className={`${inputBaseClass} appearance-none cursor-pointer`}>
-                  <option value="Accra">Accra</option>
-                  <option value="Lagos">Lagos</option>
-                  <option value="Nairobi">Nairobi</option>
-                </select>
+                <Popover open={cityOpen} onOpenChange={setCityOpen}>
+                  <PopoverTrigger asChild>
+                    <button
+                      type="button"
+                      role="combobox"
+                      aria-expanded={cityOpen}
+                      aria-controls="city-options"
+                      className={`${inputBaseClass} flex items-center justify-between`}>
+                      {watch('city') || <span className="text-gray-400">Select City</span>}
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent id="city-options" className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+                    <Command>
+                      <CommandInput placeholder="Search city..." />
+                      <CommandList>
+                        <CommandEmpty>
+                          {selectedCountry ? 'No city found.' : 'Select a country first.'}
+                        </CommandEmpty>
+                        <CommandGroup>
+                          {cities.map((city) => (
+                            <CommandItem
+                              key={`${city.name}-${city.latitude}`}
+                              value={city.name}
+                              onSelect={() => {
+                                setValue('city', city.name, {shouldDirty: true});
+                                setCityOpen(false);
+                              }}>
+                              <Check
+                                className={cn(
+                                  'mr-2 h-4 w-4',
+                                  watch('city') === city.name ? 'opacity-100' : 'opacity-0',
+                                )}
+                              />
+                              {city.name}
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
                 <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-400">
                   <svg
                     className="h-4 w-4"
@@ -190,13 +263,70 @@ export default function ProfileContent() {
             <div>
               <label className={labelClass}>Country</label>
               <div className="relative">
-                <select
-                  {...register('country')}
-                  className={`${inputBaseClass} appearance-none cursor-pointer`}>
-                  <option value="Africa">Africa</option>
-                  <option value="Ghana">Ghana</option>
-                  <option value="Nigeria">Nigeria</option>
-                </select>
+                <Popover open={countryOpen} onOpenChange={setCountryOpen} >
+                  <PopoverTrigger asChild>
+                    <button
+                      type="button"
+                      role="combobox"
+                      aria-expanded={countryOpen}
+                      aria-controls="country-options"
+                      className={`${inputBaseClass} flex cursor-pointer items-center justify-between`}>
+                      {selectedCountry ? (
+                        <div className="flex items-center gap-2">
+                          <Image
+                            src={`https://flagcdn.com/w40/${selectedCountry.toLowerCase()}.png`}
+                            alt={selectedCountry}
+                            width={20}
+                            height={15}
+                            className="object-contain"
+                          />
+                          {countries.find((c) => c.isoCode === selectedCountry)?.name}
+                        </div>
+                      ) : (
+                        <span className="text-gray-400">Select Country</span>
+                      )}
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent id="country-options" className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+                    <Command>
+                      <CommandInput placeholder="Search country..." />
+                      <CommandList>
+                        <CommandEmpty>No country found.</CommandEmpty>
+                        <CommandGroup>
+                          {countries.map((country) => (
+                            <CommandItem
+                              key={country.isoCode}
+                              value={country.name}
+                              onSelect={() => {
+                                setValue('country', country.isoCode, {shouldDirty: true});
+                                setCountryOpen(false);
+                              }}>
+                              <Check
+                                className={cn(
+                                  'mr-2 h-4 w-4',
+                                  selectedCountry === country.isoCode
+                                    ? 'opacity-100'
+                                    : 'opacity-0',
+                                )}
+                              />
+                              <div className="flex items-center gap-2">
+                                <Image
+                                  src={`https://flagcdn.com/w40/${country.isoCode.toLowerCase()}.png`}
+                                  alt={country.name}
+                                  width={20}
+                                  height={15}
+                                  className="object-contain"
+                                />
+                                {country.name}
+                              </div>
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
                 <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-400">
                   <svg
                     className="h-4 w-4"
