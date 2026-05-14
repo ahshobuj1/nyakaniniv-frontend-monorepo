@@ -32,14 +32,14 @@ import Link from 'next/link';
 const summaryStats = [
   {
     title: 'Total Earnings',
-    value: '₵45,280',
+    value: '45,280',
     trend: '+22.5%',
     isPositive: true,
     subtitle: 'vs last month',
   },
   {
     title: 'This Month',
-    value: '₵8,400',
+    value: '8,400',
     trend: '+18.4%',
     isPositive: true,
     subtitle: 'vs last month',
@@ -208,7 +208,7 @@ export default function DashboardOverview() {
             <CardContent className="p-6 md:p-8 flex-1">
               <div className="flex flex-col md:flex-row gap-6 justify-between items-center mb-8">
                 <h2 className="text-[18px] font-bold text-[#111620]">
-                  Revenue Overview
+                  Revenue Overview (KSh)
                 </h2>
 
                 <div className="flex gap-2">
@@ -227,7 +227,7 @@ export default function DashboardOverview() {
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart
                     data={revenueData}
-                    margin={{top: 10, right: 0, left: -20, bottom: 0}}>
+                    margin={{top: 10, right: 0, left: -10, bottom: 0}}>
                     <defs>
                       <linearGradient
                         id="colorRevenue"
@@ -262,8 +262,9 @@ export default function DashboardOverview() {
                     <YAxis
                       axisLine={false}
                       tickLine={false}
-                      tick={{fill: '#A1A1AA', fontSize: 12}}
-                      tickFormatter={(value) => `₵${value / 1000}k`}
+                      tick={{fill: '#A1A1AA', fontSize: 12, textAnchor: 'start'}}
+                      tickFormatter={(value) => `${value / 1000}k`}
+                      dx={-40}
                     />
                     <Tooltip content={<CustomTooltip />} />
                     <Area

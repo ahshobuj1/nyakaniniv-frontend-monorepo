@@ -65,7 +65,7 @@ export default function SetupProfilePage() {
   } = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
-      country: '',
+      country: 'KE',
       city: '',
       genres: [],
     },

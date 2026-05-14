@@ -111,21 +111,21 @@ const billingHistoryData: BillingHistory[] = [
     id: 'PAY-001',
     description: 'Pro Plan - October 2026',
     date: '22 Dec 2025',
-    amount: '$29',
+    amount: '29',
     status: 'paid',
   },
   {
     id: 'PAY-002',
     description: 'Pro Plan - September 2025',
     date: '01 Jan 2026',
-    amount: '$29',
+    amount: '29',
     status: 'paid',
   },
   {
     id: 'PAY-003',
     description: 'Pro Plan - August 2025',
     date: '14 Feb 2026',
-    amount: '$29',
+    amount: '29',
     status: 'paid',
   },
   {
@@ -175,7 +175,7 @@ export default function BillingSubscriptionPage() {
                     </Badge>
                   </div>
                   <p className="text-[#787878] text-[14px]">
-                    $28/month · Renews November 1, 2024
+                    KSh 28/month · Renews November 1, 2024
                   </p>
                 </div>
               </div>
@@ -304,12 +304,12 @@ export default function BillingSubscriptionPage() {
                   </p>
 
                   <div className="flex items-baseline mb-8">
-                    <span className="text-[48px] font-bold text-[#111620] flex items-center tracking-tight">
-                      $
+                    <span className="text-[#111620] flex items-center tracking-tight">
+                      KSh
                       <NumberFlow
                         value={plan.price[frequency]}
                         format={{useGrouping: false}}
-                        className="font-bold"
+                        className="font-bold text-[48px]"
                       />
                     </span>
                     <span className="text-[#787878] text-[14px] ml-1 font-medium">
@@ -377,8 +377,8 @@ export default function BillingSubscriptionPage() {
                     <th className="py-5 px-8 text-[12px] font-semibold text-[#A1A1AA] uppercase tracking-wider w-[20%]">
                       Date
                     </th>
-                    <th className="py-5 px-8 text-[12px] font-semibold text-[#A1A1AA] uppercase tracking-wider w-[15%]">
-                      Amount
+                    <th className="py-5 px-8 text-[12px] font-semibold text-[#A1A1AA] tracking-wider w-[15%]">
+                      Amount (KSh)
                     </th>
                     <th className="py-5 px-8 text-[12px] font-semibold text-[#A1A1AA] uppercase tracking-wider w-[15%]">
                       Status

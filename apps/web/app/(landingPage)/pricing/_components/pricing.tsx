@@ -159,12 +159,12 @@ export default function PricingSection() {
                 </h3>
                 <p className="text-gray-500 text-sm mb-6">{plan.info}</p>
                 <div className="flex items-baseline mb-8">
-                  <span className="text-6xl font-bold text-gray-900 flex items-center">
-                    $
+                  <span className="text-gray-900 flex items-center">
+                    KSh
                     <NumberFlow
                       value={plan.price[frequency]}
                       format={{useGrouping: false}}
-                      className="font-bold"
+                      className="text-6xl font-bold"
                     />
                   </span>
                   <span className="text-gray-500 ml-1">{plan.period}</span>

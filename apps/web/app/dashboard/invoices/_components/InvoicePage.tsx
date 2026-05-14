@@ -29,7 +29,7 @@ const dummyInvoices: Invoice[] = [
     clientName: 'Omar Al-Farsi',
     email: 'omar@email.com',
     date: '22 Dec 2025',
-    total: '₵3,136',
+    total: '3,136',
     status: 'Paid',
   },
   {
@@ -38,7 +38,7 @@ const dummyInvoices: Invoice[] = [
     clientName: 'Lila Chen',
     email: 'lila@email.com',
     date: '01 Jan 2026',
-    total: '₵2,016',
+    total: '2,016',
     status: 'Unpaid',
   },
   {
@@ -47,7 +47,7 @@ const dummyInvoices: Invoice[] = [
     clientName: 'Rajesh Kumar',
     email: 'rajesh@email.com',
     date: '14 Feb 2026',
-    total: '₵8,960',
+    total: '8,960',
     status: 'Paid',
   },
   {
@@ -56,7 +56,7 @@ const dummyInvoices: Invoice[] = [
     clientName: 'Sofia Martinez',
     email: 'sofia@email.com',
     date: '03 Mar 2026',
-    total: '₵1,680',
+    total: '1,680',
     status: 'Paid',
   },
   {
@@ -65,7 +65,7 @@ const dummyInvoices: Invoice[] = [
     clientName: 'Isabella Rossi',
     email: 'isabella@email.com',
     date: '19 Apr 2026',
-    total: '₵1,265',
+    total: '1,265',
     status: 'Unpaid',
   },
   {
@@ -74,7 +74,7 @@ const dummyInvoices: Invoice[] = [
     clientName: 'Kofi Boateng',
     email: 'kofi@email.com',
     date: '27 May 2026',
-    total: '₵4,568',
+    total: '4,568',
     status: 'Unpaid',
   },
   {
@@ -83,7 +83,7 @@ const dummyInvoices: Invoice[] = [
     clientName: 'Emily Watson',
     email: 'emily@email.com',
     date: '15 Jun 2026',
-    total: '₵9,524',
+    total: '9,524',
     status: 'Paid',
   },
   {
@@ -92,7 +92,7 @@ const dummyInvoices: Invoice[] = [
     clientName: 'Jasper Lee',
     email: 'jasper@email.com',
     date: '10 Jul 2026',
-    total: '₵3,654',
+    total: '3,654',
     status: 'Paid',
   },
   {
@@ -101,7 +101,7 @@ const dummyInvoices: Invoice[] = [
     clientName: 'Amina Yusuf',
     email: 'amina@email.com',
     date: '25 Aug 2026',
-    total: '₵8,136',
+    total: '8,136',
     status: 'Unpaid',
   },
   {
@@ -110,7 +110,7 @@ const dummyInvoices: Invoice[] = [
     clientName: 'Diego Silva',
     email: 'diego@email.com',
     date: '30 Sep 2026',
-    total: '₵1,857',
+    total: '1,857',
     status: 'Paid',
   },
 ];
@@ -218,8 +218,8 @@ export default function InvoicesPage() {
                     <th className="py-5 px-8 text-[12px] font-semibold text-[#A1A1AA] uppercase tracking-wider w-[20%]">
                       Date
                     </th>
-                    <th className="py-5 px-8 text-[12px] font-semibold text-[#A1A1AA] uppercase tracking-wider w-[15%]">
-                      Total
+                    <th className="py-5 px-8 text-[12px] font-semibold text-[#A1A1AA] tracking-wider w-[15%]">
+                      Total (KSh)
                     </th>
                     <th className="py-5 px-8 text-[12px] font-semibold text-[#A1A1AA] uppercase tracking-wider w-[15%]">
                       Status

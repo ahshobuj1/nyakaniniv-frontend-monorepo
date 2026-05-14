@@ -83,8 +83,8 @@ export default function ProfileContent() {
     defaultValues: {
       firstName: 'DJ Kwame',
       lastName: 'Beats',
-      city: 'Accra',
-      country: 'GH',
+      city: 'Nairobi',
+      country: 'KE',
       email: 'kwame@djkwamebeats.com',
       phone: '+233 55 123 4567',
       genres: ['Afrobeat', 'Hip Hop', 'RnB', 'Reggae'],
@@ -195,6 +195,95 @@ export default function ProfileContent() {
             </div>
 
             <div>
+              <label className={labelClass}>Country</label>
+              <div className="relative">
+                <Popover open={countryOpen} onOpenChange={setCountryOpen} >
+                  <PopoverTrigger asChild>
+                    <button
+                      type="button"
+                      role="combobox"
+                      aria-expanded={countryOpen}
+                      aria-controls="country-options"
+                      className={`${inputBaseClass} flex cursor-pointer items-center justify-between`}>
+                      {selectedCountry ? (
+                        <div className="flex items-center gap-2">
+                          <Image
+                            src={`https://flagcdn.com/w40/${selectedCountry.toLowerCase()}.png`}
+                            alt={selectedCountry}
+                            width={20}
+                            height={15}
+                            className="object-contain"
+                          />
+                          {countries.find((c) => c.isoCode === selectedCountry)?.name}
+                        </div>
+                      ) : (
+                        <span className="text-gray-400">Select Country</span>
+                      )}
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </button>
+                  </PopoverTrigger>
+
+                  <PopoverContent id="country-options" className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+                    <Command>
+                      <CommandInput placeholder="Search country..." />
+                      <CommandList>
+                        <CommandEmpty>No country found.</CommandEmpty>
+                        <CommandGroup>
+                          {countries.map((country) => (
+                            <CommandItem
+                              key={country.isoCode}
+                              value={country.name}
+                              onSelect={() => {
+                                setValue('country', country.isoCode, {shouldDirty: true});
+                                setCountryOpen(false);
+                              }}>
+                              <Check
+                                className={cn(
+                                  'mr-2 h-4 w-4',
+                                  selectedCountry === country.isoCode
+                                    ? 'opacity-100'
+                                    : 'opacity-0',
+                                )}
+                              />
+                              <div className="flex items-center gap-2">
+                                <Image
+                                  src={`https://flagcdn.com/w40/${country.isoCode.toLowerCase()}.png`}
+                                  alt={country.name}
+                                  width={20}
+                                  height={15}
+                                  className="object-contain"
+                                />
+                                {country.name}
+                              </div>
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-400">
+                  <svg
+                    className="h-4 w-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M19 9l-7 7-7-7"></path>
+                  </svg>
+                </div>
+              </div>
+              {errors.country && (
+                <p className="text-red-500 text-xs mt-1.5">
+                  {errors.country.message}
+                </p>
+              )}
+            </div>
+            
+            <div>
               <label className={labelClass}>City</label>
               <div className="relative">
                 <Popover open={cityOpen} onOpenChange={setCityOpen}>
@@ -256,94 +345,6 @@ export default function ProfileContent() {
               {errors.city && (
                 <p className="text-red-500 text-xs mt-1.5">
                   {errors.city.message}
-                </p>
-              )}
-            </div>
-
-            <div>
-              <label className={labelClass}>Country</label>
-              <div className="relative">
-                <Popover open={countryOpen} onOpenChange={setCountryOpen} >
-                  <PopoverTrigger asChild>
-                    <button
-                      type="button"
-                      role="combobox"
-                      aria-expanded={countryOpen}
-                      aria-controls="country-options"
-                      className={`${inputBaseClass} flex cursor-pointer items-center justify-between`}>
-                      {selectedCountry ? (
-                        <div className="flex items-center gap-2">
-                          <Image
-                            src={`https://flagcdn.com/w40/${selectedCountry.toLowerCase()}.png`}
-                            alt={selectedCountry}
-                            width={20}
-                            height={15}
-                            className="object-contain"
-                          />
-                          {countries.find((c) => c.isoCode === selectedCountry)?.name}
-                        </div>
-                      ) : (
-                        <span className="text-gray-400">Select Country</span>
-                      )}
-                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                    </button>
-                  </PopoverTrigger>
-                  <PopoverContent id="country-options" className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
-                    <Command>
-                      <CommandInput placeholder="Search country..." />
-                      <CommandList>
-                        <CommandEmpty>No country found.</CommandEmpty>
-                        <CommandGroup>
-                          {countries.map((country) => (
-                            <CommandItem
-                              key={country.isoCode}
-                              value={country.name}
-                              onSelect={() => {
-                                setValue('country', country.isoCode, {shouldDirty: true});
-                                setCountryOpen(false);
-                              }}>
-                              <Check
-                                className={cn(
-                                  'mr-2 h-4 w-4',
-                                  selectedCountry === country.isoCode
-                                    ? 'opacity-100'
-                                    : 'opacity-0',
-                                )}
-                              />
-                              <div className="flex items-center gap-2">
-                                <Image
-                                  src={`https://flagcdn.com/w40/${country.isoCode.toLowerCase()}.png`}
-                                  alt={country.name}
-                                  width={20}
-                                  height={15}
-                                  className="object-contain"
-                                />
-                                {country.name}
-                              </div>
-                            </CommandItem>
-                          ))}
-                        </CommandGroup>
-                      </CommandList>
-                    </Command>
-                  </PopoverContent>
-                </Popover>
-                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-400">
-                  <svg
-                    className="h-4 w-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24">
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M19 9l-7 7-7-7"></path>
-                  </svg>
-                </div>
-              </div>
-              {errors.country && (
-                <p className="text-red-500 text-xs mt-1.5">
-                  {errors.country.message}
                 </p>
               )}
             </div>
