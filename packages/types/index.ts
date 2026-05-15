@@ -1,3 +1,5 @@
+export * from './event';
+
 import React from 'react';
 
 export type Theme = {
@@ -13,7 +15,12 @@ export type Section = {
 
 export type Template = {
   id: string;
-  sections: Section[];
+  Navbar: React.ComponentType<any>;
+  Footer: React.ComponentType<any>;
+  landingSections: Section[];
+  BookingPage: React.ComponentType<any>;
+  defaultContent: Content;
+  defaultTheme: Theme;
 };
 
 export type Content = Record<string, any>;

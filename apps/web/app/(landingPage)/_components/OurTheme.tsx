@@ -2,6 +2,7 @@
 
 import {useRef} from 'react';
 import Image from 'next/image';
+import {useRouter} from 'next/navigation';
 import {ChevronLeft, ChevronRight} from 'lucide-react';
 
 export interface ThemeItem {
@@ -12,22 +13,22 @@ export interface ThemeItem {
 
 const themeData: ThemeItem[] = [
   {
-    id: 'theme-1',
+    id: 'azura',
     name: 'DJ AURA',
     image: '/theme/Theme1.png',
   },
   {
-    id: 'theme-2',
+    id: 'kenzo',
     name: 'KENZO',
     image: '/theme/Theme2.png',
   },
   {
-    id: 'theme-3',
+    id: 'azura', // Temporary fallback
     name: 'NIGHTLIFE',
     image: '/theme/Theme1.png',
   },
   {
-    id: 'theme-4',
+    id: 'kenzo', // Temporary fallback
     name: 'ACOUSTIC',
     image: '/theme/Theme2.png',
   },
@@ -35,6 +36,11 @@ const themeData: ThemeItem[] = [
 
 export default function OurThemes() {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
+
+  const handlePreview = (themeId: string) => {
+    router.push(`/themes/preview?themeId=${themeId}`);
+  };
 
   const scroll = (direction: 'left' | 'right') => {
     if (scrollContainerRef.current) {
@@ -73,6 +79,7 @@ export default function OurThemes() {
             {themeData.map((theme) => (
               <div
                 key={theme.id}
+                onClick={() => handlePreview(theme.id)}
                 className="min-w-full md:min-w-[calc(50%-1rem)] snap-center group/card cursor-pointer">
                 <div className="relative w-full aspect-16/13 bg-white shadow-sm hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] transition-all duration-500 ease-out overflow-hidden transform group-hover/card:-translate-y-2">
                   <Image

@@ -1,16 +1,16 @@
-import TemplateRenderer from "@repo/builder";
-import { dummyUsers } from "../data";
-import { notFound } from "next/navigation";
+import TemplateRenderer from '@repo/builder';
+import {dummyUsers} from '../data';
+import {notFound} from 'next/navigation';
 
 interface PageProps {
-  params: Promise<{ username: string }>;
-  searchParams: Promise<{ templateId?: string }>;
+  params: Promise<{username: string}>;
+  searchParams: Promise<{templateId?: string}>;
 }
 
-export default async function Page({ params, searchParams }: PageProps) {
-  const { username } = await params;
-  const { templateId: previewTemplateId } = await searchParams;
-  
+export default async function Page({params, searchParams}: PageProps) {
+  const {username} = await params;
+  const {templateId: previewTemplateId} = await searchParams;
+
   const userData = dummyUsers[username.toLowerCase()];
 
   if (!userData) {
@@ -25,8 +25,7 @@ export default async function Page({ params, searchParams }: PageProps) {
       templateId={activeTemplateId}
       content={userData.content}
       theme={userData.theme}
+      baseUrl={`/${username}`}
     />
   );
 }
-
-

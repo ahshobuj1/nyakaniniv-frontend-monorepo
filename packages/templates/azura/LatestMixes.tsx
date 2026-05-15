@@ -42,19 +42,19 @@ function MixCard({img, title, genre, time, delay}: any) {
 export default function LatestMixes({content}: any) {
   const mixes = content?.mixes || [
     {
-      img: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?q=80&w=2070&auto=format&fit=crop',
+      img: '/theme/aura/mixes-video-avator-1.png',
       title: 'Lagos Nights Vol.3',
       genre: 'Amapiano',
       time: '58:20',
     },
     {
-      img: 'https://images.unsplash.com/photo-1493225255756-d9584f8606e9?q=80&w=2070&auto=format&fit=crop',
+      img: '/theme/aura/mixes-video-avator-2.png',
       title: 'Cape Town Grooves',
       genre: 'House',
       time: '45:15',
     },
     {
-      img: 'https://images.unsplash.com/photo-1514525253361-bee8718a7439?q=80&w=1964&auto=format&fit=crop',
+      img: '/theme/aura/mixes-video-avator-3.png',
       title: 'Nairobi Vibes',
       genre: 'Afrobeats',
       time: '52:30',
@@ -67,7 +67,7 @@ export default function LatestMixes({content}: any) {
       whileInView="show"
       viewport={{once: true, amount: 0.15}}
       variants={{show: {transition: {staggerChildren: 0.08}}}}
-      className="bg-[#f0f0f0] py-[120px]">
+      className="bg-[#f0f0f0] py-8 lg:py-[120px]">
       <div className="max-w-[1440px] mx-auto px-6 lg:px-[80px] flex flex-col gap-[48px] items-center">
         <motion.div
           variants={fadeUp}
@@ -100,7 +100,7 @@ export default function LatestMixes({content}: any) {
           className="bg-[#fbfbfb] rounded-[16px] shadow-sm p-[24px] flex flex-col md:flex-row items-center gap-[30px] w-full">
           <div className="relative size-[100px] shrink-0">
             <Image
-              src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=2070&auto=format&fit=crop"
+              src="/theme/aura/audio.png"
               alt="Now playing"
               fill
               className="rounded-[6px] object-cover"

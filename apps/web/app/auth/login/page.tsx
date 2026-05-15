@@ -9,6 +9,7 @@ import {Eye, EyeOff} from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import {Button} from '@repo/ui';
+import {useRouter} from 'next/navigation';
 
 const loginSchema = z.object({
   email: z.string().min(1, 'Email is required').email('Invalid email address'),
@@ -18,6 +19,7 @@ const loginSchema = z.object({
 type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
+  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
 
   const {
@@ -32,11 +34,12 @@ export default function LoginPage() {
     console.log(data);
     await new Promise((resolve) => setTimeout(resolve, 1000));
     toast.success('Successfully logged in!');
+    router.push('/dashboard');
   };
 
   return (
     <div className="min-h-screen w-full flex flex-col items-center justify-center p-4 font-sans">
-      <div className="w-full md:min-w-150">
+      <div className="w-full md:max-w-150 mx-auto">
         <div className="flex flex-col items-center mb-6">
           <Link className="rounded-md p-2 hover:bg-muted/50 py-4" href="/">
             <Image

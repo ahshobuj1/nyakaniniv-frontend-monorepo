@@ -15,15 +15,15 @@ export const navLinks = [
   },
   {
     label: 'Features',
-    href: '#features',
+    href: '/#features',
   },
   {
     label: 'How it Works',
-    href: '#howitworks',
+    href: '/#howitworks',
   },
   {
     label: 'Themes',
-    href: '#themes',
+    href: '/#themes',
   },
   {
     label: 'Pricing',
@@ -31,7 +31,7 @@ export const navLinks = [
   },
   {
     label: 'Support',
-    href: '#support',
+    href: '/support',
   },
 ];
 
@@ -93,10 +93,10 @@ export function Header() {
           href="/">
           <Image
             src={'/home/upbeat.png'}
-            width={200}
-            height={200}
+            width={500}
+            height={500}
             alt="logo"
-            className="max-w-15 max-h-15 bg-contain"
+            className="max-w-15 bg-contain"
           />
         </Link>
 
@@ -120,7 +120,7 @@ export function Header() {
           <Link href={'/auth/login'}>
             <Button
               size="lg"
-              className="bg-primary px-10 py-4 text-lg font-semibold text-white hover:bg-[#e02a30]">
+              className="bg-primary rounded-[2px] px-10 py-4 text-lg font-semibold text-white hover:bg-[#e02a30]">
               Log In
             </Button>
           </Link>
