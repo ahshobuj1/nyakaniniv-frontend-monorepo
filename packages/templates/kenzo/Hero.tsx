@@ -19,7 +19,7 @@ export default function Hero({content}: HeroProps) {
   const description =
     content?.hero?.heroDescription ||
     'International DJ and producer bringing the best of Afro-fusion, Amapiano, and Deep House to stages worldwide.';
-  const image = '/theme/kenzo/kenzo-hero.png';
+  const image = '/theme/kenzo/hero-dark.png';
   // const image = content?.hero?.heroImage || '/theme/kenzo/kenzo-hero.png';
   const badgeText = content?.hero?.badgeText || 'AVAILABLE FOR BOOKING';
 
@@ -27,7 +27,7 @@ export default function Hero({content}: HeroProps) {
     <section className="relative w-full min-h-screen flex items-center overflow-hidden bg-black">
       <div className="absolute inset-0 z-0">
         <Image
-          src={image}
+          src={content?.hero?.heroImage || image}
           alt="Hero Background"
           fill
           priority

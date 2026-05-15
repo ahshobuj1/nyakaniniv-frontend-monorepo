@@ -12,7 +12,7 @@ export default function Story({content}: any) {
   const description2 =
     content?.story?.description2 ||
     'Known for seamless transitions and an unparalleled ability to read the room, every set is a unique experience tailored to elevate the moment.';
-  const mainImage = content?.story?.mainImage || '/theme/kenzo/stroy.png';
+  const mainImage = content?.story?.mainImage || '/theme/kenzo/story.png';
   const bgImage = content?.story?.bgImage || '/theme/kenzo/stroy-bg.png';
 
   const stats = content?.story?.stats || [

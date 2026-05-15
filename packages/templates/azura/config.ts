@@ -28,12 +28,11 @@ export const azuraTemplate: Template = {
     heroTitle: 'Bringing the energy to every dancefloor.',
     heroDescription:
       'Afrobeat, Amapiano, and Deep House specialist. Creating unforgettable rhythmic experiences across Africa and beyond.',
-    heroImage: '/theme/aura/aura-hero.jpg',
+    heroImage: '/theme/aura/default/aura-hero-1.png',
     behindDecksTitle: 'Behind the Decks',
     behindDecksBio:
       'With over 8 years of experience rocking crowds from Nairobi to Lagos, DJ Aura blends traditional African rhythms with modern electronic beats.',
-    behindDecksImage:
-      'https://images.unsplash.com/photo-1598387993441-a364f854c3e1?q=80&w=2076&auto=format&fit=crop',
+    behindDecksImage: '/theme/aura/default/aura-bihind-the-decks.png',
     aboutText:
       'We are a DJ service dedicated to bringing the best music experience to your events. Our team of professionals ensures every beat is perfect.',
     email: 'contact@djkwamebeats.com',
@@ -42,10 +41,10 @@ export const azuraTemplate: Template = {
     title: 'Live In Action',
     subtitle: 'Energy from recent performances.',
     liveActionImages: [
-      '/theme/aura/live-action-1.png',
-      '/theme/aura/live-action-2.png',
-      '/theme/aura/live-action-3.png',
-      '/theme/aura/live-action-4.png',
+      '/theme/aura/default/live-action-1.png',
+      '/theme/aura/default/live-action-2.png',
+      '/theme/aura/default/live-action-3.png',
+      '/theme/aura/default/live-action-4.png',
     ],
     footer: {
       logoText: 'DJ AURA',

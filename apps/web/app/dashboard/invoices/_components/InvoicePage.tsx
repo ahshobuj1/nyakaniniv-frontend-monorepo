@@ -219,7 +219,7 @@ export default function InvoicesPage() {
                       Date
                     </th>
                     <th className="py-5 px-8 text-[12px] font-semibold text-[#A1A1AA] tracking-wider w-[15%]">
-                      Total (KSh)
+                      Total (KES)
                     </th>
                     <th className="py-5 px-8 text-[12px] font-semibold text-[#A1A1AA] uppercase tracking-wider w-[15%]">
                       Status

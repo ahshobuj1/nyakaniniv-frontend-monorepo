@@ -15,10 +15,10 @@ export default function LiveInAction({content}: LiveInActionProps) {
   const title = content?.title || 'Live In Action';
   const subtitle = content?.subtitle || 'Energy from recent performances.';
   const images = content?.images || [
-    '/theme/aura/live-action-1.png',
-    '/theme/aura/live-action-2.png',
-    '/theme/aura/live-action-3.png',
-    '/theme/aura/live-action-4.png',
+    '/theme/aura/default/live-action-1.png',
+    '/theme/aura/default/live-action-2.png',
+    '/theme/aura/default/live-action-3.png',
+    '/theme/aura/default/live-action-4.png',
   ];
 
   return (

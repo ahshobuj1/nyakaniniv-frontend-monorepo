@@ -38,7 +38,7 @@ export const kenzoTemplate: Template = {
       heroTitle: 'Feel the Energy.\nOwn the Night.',
       heroDescription:
         'International DJ and producer bringing the best of Afro-fusion, Amapiano, and Deep House to stages worldwide.',
-      heroImage: '/theme/kenzo/kenzo-hero.png',
+      heroImage: '/theme/kenzo/hero-dark.png',
       badgeText: 'AVAILABLE FOR BOOKING',
       primaryButtonText: 'Book The DJ',
       secondaryButtonText: 'Listen to Mixes',
@@ -57,7 +57,7 @@ export const kenzoTemplate: Template = {
         'With over a decade of experience moving crowds from intimate underground clubs to massive festival stages, DJ Kenzo creates sonic journeys that blend cultural rhythms with modern electronic beats.',
       description2:
         'Known for seamless transitions and an unparalleled ability to read the room, every set is a unique experience tailored to elevate the moment.',
-      mainImage: '/theme/kenzo/stroy.png',
+      mainImage: '/theme/kenzo/story.png',
       bgImage: '/theme/kenzo/stroy-bg.png',
       stats: [
         {value: '10+', label: 'Years Active'},
@@ -175,11 +175,11 @@ export const kenzoTemplate: Template = {
       title: 'Gallery Highlights',
       subtitle: 'Energy from recent performances.',
       images: [
-        '/theme/kenzo/gallary-1.png', // Left Top
-        '/theme/kenzo/gallary-2.png', // Left Bottom
-        '/theme/kenzo/gallary-3.png', // Center Large
-        '/theme/kenzo/gallary-4.png', // Right Top
-        '/theme/kenzo/gallary-5.png', // Right Bottom
+        '/theme/kenzo/default/gallary-1.png', // Left Top
+        '/theme/kenzo/default/gallary-2.png', // Left Bottom
+        '/theme/kenzo/default/gallary.png', // Center Large
+        '/theme/kenzo/default/gallary-4.png', // Right Top
+        '/theme/kenzo/default/gallary-3.png', // Right Bottom
       ],
     },
 

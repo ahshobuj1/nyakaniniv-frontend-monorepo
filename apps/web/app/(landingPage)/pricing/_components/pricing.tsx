@@ -160,7 +160,7 @@ export default function PricingSection() {
                 <p className="text-gray-500 text-sm mb-6">{plan.info}</p>
                 <div className="flex items-baseline mb-8">
                   <span className="text-gray-900 flex items-center">
-                    KSh
+                    KES
                     <NumberFlow
                       value={plan.price[frequency]}
                       format={{useGrouping: false}}

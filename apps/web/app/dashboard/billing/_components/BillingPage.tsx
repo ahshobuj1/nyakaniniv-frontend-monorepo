@@ -175,7 +175,7 @@ export default function BillingSubscriptionPage() {
                     </Badge>
                   </div>
                   <p className="text-[#787878] text-[14px]">
-                    KSh 28/month · Renews November 1, 2024
+                    KES 28/month · Renews November 1, 2024
                   </p>
                 </div>
               </div>
@@ -305,7 +305,7 @@ export default function BillingSubscriptionPage() {
 
                   <div className="flex items-baseline mb-8">
                     <span className="text-[#111620] flex items-center tracking-tight">
-                      KSh
+                      KES
                       <NumberFlow
                         value={plan.price[frequency]}
                         format={{useGrouping: false}}
@@ -378,7 +378,7 @@ export default function BillingSubscriptionPage() {
                       Date
                     </th>
                     <th className="py-5 px-8 text-[12px] font-semibold text-[#A1A1AA] tracking-wider w-[15%]">
-                      Amount (KSh)
+                      Amount (KES)
                     </th>
                     <th className="py-5 px-8 text-[12px] font-semibold text-[#A1A1AA] uppercase tracking-wider w-[15%]">
                       Status
