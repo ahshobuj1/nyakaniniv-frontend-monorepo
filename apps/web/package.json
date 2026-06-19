@@ -14,6 +14,7 @@
     "@repo/templates": "workspace:*",
     "@repo/types": "workspace:*",
     "@repo/ui": "workspace:*",
+    "@repo/store": "workspace:*",
     "country-state-city": "^3.2.1",
     "next": "16.2.4",
     "react": "19.2.4",
