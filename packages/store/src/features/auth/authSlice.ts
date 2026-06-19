@@ -1,8 +1,10 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { authApi } from '../../api/authApi';
+import { User } from '../../types';
 
 export interface AuthState {
   token: string | null;
-  user: any | null;
+  user: User | null;
 }
 
 const initialState: AuthState = {
@@ -16,7 +18,7 @@ const authSlice = createSlice({
   reducers: {
     setCredentials: (
       state,
-      action: PayloadAction<{ user: any; token: string }>
+      action: PayloadAction<{ user: User; token: string }>
     ) => {
       state.user = action.payload.user;
       state.token = action.payload.token;
@@ -25,6 +27,33 @@ const authSlice = createSlice({
       state.user = null;
       state.token = null;
     },
+  },
+  extraReducers: (builder) => {
+    builder.addMatcher(
+      authApi.endpoints.login.matchFulfilled,
+      (state, { payload }) => {
+        // Handle BaseResponse wrapper if present
+        const data = 'data' in payload ? (payload as any).data : payload;
+        if (data?.token) {
+          state.token = data.token;
+          if (data.user) {
+            state.user = data.user;
+          }
+        }
+      }
+    );
+    builder.addMatcher(
+      authApi.endpoints.verifyOtp.matchFulfilled,
+      (state, { payload }) => {
+        const data = 'data' in payload ? (payload as any).data : payload;
+        if (data?.token) {
+          state.token = data.token;
+          if (data.user) {
+            state.user = data.user;
+          }
+        }
+      }
+    );
   },
 });
 

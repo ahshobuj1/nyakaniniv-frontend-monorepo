@@ -9,18 +9,22 @@ import {Eye, EyeOff} from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import {Button} from '@repo/ui';
+import {useRouter} from 'next/navigation';
+import {useRegisterMutation} from '@repo/store';
 
 const signupSchema = z.object({
-  firstName: z.string().min(1, 'First name is required'),
-  lastName: z.string().min(1, 'Last name is required'),
+  firstName: z.string().min(2, 'First name must be at least 2 characters'),
+  lastName: z.string().min(2, 'Last name must be at least 2 characters'),
   email: z.string().min(1, 'Email is required').email('Invalid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
+  password: z.string().min(8, 'Password must be at least 8 characters'),
 });
 
 type SignupFormValues = z.infer<typeof signupSchema>;
 
 export default function SignupPage() {
+  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
+  const [registerApi, {isLoading}] = useRegisterMutation();
 
   const {
     register,
@@ -31,9 +35,14 @@ export default function SignupPage() {
   });
 
   const onSubmit = async (data: SignupFormValues) => {
-    console.log(data);
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    toast.success('Account created successfully!');
+    try {
+      const response = await registerApi(data).unwrap();
+      toast.success(response.message || 'Account created successfully!');
+      router.push(`/auth/verify-email?email=${encodeURIComponent(data.email)}`);
+    } catch (error: any) {
+      const errorMsg = error?.data?.error?.message || error?.data?.message || 'Failed to create account.';
+      toast.error(errorMsg);
+    }
   };
 
   return (
@@ -185,9 +194,9 @@ export default function SignupPage() {
 
             <Button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isSubmitting || isLoading}
               className="w-1/2 bg-primary rounded-none text-white py-6 border-primary text-lg font-medium hover:bg-[#e03939] border-2 transition-colors disabled:opacity-70 disabled:cursor-not-allowed shadow-sm">
-              {isSubmitting ? 'Processing...' : 'Continue'}
+              {isSubmitting || isLoading ? 'Processing...' : 'Continue'}
             </Button>
           </div>
         </form>

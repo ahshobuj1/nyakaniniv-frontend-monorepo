@@ -1,7 +1,7 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import type { RootState } from '../store';
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.mojacares.com/api/v1';
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://upbeatafrica-api.onrender.com' || 'http://localhost:3030';
 
 const baseQuery = fetchBaseQuery({
   baseUrl: BASE_URL,
@@ -33,7 +33,9 @@ export const baseApi = createApi({
     return result;
   },
   tagTypes: [
-    'auth', 'user', 'patient', 'service', 'booking' // Add other tags here
+    'Auth', 'User', 'Tenant', 'Theme', 'Event', 'MixTape', 
+    'Booking', 'Subscription', 'Invoice', 'StripeConnect', 
+    'Client', 'Ticket', 'Notification', 'LandingPage'
   ],
   endpoints: () => ({}), // Endpoints are injected in separate files
 });

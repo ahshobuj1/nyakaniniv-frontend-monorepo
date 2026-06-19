@@ -71,23 +71,35 @@ const ALL_GENRES = [
   'Lingala',
 ];
 
+import {
+  useGetCurrentProfileQuery,
+  useUpdateCurrentProfileMutation,
+  useUpdateTenantProfileMutation,
+} from '@repo/store';
+import LoadingSpinner from '@/components/LoadingSpinner';
+
 export default function ProfileContent() {
+  const { data: profileResponse, isLoading: isProfileLoading, refetch } = useGetCurrentProfileQuery();
+  const [updateUser] = useUpdateCurrentProfileMutation();
+  const [updateTenant] = useUpdateTenantProfileMutation();
+
   const {
     register,
     handleSubmit,
     setValue,
     watch,
+    reset,
     formState: {errors, isSubmitting},
   } = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
-      firstName: 'DJ Kwame',
-      lastName: 'Beats',
-      city: 'Nairobi',
-      country: 'KE',
-      email: 'kwame@djkwamebeats.com',
-      phone: '+233 55 123 4567',
-      genres: ['Afrobeat', 'Hip Hop', 'RnB', 'Reggae'],
+      firstName: '',
+      lastName: '',
+      city: '',
+      country: '',
+      email: '',
+      phone: '',
+      genres: [],
       currentPassword: '',
       newPassword: '',
     },
@@ -99,10 +111,28 @@ export default function ProfileContent() {
   const [countryOpen, setCountryOpen] = useState(false);
   const [cityOpen, setCityOpen] = useState(false);
 
+  // Pre-fill form when profile data loads
+  useEffect(() => {
+    if (profileResponse?.data) {
+      const user = profileResponse.data;
+      const tenant = user.tenant;
+
+      reset({
+        firstName: user.firstName || '',
+        lastName: user.lastName || '',
+        email: user.email || '',
+        phone: '', // Not in schema currently
+        country: tenant?.country || '',
+        city: tenant?.city || '',
+        genres: tenant?.genres || [],
+        currentPassword: '',
+        newPassword: '',
+      });
+    }
+  }, [profileResponse, reset]);
+
   useEffect(() => {
     if (selectedCountry) {
-      // Handle both full name and ISO code if necessary, but country-state-city usually uses ISO code
-      // If the default value is 'Africa' (which is not a country), we might need to handle it.
       const countryCities = City.getCitiesOfCountry(selectedCountry);
       setCities(countryCities || []);
     } else {
@@ -112,17 +142,18 @@ export default function ProfileContent() {
 
   // Reset city when country changes
   useEffect(() => {
-    if (selectedCountry) {
+    if (selectedCountry && profileResponse?.data) {
       const currentCity = watch('city');
       const countryCities = City.getCitiesOfCountry(selectedCountry);
       const cityExists = countryCities?.some(c => c.name === currentCity) ?? false;
-      if (!cityExists) {
+      if (!cityExists && currentCity !== '') {
+        // Only reset if the city doesn't exist in the new country and it wasn't just populated from initial load
         setValue('city', '', { shouldDirty: true });
       }
     }
-  }, [selectedCountry, setValue, watch]);
+  }, [selectedCountry, setValue, watch, profileResponse]);
 
-  const selectedGenres = watch('genres');
+  const selectedGenres = watch('genres') || [];
 
   const toggleGenre = (genre: string) => {
     if (selectedGenres.includes(genre)) {
@@ -138,14 +169,32 @@ export default function ProfileContent() {
 
   const onSubmit = async (data: ProfileFormValues) => {
     try {
-      await new Promise((resolve) => setTimeout(resolve, 800));
-      console.log('Form Data:', data);
+      // Update User Level Data
+      await updateUser({
+        firstName: data.firstName,
+        lastName: data.lastName,
+      }).unwrap();
+
+      // Update Tenant Level Data (if applicable)
+      if (profileResponse?.data?.tenant) {
+        await updateTenant({
+          country: data.country,
+          city: data.city,
+          genres: data.genres,
+        }).unwrap();
+      }
+
       toast.success('Profile updated successfully!');
-    } catch (error) {
-      console.log(error);
-      toast.error('Failed to update profile.');
+      refetch();
+    } catch (error: any) {
+      const errorMsg = error?.data?.error?.message || error?.data?.message || 'Failed to update profile.';
+      toast.error(errorMsg);
     }
   };
+
+  if (isProfileLoading) {
+    return <LoadingSpinner />;
+  }
 
   // Changed to standard Tailwind classes
   const inputBaseClass =
