@@ -13,7 +13,7 @@ export const bookingApi = baseApi.injectEndpoints({
     }),
     getMyBookings: builder.query<BaseResponse<Booking[]>, void>({
       query: () => ({
-        url: '/bookings/v1/',
+        url: '/bookings/v1/my-bookings',
         method: 'GET',
       }),
       providesTags: ['Booking'],

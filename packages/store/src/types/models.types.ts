@@ -115,6 +115,7 @@ export interface Event {
   capacity?: number;
   price?: number | string;
   status?: 'upcoming' | 'completed' | 'canceled';
+  coverUrl?: string;
   createdAt?: string;
   updatedAt?: string;
   deletedAt?: string;
