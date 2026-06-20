@@ -3,9 +3,9 @@ import { MixTape, BaseResponse, CreateMixTapeRequest, UpdateMixTapeRequest, Reor
 
 export const mixTapeApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
-    getMyMixTapes: builder.query<BaseResponse<MixTape[]>, void>({
-      query: () => ({
-        url: '/mixtapes/v1/',
+    getTenantMixTapes: builder.query<BaseResponse<MixTape[]>, string>({
+      query: (tenantId) => ({
+        url: `/mixtapes/v1/tenant/${tenantId}`,
         method: 'GET',
       }),
       providesTags: ['MixTape'],
@@ -16,6 +16,7 @@ export const mixTapeApi = baseApi.injectEndpoints({
         formData.append('title', body.title);
         if (body.audioUrl) formData.append('audioUrl', body.audioUrl);
         if (body.coverImage) formData.append('coverImage', body.coverImage);
+        if (body.order !== undefined) formData.append('order', String(body.order));
 
         return {
           url: '/mixtapes/v1/',
@@ -32,6 +33,7 @@ export const mixTapeApi = baseApi.injectEndpoints({
         if (rest.title) formData.append('title', rest.title);
         if (rest.audioUrl) formData.append('audioUrl', rest.audioUrl);
         if (rest.coverImage) formData.append('coverImage', rest.coverImage);
+        if (rest.order !== undefined) formData.append('order', String(rest.order));
 
         return {
           url: `/mixtapes/v1/${id}`,
@@ -61,7 +63,7 @@ export const mixTapeApi = baseApi.injectEndpoints({
 });
 
 export const {
-  useGetMyMixTapesQuery,
+  useGetTenantMixTapesQuery,
   useCreateMixTapeMutation,
   useUpdateMixTapeMutation,
   useDeleteMixTapeMutation,

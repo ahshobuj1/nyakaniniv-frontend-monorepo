@@ -44,7 +44,8 @@ This document tracks the progress of integrating the backend APIs into the front
 - [ ] `POST/PATCH/DELETE /landing-page/v1/marquee` - Manage Marquee Content (Admin)
 
 ### 🎨 Theme Module
-- [ ] `GET /themes/v1/` - Get All Themes
+- [x] `GET /themes/v1/` - Get All Available Themes
+- [x] `PATCH /tenant/v1/theme` - Assign Theme to Tenant
 - [ ] `GET /themes/v1/slug/:slug` - Get Theme by Slug
 - [ ] `POST /themes/v1/` - Create Theme (Admin)
 - [ ] `PATCH /themes/v1/:id` - Update Theme (Admin)
@@ -58,11 +59,11 @@ This document tracks the progress of integrating the backend APIs into the front
 - [x] `DELETE /events/v1/:id` - Delete Event (DJ)
 
 ### 🎵 MixTape Module
-- [ ] `POST /mixtapes/v1/` - Create MixTape
-- [ ] `GET /mixtapes/v1/` - Get My MixTapes
-- [ ] `PATCH /mixtapes/v1/:id` - Update MixTape
-- [ ] `DELETE /mixtapes/v1/:id` - Delete MixTape
-- [ ] `POST /mixtapes/v1/reorder` - Reorder MixTapes
+- [x] `POST /mixtapes/v1/` - Create MixTape
+- [x] `GET /mixtapes/v1/tenant/:tenantId` - Get Tenant MixTapes
+- [x] `PATCH /mixtapes/v1/:id` - Update MixTape
+- [x] `DELETE /mixtapes/v1/:id` - Delete MixTape
+- [x] `POST /mixtapes/v1/reorder` - Reorder MixTapes
 
 ### 📆 Booking Module
 - [ ] `POST /bookings/v1/` - Create Booking (Public)
@@ -71,17 +72,17 @@ This document tracks the progress of integrating the backend APIs into the front
 - [ ] `PATCH /bookings/v1/:id/request-cash` - Request Cash Payment (Public)
 
 ### 💳 Subscription Module
-- [ ] `GET /subscriptions/v1/plans` - Get All Subscription Plans
+- [x] `GET /subscriptions/v1/plans` - Get All Subscription Plans
 - [ ] `POST /subscriptions/v1/plans` - Create Subscription Plan (Admin)
 - [ ] `PATCH /subscriptions/v1/plans/:id` - Update Subscription Plan (Admin)
 - [ ] `DELETE /subscriptions/v1/plans/:id` - Delete Subscription Plan (Admin)
-- [ ] `GET /subscriptions/v1/my-subscription` - Get My Active Subscription (DJ)
-- [ ] `POST /subscriptions/v1/subscribe` - Subscribe to Plan
-- [ ] `POST /subscriptions/v1/cancel` - Cancel Subscription
+- [x] `GET /subscriptions/v1/my-subscription` - Get My Active Subscription (DJ)
+- [x] `POST /subscriptions/v1/subscribe` - Subscribe to Plan
+- [x] `POST /subscriptions/v1/cancel` - Cancel Subscription
 
 ### 💳 Unified Invoice Module (Payments & Subscriptions)
 - [ ] `GET /invoices/v1/all` - Get All Invoices (Admin)
-- [ ] `GET /invoices/v1/my-invoices` - Get My Invoices (DJ)
+- [x] `GET /invoices/v1/my-invoices` - Get My Invoices (DJ)
 - [ ] `POST /invoices/v1/:id/pay` - Pay Booking (Public)
 - [ ] `PATCH /invoices/v1/:id/mark-paid` - Mark Booking Paid (Cash) (DJ)
 

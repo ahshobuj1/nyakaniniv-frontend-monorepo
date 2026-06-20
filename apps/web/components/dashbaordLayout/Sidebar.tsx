@@ -15,6 +15,7 @@ import {
   Headphones,
   X,
   HeadphonesIcon,
+  Music,
 } from 'lucide-react';
 import {useSidebar} from './SidebarContext';
 import Image from 'next/image';
@@ -31,6 +32,7 @@ const sidebarGroups = [
       {label: 'Themes', url: '/dashboard/themes', icon: Palette},
       {label: 'Manage Theme', url: '/dashboard/manage-theme', icon: Settings},
       {label: 'Events', url: '/dashboard/events', icon: CalendarDays},
+      {label: 'MixTapes', url: '/dashboard/mixtapes', icon: Music},
     ],
   },
   {

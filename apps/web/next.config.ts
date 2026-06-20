@@ -12,6 +12,10 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'flagcdn.com',
       },
+      {
+        protocol: 'https',
+        hostname: 'additional-user.s3.eu-north-1.amazonaws.com',
+      },
     ],
   },
 };

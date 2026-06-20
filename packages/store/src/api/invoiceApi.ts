@@ -1,9 +1,13 @@
 import { baseApi } from './baseApi';
-import { Invoice, BaseResponse } from '../types';
+import { BaseResponse, BookingPayment, SubscriptionInvoice, PaginatedResponse } from '../types';
+
+export type UnifiedInvoice = (BookingPayment | SubscriptionInvoice) & {
+  type: 'BOOKING' | 'SUBSCRIPTION';
+};
 
 export const invoiceApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
-    getMyInvoices: builder.query<BaseResponse<Invoice[]>, void>({
+    getMyInvoices: builder.query<PaginatedResponse<UnifiedInvoice>, void>({
       query: () => ({
         url: '/invoices/v1/my-invoices',
         method: 'GET',
@@ -16,7 +20,7 @@ export const invoiceApi = baseApi.injectEndpoints({
         method: 'POST',
       }),
     }),
-    markBookingPaid: builder.mutation<BaseResponse<Invoice>, string>({
+    markBookingPaid: builder.mutation<BaseResponse<any>, string>({
       query: (id) => ({
         url: `/invoices/v1/${id}/mark-paid`,
         method: 'PATCH',

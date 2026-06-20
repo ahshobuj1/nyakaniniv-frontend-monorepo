@@ -1,4 +1,4 @@
-import { User, Tenant, Theme, Event, MixTape, Booking, SubscriptionPlan, Subscription, Invoice, Client, Ticket, Notification, LandingPageContent } from './models.types';
+import { User, Tenant, Theme, Event, MixTape, Booking, SubscriptionPlan, Subscription, Client, Notification, LandingPageContent } from './models.types';
 
 // --- Auth Requests ---
 export interface RegisterRequest {
@@ -89,6 +89,7 @@ export interface CreateMixTapeRequest {
   title: string;
   audioUrl: string | File;
   coverImage?: File;
+  order?: number;
 }
 
 export interface UpdateMixTapeRequest extends Partial<CreateMixTapeRequest> {
@@ -119,12 +120,14 @@ export interface UpdateBookingStatusRequest {
 
 // --- Subscription Requests ---
 export interface SubscribeRequest {
-  planId: string;
+  planId: number;
   billingCycle: 'monthly' | 'annually';
+  successUrl?: string;
+  cancelUrl?: string;
 }
 
 export interface SubscribeResponse {
-  checkoutUrl: string;
+  url: string;
 }
 
 // --- Stripe Connect Requests ---

@@ -14,6 +14,8 @@ import {
 import TemplateRenderer from '@repo/builder';
 import {templates} from '@repo/templates';
 import {Content, Theme} from '@repo/types';
+import { useAssignThemeMutation } from '@repo/store';
+import { toast } from 'sonner';
 
 // ==========================================
 // 1. Section Editor Configuration
@@ -76,6 +78,18 @@ function ManageThemeContent() {
   const previewContainerRef = useRef<HTMLDivElement>(null);
   const [previewScale, setPreviewScale] = useState(1);
 
+  // APIs
+  const [assignTheme, { isLoading: isAssigning }] = useAssignThemeMutation();
+
+  const handlePublish = async () => {
+    try {
+      await assignTheme({ themeId }).unwrap();
+      toast.success('Theme published successfully!');
+    } catch (error: any) {
+      toast.error(error?.data?.error?.message || error?.data?.message || 'Failed to publish theme');
+    }
+  };
+
   // Dynamic Scale Calculator (Webflow/Framer style)
   useEffect(() => {
     if (!previewContainerRef.current) return;
@@ -124,8 +138,12 @@ function ManageThemeContent() {
               <Eye className="w-4 h-4" /> Preview Site
             </button>
             <div className="h-6 w-px bg-slate-200 mx-1 hidden md:block" />
-            <button className="bg-[#111620] hover:bg-slate-800 text-white px-6 py-2 rounded-xl text-sm font-bold shadow-lg shadow-slate-200 transition-all active:scale-95">
-              Save Changes
+            <button 
+              onClick={handlePublish}
+              disabled={isAssigning}
+              className="bg-[#111620] hover:bg-slate-800 text-white px-6 py-2 rounded-xl text-sm font-bold shadow-lg shadow-slate-200 transition-all active:scale-95 disabled:opacity-70"
+            >
+              {isAssigning ? 'Saving...' : 'Save Changes'}
             </button>
           </div>
         </header>
@@ -446,8 +464,12 @@ function ManageThemeContent() {
 
             {/* Sidebar Footer */}
             <div className="p-4 bg-white border-t border-slate-100 shrink-0">
-              <button className="w-full bg-[#F63131] hover:bg-[#F63131]/90 text-white py-3 rounded-xl text-[13px] font-bold shadow-lg shadow-[#F63131]/20 transition-all active:scale-[0.98]">
-                Publish Changes
+              <button 
+                onClick={handlePublish}
+                disabled={isAssigning}
+                className="w-full bg-[#F63131] hover:bg-[#F63131]/90 text-white py-3 rounded-xl text-[13px] font-bold shadow-lg shadow-[#F63131]/20 transition-all active:scale-[0.98] disabled:opacity-70"
+              >
+                {isAssigning ? 'Publishing...' : 'Publish Changes'}
               </button>
             </div>
           </aside>

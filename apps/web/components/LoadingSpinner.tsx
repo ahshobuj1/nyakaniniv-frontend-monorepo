@@ -1,23 +1,20 @@
 'use client';
 
-import PropTypes from 'prop-types';
+
 import { ScaleLoader } from 'react-spinners';
 
-const LoadingSpinner = ({ smallHeight }: { smallHeight?: boolean }) => {
+const LoadingSpinner = ({ smallHeight, fullScreen }: { smallHeight?: boolean; fullScreen?: boolean }) => {
+    let heightClass = 'h-[70vh]';
+    if (fullScreen) heightClass = 'h-screen';
+    else if (smallHeight) heightClass = 'h-[250px]';
+
     return (
-        <div
-            className={` ${smallHeight ? 'h-[250px]' : 'h-[70vh]'}
-      flex 
-      flex-col 
-      justify-center 
-      items-center `}>
+        <div className={`${heightClass} w-full flex flex-col justify-center items-center`}>
             <ScaleLoader color="red" />
         </div>
     );
 };
 
-LoadingSpinner.propTypes = {
-    smallHeight: PropTypes.bool,
-};
+
 
 export default LoadingSpinner;
