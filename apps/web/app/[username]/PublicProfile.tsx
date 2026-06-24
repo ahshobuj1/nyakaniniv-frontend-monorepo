@@ -47,6 +47,7 @@ export default function PublicProfile({ username }: PublicProfileProps) {
       title: m.title,
       genre: m.genre || 'Various',
       time: '00:00',
+      audioUrl: m.audioUrl,
     })) : template.defaultContent.mixes || [
       {
         img: '/theme/aura/mixes-video-avator-1.png',
@@ -64,6 +65,8 @@ export default function PublicProfile({ username }: PublicProfileProps) {
         duration: '00:00',
         currentTime: '00:00',
         progress: 0,
+        audioUrl: m.audioUrl,
+        coverImage: m.coverUrl || template.defaultContent.heroImage,
       })) : template.defaultContent.latestMixes?.tracks || [],
     },
     events: {

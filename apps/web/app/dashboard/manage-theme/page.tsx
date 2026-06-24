@@ -164,7 +164,9 @@ function ManageThemeContent() {
 
   // Fetch current user config
   const { data: userRes, isLoading: isUserLoading } = useGetCurrentProfileQuery();
-  const tenantConfig = userRes?.data?.tenant?.config;
+  const tenant = userRes?.data?.tenant;
+  const tenantConfig = tenant?.config;
+  const subdomain = tenant?.subdomain || 'your-stage-url';
 
   // Content & Theme State
   const [content, setContent] = useState<Content>(template.defaultContent);
@@ -172,16 +174,56 @@ function ManageThemeContent() {
   const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
-    if (!isUserLoading && !isInitialized) {
-      if (tenantConfig?.content) {
-        setContent({ ...template.defaultContent, ...tenantConfig.content });
-      }
-      if (tenantConfig?.theme) {
-        setThemeSettings({ ...template.defaultTheme, ...tenantConfig.theme });
+    if (!isUserLoading && !isInitialized && userRes?.data) {
+      const currentTenant = userRes.data.tenant;
+      const currentConfig = currentTenant?.config;
+      
+      const mergedContent = {
+        ...template.defaultContent,
+        ...currentConfig?.content,
+        mixes: currentTenant?.mixTapes?.length ? currentTenant.mixTapes.map(m => ({
+          img: m.coverUrl || template.defaultContent.heroImage || '/theme/aura/mixes-video-avator-1.png',
+          title: m.title,
+          genre: m.genre || 'Various',
+          time: '00:00',
+          audioUrl: m.audioUrl,
+        })) : template.defaultContent.mixes || [],
+        latestMixes: {
+          ...template.defaultContent.latestMixes,
+          tracks: currentTenant?.mixTapes?.length ? currentTenant.mixTapes.map((m, i) => ({
+            id: m.id || i,
+            title: m.title,
+            genre: m.genre || 'Various',
+            duration: '00:00',
+            currentTime: '00:00',
+            progress: 0,
+            audioUrl: m.audioUrl,
+            coverImage: m.coverUrl || template.defaultContent.heroImage,
+          })) : template.defaultContent.latestMixes?.tracks || [],
+        },
+        events: {
+          ...template.defaultContent.events,
+          list: currentTenant?.events?.length ? currentTenant.events.map((e, i) => ({
+            id: e.id || i,
+            day: e.eventDate ? new Date(e.eventDate).toLocaleDateString('en-US', { day: '2-digit' }) : '',
+            month: e.eventDate ? new Date(e.eventDate).toLocaleDateString('en-US', { month: 'short' }).toUpperCase() : '',
+            date: e.eventDate ? new Date(e.eventDate).toLocaleDateString() : '',
+            title: e.title,
+            venue: e.venueName,
+            location: e.venueAddress,
+            ticketUrl: '#',
+          })) : template.defaultContent.events?.list || [],
+        }
+      };
+
+      setContent(mergedContent);
+
+      if (currentConfig?.theme) {
+        setThemeSettings({ ...template.defaultTheme, ...currentConfig.theme });
       }
       setIsInitialized(true);
     }
-  }, [tenantConfig, isUserLoading, isInitialized, template]);
+  }, [userRes, isUserLoading, isInitialized, template]);
 
   const [view, setView] = useState<'landing' | 'booking'>('landing');
 
@@ -268,9 +310,9 @@ function ManageThemeContent() {
           </div>
 
           <div className="flex items-center gap-3">
-            <button className="hidden md:flex items-center gap-2 px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">
+            <a href={`http://localhost:3000/${subdomain}`} target="_blank" rel="noreferrer" className="hidden md:flex items-center gap-2 px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">
               <Eye className="w-4 h-4" /> Preview Site
-            </button>
+            </a>
             <div className="h-6 w-px bg-slate-200 mx-1 hidden md:block" />
             <button 
               onClick={handlePublish}
@@ -303,7 +345,7 @@ function ManageThemeContent() {
                 <div className="flex-1 max-w-md mx-auto h-7 bg-white rounded-lg border border-slate-200 flex items-center px-3 gap-2">
                   <div className="w-2 h-2 rounded-full bg-[#10B981]" />
                   <span className="text-[10px] text-slate-400 font-mono truncate">
-                    https://your-stage-url.upbeat.africa
+                    https://{subdomain}.upbeat.africa
                   </span>
                 </div>
                 <div className="w-16" />
