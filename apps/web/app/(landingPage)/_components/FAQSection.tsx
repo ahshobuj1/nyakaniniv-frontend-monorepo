@@ -2,26 +2,24 @@
 
 import {FAQItem, type FAQ} from '@/components/shared/FAQItem';
 import {useState} from 'react';
+import { LandingPageFaq } from '@repo/store';
 
-const faqsData: FAQ[] = [
+const defaultFaqsData: FAQ[] = [
   {
     question: '1. What is UpBeat Africa and how does it work?',
     answer:
       'UpBeat Africa is a platform that helps DJs create their own professional website and manage their business in one place. After signing up, a DJ can choose a subscription plan and instantly get access to a personal dashboard.',
   },
-
   {
     question: '2. Do I need coding skills to create my DJ website?',
     answer:
       'No, you do not need any coding skills. Our platform provides easy-to-use templates and a simple editor so you can build your website effortlessly.',
   },
-
   {
     question: '3. How do clients book me through the platform?',
     answer:
       'Clients can visit your custom DJ website, view your availability, and submit booking requests directly. You will receive notifications in your dashboard to approve or decline them.',
   },
-
   {
     question: '4. How does payment and invoicing work?',
     answer:
@@ -29,12 +27,20 @@ const faqsData: FAQ[] = [
   },
 ];
 
-export function FAQSection() {
+interface FAQSectionProps {
+  faqs?: LandingPageFaq[];
+}
+
+export function FAQSection({ faqs }: FAQSectionProps) {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
 
   const toggleFAQ = (index: number) => {
     setOpenIndex(openIndex === index ? null : index);
   };
+
+  const displayFaqs = faqs && faqs.length > 0 
+    ? faqs.map(f => ({ question: f.question || '', answer: f.answer || '' })) 
+    : defaultFaqsData;
 
   return (
     <section className="bg-[#f0f0f0] py-20 px-6">
@@ -44,7 +50,7 @@ export function FAQSection() {
         </h2>
 
         <div className="flex flex-col gap-4">
-          {faqsData.map((faq, index) => (
+          {displayFaqs.map((faq, index) => (
             <FAQItem
               key={index}
               faq={faq}

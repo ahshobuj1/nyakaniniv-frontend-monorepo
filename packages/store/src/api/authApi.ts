@@ -6,6 +6,7 @@ import {
   ResendOtpRequest,
   ForgotPasswordRequest,
   ResetPasswordRequest,
+  ChangePasswordRequest,
   AuthResponse,
   BaseResponse,
 } from '../types';
@@ -64,6 +65,13 @@ export const authApi = baseApi.injectEndpoints({
         body,
       }),
     }),
+    changePassword: builder.mutation<BaseResponse<null>, ChangePasswordRequest>({
+      query: (body) => ({
+        url: '/auth/v1/change-password',
+        method: 'POST',
+        body,
+      }),
+    }),
   }),
   overrideExisting: false,
 });
@@ -76,4 +84,5 @@ export const {
   useLogoutMutation,
   useForgotPasswordMutation,
   useResetPasswordMutation,
+  useChangePasswordMutation,
 } = authApi;

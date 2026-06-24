@@ -1,9 +1,9 @@
 import { baseApi } from './baseApi';
-import { Ticket, BaseResponse, CreateTicketRequest } from '../types';
+import { SupportTicket, BaseResponse, CreateTicketRequest } from '../types';
 
 export const ticketApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
-    createTicket: builder.mutation<BaseResponse<Ticket>, CreateTicketRequest>({
+    createTicket: builder.mutation<BaseResponse<SupportTicket>, CreateTicketRequest>({
       query: (body) => ({
         url: '/tickets/v1/',
         method: 'POST',
@@ -11,7 +11,7 @@ export const ticketApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ['Ticket'],
     }),
-    getMyTickets: builder.query<BaseResponse<Ticket[]>, void>({
+    getMyTickets: builder.query<BaseResponse<SupportTicket[]>, void>({
       query: () => ({
         url: '/tickets/v1/my-tickets',
         method: 'GET',

@@ -27,21 +27,26 @@ export const tenantApi = baseApi.injectEndpoints({
     updateTenantProfile: builder.mutation<BaseResponse<Tenant>, UpdateTenantProfileRequest>({
       query: (body) => {
         // Handle potential file uploads
-        const formData = new FormData();
-        if (body.country) formData.append('country', body.country);
-        if (body.city) formData.append('city', body.city);
-        if (body.genres) {
-          body.genres.forEach(genre => formData.append('genres[]', genre));
+        let requestBody: any = body;
+
+        if (body.logo || body.banner) {
+          const formData = new FormData();
+          if (body.country) formData.append('country', body.country);
+          if (body.city) formData.append('city', body.city);
+          if (body.genres) {
+            body.genres.forEach(genre => formData.append('genres[]', genre));
+          }
+          if (body.bio) formData.append('bio', body.bio);
+          if (body.socialLinks) formData.append('socialLinks', JSON.stringify(body.socialLinks));
+          if (body.logo) formData.append('logo', body.logo);
+          if (body.banner) formData.append('banner', body.banner);
+          requestBody = formData;
         }
-        if (body.bio) formData.append('bio', body.bio);
-        if (body.socialLinks) formData.append('socialLinks', JSON.stringify(body.socialLinks));
-        if (body.logo) formData.append('logo', body.logo);
-        if (body.banner) formData.append('banner', body.banner);
 
         return {
           url: '/tenant/v1/profile',
           method: 'PUT',
-          body: formData,
+          body: requestBody,
         };
       },
       invalidatesTags: ['Tenant'],
@@ -54,6 +59,17 @@ export const tenantApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ['Tenant'],
     }),
+    uploadTenantMedia: builder.mutation<BaseResponse<{ url: string }>, File>({
+      query: (file) => {
+        const formData = new FormData();
+        formData.append('file', file);
+        return {
+          url: '/tenant/v1/upload-media',
+          method: 'POST',
+          body: formData,
+        };
+      },
+    }),
   }),
   overrideExisting: false,
 });
@@ -63,4 +79,5 @@ export const {
   useGetPublicProfileQuery,
   useUpdateTenantProfileMutation,
   useAssignThemeMutation,
+  useUploadTenantMediaMutation,
 } = tenantApi;

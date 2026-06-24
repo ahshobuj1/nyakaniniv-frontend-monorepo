@@ -32,6 +32,11 @@ export interface ResetPasswordRequest {
   newPassword?: string;
 }
 
+export interface ChangePasswordRequest {
+  currentPassword?: string;
+  newPassword?: string;
+}
+
 export interface AuthResponse {
   user: User;
   token: string;
@@ -64,7 +69,8 @@ export interface UpdateTenantProfileRequest {
 }
 
 export interface AssignThemeRequest {
-  themeId: string;
+  themeSlug: string;
+  config?: any;
 }
 
 // --- Event Requests ---

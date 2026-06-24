@@ -2,7 +2,20 @@
 
 import {useState} from 'react';
 import {Zap, Check, X, Calendar, CheckCircle2} from 'lucide-react';
-import {Card, CardContent, Button, Badge, NumberFlow} from '@repo/ui';
+import {
+  Card, 
+  CardContent, 
+  Button, 
+  Badge, 
+  NumberFlow,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger
+} from '@repo/ui';
 import {
   useGetPlansQuery,
   useGetMySubscriptionQuery,
@@ -32,6 +45,7 @@ import { toast } from 'sonner';
 
 export default function BillingSubscriptionPage() {
   const [frequency, setFrequency] = useState<'monthly' | 'yearly'>('monthly');
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
 
   // Fetch API data
   const { data: plansResponse, isLoading: isLoadingPlans } = useGetPlansQuery();
@@ -66,10 +80,10 @@ export default function BillingSubscriptionPage() {
   };
 
   const handleCancel = async () => {
-    if (!confirm('Are you sure you want to cancel your subscription?')) return;
     try {
       await cancelSubscription().unwrap();
       toast.success('Subscription cancelled successfully');
+      setCancelDialogOpen(false);
       refetchSub();
     } catch (error: any) {
       toast.error(error?.data?.error?.message || error?.data?.message || 'Failed to cancel subscription');
@@ -118,13 +132,36 @@ export default function BillingSubscriptionPage() {
                   </div>
                 </div>
                 <div className="flex flex-col md:flex-row items-center gap-3 w-full md:w-auto">
-                  <Button
-                    variant="secondary"
-                    onClick={handleCancel}
-                    disabled={isCanceling}
-                    className="flex-1 md:flex-none bg-[#E5E7EB] hover:bg-[#D1D5DB] text-[#111620] font-semibold h-11 rounded-lg">
-                    {isCanceling ? 'Canceling...' : 'Cancel Plan'}
-                  </Button>
+                  <Dialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button
+                        variant="secondary"
+                        disabled={isCanceling}
+                        className="flex-1 md:flex-none bg-[#E5E7EB] hover:bg-[#D1D5DB] text-[#111620] font-semibold h-11 rounded-lg">
+                        {isCanceling ? 'Canceling...' : 'Cancel Plan'}
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Cancel Subscription</DialogTitle>
+                        <DialogDescription>
+                          Are you sure you want to cancel your subscription? You will lose access to premium features at the end of your billing period.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <DialogFooter className="mt-4">
+                        <Button variant="outline" onClick={() => setCancelDialogOpen(false)}>
+                          Keep Subscription
+                        </Button>
+                        <Button 
+                          onClick={handleCancel} 
+                          disabled={isCanceling}
+                          className="bg-red-500 hover:bg-red-600 text-white"
+                        >
+                          {isCanceling ? 'Canceling...' : 'Yes, Cancel'}
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
                 </div>
               </div>
             </CardContent>
@@ -179,6 +216,7 @@ export default function BillingSubscriptionPage() {
             <div className="grid lg:grid-cols-3 gap-6 items-start">
               {plans.map((plan: SubscriptionPlan, idx: number) => {
                 const isPopular = idx === 1; // Highlight the middle plan
+                const isActivePlan = activeSubscription?.planId === plan.id;
                 const price = frequency === 'monthly' ? Number(plan.priceMonthly) : Number(plan.priceAnnually);
                 
                 let featuresObj: any = {};
@@ -204,15 +242,21 @@ export default function BillingSubscriptionPage() {
                   <div
                     key={plan.id}
                     className={`relative h-full flex flex-col ${
-                      isPopular
+                      isActivePlan
+                        ? 'bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.06)] border-2 border-green-500'
+                        : isPopular
                         ? 'bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.06)] border-2 border-primary'
                         : 'bg-white rounded-2xl shadow-[0_2px_20px_rgba(0,0,0,0.03)] border-2 border-transparent'
                     }`}>
-                    {isPopular && (
+                    {isActivePlan ? (
+                      <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-green-500 text-white px-3 py-1 text-[11px] font-bold uppercase tracking-wider rounded-full z-10 flex items-center gap-1">
+                        <CheckCircle2 className="w-3.5 h-3.5" /> Current Plan
+                      </div>
+                    ) : isPopular ? (
                       <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#10B981] text-white px-3 py-1 text-[11px] font-bold uppercase tracking-wider rounded-full z-10">
                         Most Popular
                       </div>
-                    )}
+                    ) : null}
 
                     <div className="p-8 flex flex-col h-full">
                       <h3 className="text-[24px] font-bold text-[#111620] mb-1">
@@ -237,14 +281,22 @@ export default function BillingSubscriptionPage() {
                       </div>
 
                       <button
-                        onClick={() => handleSubscribe(plan.id)}
+                        onClick={() => {
+                          if (activeSubscription) {
+                            toast.info(isActivePlan ? 'You are already subscribed to this plan.' : 'Please cancel your current plan before switching.');
+                            return;
+                          }
+                          handleSubscribe(plan.id);
+                        }}
                         disabled={isSubscribing}
-                        className={`w-full py-3.5 rounded-lg font-bold mb-8 cursor-pointer transition-colors duration-300 text-[15px] ${
-                          isPopular
-                            ? 'bg-primary text-white hover:bg-primary/90'
-                            : 'bg-[#E5E7EB] text-[#111620] hover:bg-[#D1D5DB]'
+                        className={`w-full py-3.5 rounded-lg font-bold mb-8 transition-colors duration-300 text-[15px] ${
+                          isActivePlan
+                            ? 'bg-green-50 text-green-600 border border-green-200 cursor-pointer'
+                            : isPopular
+                            ? 'bg-primary text-white hover:bg-primary/90 cursor-pointer'
+                            : 'bg-[#E5E7EB] text-[#111620] hover:bg-[#D1D5DB] cursor-pointer'
                         }`}>
-                        {isSubscribing ? 'Processing...' : 'Subscribe'}
+                        {isActivePlan ? 'Already Active' : isSubscribing ? 'Processing...' : 'Subscribe'}
                       </button>
 
                       <ul className="space-y-4 grow">
@@ -288,19 +340,22 @@ export default function BillingSubscriptionPage() {
             </div>
 
             <div className="overflow-x-auto">
-              <table className="w-full min-w-200 text-left border-collapse">
+              <table className="w-full min-w-[600px] text-left border-collapse">
                 <thead>
                   <tr className="bg-white">
-                    <th className="py-5 px-8 text-[12px] font-semibold text-[#A1A1AA] uppercase tracking-wider w-[25%]">
+                    <th className="py-5 px-8 text-[12px] font-semibold text-[#A1A1AA] uppercase tracking-wider w-[20%]">
                       Payment ID
                     </th>
-                    <th className="py-5 px-8 text-[12px] font-semibold text-[#A1A1AA] uppercase tracking-wider w-[25%]">
+                    <th className="py-5 px-8 text-[12px] font-semibold text-[#A1A1AA] uppercase tracking-wider w-[20%]">
+                      Plan
+                    </th>
+                    <th className="py-5 px-8 text-[12px] font-semibold text-[#A1A1AA] uppercase tracking-wider w-[20%]">
                       Date
                     </th>
-                    <th className="py-5 px-8 text-[12px] font-semibold text-[#A1A1AA] tracking-wider w-[25%]">
+                    <th className="py-5 px-8 text-[12px] font-semibold text-[#A1A1AA] uppercase tracking-wider w-[20%]">
                       Amount (KES)
                     </th>
-                    <th className="py-5 px-8 text-[12px] font-semibold text-[#A1A1AA] uppercase tracking-wider w-[25%]">
+                    <th className="py-5 px-8 text-[12px] font-semibold text-[#A1A1AA] uppercase tracking-wider w-[20%]">
                       Status
                     </th>
                   </tr>
@@ -308,7 +363,7 @@ export default function BillingSubscriptionPage() {
                 <tbody>
                   {isLoadingInvoices ? (
                     <tr>
-                      <td colSpan={4} className="py-10 text-center">
+                      <td colSpan={5} className="py-10 text-center">
                         <div className="flex justify-center">
                           <div className="w-6 h-6 border-2 border-gray-200 border-t-primary rounded-full animate-spin"></div>
                         </div>
@@ -321,6 +376,9 @@ export default function BillingSubscriptionPage() {
                         className={`${index % 2 === 0 ? 'bg-[#F9FAFB]' : 'bg-white'} hover:bg-gray-100/50 transition-colors`}>
                         <td className="py-5 px-8 text-[14px] font-bold text-[#111620]">
                           {item.stripeInvoiceId || item.id.substring(0, 8).toUpperCase()}
+                        </td>
+                        <td className="py-5 px-8 text-[14px] font-semibold text-[#111620]">
+                          {item.plan?.name || 'Subscription'}
                         </td>
                         <td className="py-5 px-8 text-[14px] text-[#787878]">
                           <div className="flex items-center gap-2">
@@ -348,7 +406,7 @@ export default function BillingSubscriptionPage() {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={4} className="py-10 text-center text-gray-500">
+                      <td colSpan={5} className="py-10 text-center text-gray-500">
                         No billing history found.
                       </td>
                     </tr>

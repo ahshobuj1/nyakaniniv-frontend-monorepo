@@ -25,31 +25,23 @@ import {
 } from '@repo/ui';
 import Image from 'next/image';
 
-// 1. Validation Schema
-const profileSchema = z
-  .object({
-    firstName: z.string().min(1, 'First name is required'),
-    lastName: z.string().min(1, 'Last name is required'),
-    city: z.string().min(1, 'City is required'),
-    country: z.string().min(1, 'Country is required'),
-    email: z.string().email('Invalid email address'),
-    phone: z.string().min(1, 'Phone number is required'),
-    genres: z.array(z.string()),
-    currentPassword: z.string().optional(),
-    newPassword: z.string().optional(),
-  })
-  .refine(
-    (data) => {
-      if (data.newPassword && !data.currentPassword) return false;
-      return true;
-    },
-    {
-      message: 'Current password is required to set a new password',
-      path: ['currentPassword'],
-    },
-  );
+// 1. Validation Schemas
+const profileSchema = z.object({
+  firstName: z.string().min(1, 'First name is required'),
+  lastName: z.string().min(1, 'Last name is required'),
+  city: z.string().min(1, 'City is required'),
+  country: z.string().min(1, 'Country is required'),
+  email: z.string().email('Invalid email address'),
+  genres: z.array(z.string()),
+});
+
+const passwordSchema = z.object({
+  currentPassword: z.string().min(1, 'Current password is required'),
+  newPassword: z.string().min(8, 'Password must be at least 8 characters'),
+});
 
 type ProfileFormValues = z.infer<typeof profileSchema>;
+type PasswordFormValues = z.infer<typeof passwordSchema>;
 
 const ALL_GENRES = [
   'Afrobeat',
@@ -75,6 +67,7 @@ import {
   useGetCurrentProfileQuery,
   useUpdateCurrentProfileMutation,
   useUpdateTenantProfileMutation,
+  useChangePasswordMutation,
 } from '@repo/store';
 import LoadingSpinner from '@/components/LoadingSpinner';
 
@@ -82,6 +75,7 @@ export default function ProfileContent() {
   const { data: profileResponse, isLoading: isProfileLoading, refetch } = useGetCurrentProfileQuery();
   const [updateUser] = useUpdateCurrentProfileMutation();
   const [updateTenant] = useUpdateTenantProfileMutation();
+  const [changePasswordMutation] = useChangePasswordMutation();
 
   const {
     register,
@@ -98,8 +92,18 @@ export default function ProfileContent() {
       city: '',
       country: '',
       email: '',
-      phone: '',
       genres: [],
+    },
+  });
+
+  const {
+    register: registerPassword,
+    handleSubmit: handlePasswordSubmit,
+    reset: resetPassword,
+    formState: {errors: passwordErrors, isSubmitting: isSubmittingPassword},
+  } = useForm<PasswordFormValues>({
+    resolver: zodResolver(passwordSchema),
+    defaultValues: {
       currentPassword: '',
       newPassword: '',
     },
@@ -121,12 +125,9 @@ export default function ProfileContent() {
         firstName: user.firstName || '',
         lastName: user.lastName || '',
         email: user.email || '',
-        phone: '', // Not in schema currently
         country: tenant?.country || '',
         city: tenant?.city || '',
         genres: tenant?.genres || [],
-        currentPassword: '',
-        newPassword: '',
       });
     }
   }, [profileResponse, reset]);
@@ -192,6 +193,21 @@ export default function ProfileContent() {
     }
   };
 
+  const onPasswordSubmit = async (data: PasswordFormValues) => {
+    try {
+      await changePasswordMutation({
+        currentPassword: data.currentPassword,
+        newPassword: data.newPassword,
+      }).unwrap();
+
+      toast.success('Password changed successfully!');
+      resetPassword();
+    } catch (error: any) {
+      const errorMsg = error?.data?.error?.message || error?.data?.message || 'Failed to change password.';
+      toast.error(errorMsg);
+    }
+  };
+
   if (isProfileLoading) {
     return <LoadingSpinner />;
   }
@@ -211,7 +227,8 @@ export default function ProfileContent() {
         </p>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      {/* Main Profile Form */}
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 mb-12">
         {/* Section 1: Personal Information Card */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -311,19 +328,6 @@ export default function ProfileContent() {
                     </Command>
                   </PopoverContent>
                 </Popover>
-                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-400">
-                  <svg
-                    className="h-4 w-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24">
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M19 9l-7 7-7-7"></path>
-                  </svg>
-                </div>
               </div>
               {errors.country && (
                 <p className="text-red-500 text-xs mt-1.5">
@@ -377,19 +381,6 @@ export default function ProfileContent() {
                     </Command>
                   </PopoverContent>
                 </Popover>
-                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-400">
-                  <svg
-                    className="h-4 w-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24">
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M19 9l-7 7-7-7"></path>
-                  </svg>
-                </div>
               </div>
               {errors.city && (
                 <p className="text-red-500 text-xs mt-1.5">
@@ -405,6 +396,7 @@ export default function ProfileContent() {
                 {...register('email')}
                 placeholder="kwame@djkwamebeats.com"
                 className={inputBaseClass}
+                disabled
               />
               {errors.email && (
                 <p className="text-red-500 text-xs mt-1.5">
@@ -412,103 +404,94 @@ export default function ProfileContent() {
                 </p>
               )}
             </div>
-
-            <div>
-              <label className={labelClass}>Phone</label>
-              <input
-                {...register('phone')}
-                placeholder="+233 55 123 4567"
-                className={inputBaseClass}
-              />
-              {errors.phone && (
-                <p className="text-red-500 text-xs mt-1.5">
-                  {errors.phone.message}
-                </p>
-              )}
-            </div>
           </div>
         </div>
 
-        {/* Bottom Two Cards - Changed from xl:grid-cols-2 to lg:grid-cols-2 */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-          {/* Section 2: Music Genres */}
-          <div className="bg-white rounded-2xl shadow-sm p-6 md:p-8 h-full">
-            <h3 className="text-base font-bold text-gray-800 pb-6 mb-6 border-b border-gray-200">
-              Music Genres
-            </h3>
-            <div className="flex flex-wrap gap-2.5">
-              {ALL_GENRES.map((genre) => {
-                const isSelected = selectedGenres.includes(genre);
-                return (
-                  <button
-                    key={genre}
-                    type="button"
-                    onClick={() => toggleGenre(genre)}
-                    className={`px-4 py-1.5 rounded-full text-xs font-medium transition-colors border
-                      ${
-                        isSelected
-                          ? 'bg-red-50 border-red-300 text-red-500'
-                          : 'bg-gray-100 border-transparent text-gray-500 hover:bg-gray-200'
-                      }`}>
-                    {genre}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Section 3: Password */}
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8 h-full">
-            <div className="space-y-6">
-              <div>
-                <label className={labelClass}>Current password</label>
-                <input
-                  type="password"
-                  {...register('currentPassword')}
-                  placeholder="Enter your current password"
-                  className={inputBaseClass}
-                />
-                {errors.currentPassword && (
-                  <p className="text-red-500 text-xs mt-1.5">
-                    {errors.currentPassword.message}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <label className={labelClass}>New password</label>
-                <input
-                  type="password"
-                  {...register('newPassword')}
-                  placeholder="Enter your new password"
-                  className={inputBaseClass}
-                />
-                {errors.newPassword && (
-                  <p className="text-red-500 text-xs mt-1.5">
-                    {errors.newPassword.message}
-                  </p>
-                )}
-              </div>
-            </div>
+        {/* Section 2: Music Genres */}
+        <div className="bg-white rounded-2xl shadow-sm p-6 md:p-8 h-full border border-gray-100">
+          <h3 className="text-base font-bold text-gray-800 pb-6 mb-6 border-b border-gray-200">
+            Music Genres
+          </h3>
+          <div className="flex flex-wrap gap-2.5">
+            {ALL_GENRES.map((genre) => {
+              const isSelected = selectedGenres.includes(genre);
+              return (
+                <button
+                  key={genre}
+                  type="button"
+                  onClick={() => toggleGenre(genre)}
+                  className={`px-4 py-1.5 rounded-full text-xs font-medium transition-colors border
+                    ${
+                      isSelected
+                        ? 'bg-red-50 border-red-300 text-red-500'
+                        : 'bg-gray-100 border-transparent text-gray-500 hover:bg-gray-200'
+                    }`}>
+                  {genre}
+                </button>
+              );
+            })}
           </div>
         </div>
 
         {/* Action Button */}
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'flex-end',
-            width: '100%',
-            paddingTop: '1.5rem',
-          }}>
+        <div className="flex justify-end pt-2">
           <Button
             size={'lg'}
             type="submit"
             disabled={isSubmitting}
-            className="bg-primary hover:bg-primary/90 text-white text-sm font-semibold py-3 px-10 rounded-md shadow-md transition-all active:scale-95 disabled:opacity-70"
-            style={{width: 'auto', marginLeft: 'auto'}}>
-            {isSubmitting ? 'Saving...' : 'Save Changes'}
+            className="bg-primary hover:bg-primary/90 text-white text-sm font-semibold py-3 px-10 rounded-md shadow-md transition-all active:scale-95 disabled:opacity-70">
+            {isSubmitting ? 'Saving...' : 'Save Profile Changes'}
           </Button>
+        </div>
+      </form>
+
+      {/* Password Change Form */}
+      <form onSubmit={handlePasswordSubmit(onPasswordSubmit)} className="space-y-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8 h-full">
+          <h3 className="text-base font-bold text-gray-800 pb-6 mb-6 border-b border-gray-200">
+            Change Password
+          </h3>
+          <div className="space-y-6 max-w-md">
+            <div>
+              <label className={labelClass}>Current password</label>
+              <input
+                type="password"
+                {...registerPassword('currentPassword')}
+                placeholder="Enter your current password"
+                className={inputBaseClass}
+              />
+              {passwordErrors.currentPassword && (
+                <p className="text-red-500 text-xs mt-1.5">
+                  {passwordErrors.currentPassword.message}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <label className={labelClass}>New password</label>
+              <input
+                type="password"
+                {...registerPassword('newPassword')}
+                placeholder="Enter your new password"
+                className={inputBaseClass}
+              />
+              {passwordErrors.newPassword && (
+                <p className="text-red-500 text-xs mt-1.5">
+                  {passwordErrors.newPassword.message}
+                </p>
+              )}
+            </div>
+            
+            <div className="pt-2">
+              <Button
+                size={'lg'}
+                type="submit"
+                disabled={isSubmittingPassword}
+                className="bg-primary hover:bg-primary/90 text-white text-sm font-semibold py-3 px-10 rounded-md shadow-md transition-all active:scale-95 disabled:opacity-70">
+                {isSubmittingPassword ? 'Updating...' : 'Update Password'}
+              </Button>
+            </div>
+          </div>
         </div>
       </form>
     </div>

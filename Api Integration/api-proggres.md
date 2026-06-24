@@ -30,13 +30,13 @@ This document tracks the progress of integrating the backend APIs into the front
 
 ### 🏢 Tenant Module
 - [x] `POST /tenant/v1/onboard` - Create Tenant Profile (Onboarding)
-- [ ] `GET /tenant/v1/:subdomain` - Get Public Profile
+- [x] `GET /tenant/v1/:subdomain` - Get Public Profile
 - [x] `PUT /tenant/v1/profile` - Update Tenant Profile
 - [ ] `PUT /tenant/v1/theme` - Assign Theme
 - [ ] `GET /tenant/v1/` - Get All Tenants (Admin Only)
 
 ### 🌐 Landing Page Module
-- [ ] `GET /landing-page/v1/content` - Get Landing Page Content
+- [x] `GET /landing-page/v1/content` - Get Landing Page Content
 - [ ] `POST/PATCH/DELETE /landing-page/v1/hero` - Manage Hero Content (Admin)
 - [ ] `POST/PATCH/DELETE /landing-page/v1/step` - Manage Step Content (Admin)
 - [ ] `POST/PATCH/DELETE /landing-page/v1/service` - Manage Service Content (Admin)
@@ -84,7 +84,8 @@ This document tracks the progress of integrating the backend APIs into the front
 - [ ] `GET /invoices/v1/all` - Get All Invoices (Admin)
 - [x] `GET /invoices/v1/my-invoices` - Get My Invoices (DJ)
 - [ ] `POST /invoices/v1/:id/pay` - Pay Booking (Public)
-- [ ] `PATCH /invoices/v1/:id/mark-paid` - Mark Booking Paid (Cash) (DJ)
+- [x] `PATCH /invoices/v1/:id/mark-paid` - Mark Booking Paid (Cash) (DJ)
+
 
 ### 🔗 Stripe Connect Module
 - [ ] `POST /stripe-connect/v1/onboard` - Get Onboarding Link (DJ)

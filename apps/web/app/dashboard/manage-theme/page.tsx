@@ -14,8 +14,140 @@ import {
 import TemplateRenderer from '@repo/builder';
 import {templates} from '@repo/templates';
 import {Content, Theme} from '@repo/types';
-import { useAssignThemeMutation } from '@repo/store';
+import {
+  useAssignThemeMutation,
+  useGetCurrentProfileQuery,
+  useUploadTenantMediaMutation,
+} from '@repo/store';
 import { toast } from 'sonner';
+
+// ==========================================
+// 0. Custom Image Uploader Component
+// ==========================================
+function ImageUploader({
+  value,
+  onChange,
+  label,
+}: {
+  value: string;
+  onChange: (url: string) => void;
+  label: string;
+}) {
+  const [uploadMedia, { isLoading }] = useUploadTenantMediaMutation();
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const res = await uploadMedia(file).unwrap();
+      if (res.data?.url) {
+        onChange(res.data.url);
+        toast.success('Image uploaded successfully');
+      }
+    } catch (err: any) {
+      toast.error(err?.data?.message || 'Failed to upload image');
+    }
+  };
+
+  return (
+    <div className="space-y-2">
+      {value && (
+        <div className="relative w-full h-32 rounded-lg overflow-hidden border border-slate-200">
+          <img src={value} alt="Preview" className="w-full h-full object-cover" />
+        </div>
+      )}
+      <div className="relative w-full">
+        <input
+          type="file"
+          accept="image/*"
+          onChange={handleFileChange}
+          disabled={isLoading}
+          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
+        />
+        <div className="w-full p-2.5 bg-white border border-slate-200 border-dashed hover:border-[#F63131] rounded-lg text-[13px] text-slate-500 flex items-center justify-center gap-2 transition-colors">
+          <Upload className="w-4 h-4" />
+          {isLoading ? 'Uploading...' : `Upload ${label}`}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function GalleryUploader({
+  images,
+  onChange,
+}: {
+  images: string[];
+  onChange: (images: string[]) => void;
+}) {
+  const [uploadMedia, { isLoading }] = useUploadTenantMediaMutation();
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (images.length >= 5) {
+      toast.error('Maximum 5 images allowed in gallery');
+      return;
+    }
+
+    try {
+      const res = await uploadMedia(file).unwrap();
+      if (res.data?.url) {
+        onChange([...images, res.data.url]);
+        toast.success('Image added to gallery');
+      }
+    } catch (err: any) {
+      toast.error('Failed to upload image');
+    }
+  };
+
+  const moveImage = (index: number, direction: 'up' | 'down') => {
+    const newImages = [...images];
+    if (direction === 'up' && index > 0) {
+      [newImages[index - 1], newImages[index]] = [newImages[index], newImages[index - 1]];
+    } else if (direction === 'down' && index < newImages.length - 1) {
+      [newImages[index + 1], newImages[index]] = [newImages[index], newImages[index + 1]];
+    }
+    onChange(newImages);
+  };
+
+  const removeImage = (index: number) => {
+    const newImages = images.filter((_, i) => i !== index);
+    onChange(newImages);
+  };
+
+  return (
+    <div className="space-y-3">
+      {images.map((img, idx) => (
+        <div key={idx} className="flex items-center gap-2 bg-white p-2 border border-slate-200 rounded-lg">
+          <img src={img} alt="" className="w-12 h-12 rounded object-cover" />
+          <div className="flex-1 flex flex-col gap-1">
+            <button onClick={() => moveImage(idx, 'up')} disabled={idx === 0} className="text-[10px] text-slate-500 hover:text-slate-800 disabled:opacity-30">Move Up</button>
+            <button onClick={() => moveImage(idx, 'down')} disabled={idx === images.length - 1} className="text-[10px] text-slate-500 hover:text-slate-800 disabled:opacity-30">Move Down</button>
+          </div>
+          <button onClick={() => removeImage(idx)} className="text-red-500 p-1 hover:bg-red-50 rounded">X</button>
+        </div>
+      ))}
+      {images.length < 5 && (
+        <div className="relative w-full">
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleFileChange}
+            disabled={isLoading}
+            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+          />
+          <div className="w-full p-2.5 bg-white border border-slate-200 border-dashed hover:border-[#F63131] rounded-lg text-[13px] text-slate-500 flex items-center justify-center gap-2">
+            <Upload className="w-4 h-4" />
+            {isLoading ? 'Uploading...' : 'Add Gallery Image'}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 // ==========================================
 // 1. Section Editor Configuration
@@ -24,7 +156,7 @@ const SECTION_EDITORS: Record<
   string,
   {
     label: string;
-    fields: {label: string; key: string; type: 'text' | 'textarea' | 'list'}[];
+    fields: {label: string; key: string; type: 'text' | 'textarea' | 'list' | 'image' | 'gallery'}[];
   }
 > = {
   hero: {
@@ -32,7 +164,7 @@ const SECTION_EDITORS: Record<
     fields: [
       {label: 'Main Title', key: 'heroTitle', type: 'text'},
       {label: 'Sub Description', key: 'heroDescription', type: 'textarea'},
-      {label: 'Background Image URL', key: 'heroImage', type: 'text'},
+      {label: 'Background Image', key: 'heroImage', type: 'image'},
     ],
   },
   'behind-decks': {
@@ -40,7 +172,15 @@ const SECTION_EDITORS: Record<
     fields: [
       {label: 'Section Title', key: 'behindDecksTitle', type: 'text'},
       {label: 'Biography', key: 'behindDecksBio', type: 'textarea'},
-      {label: 'Featured Image', key: 'behindDecksImage', type: 'text'},
+      {label: 'Featured Image', key: 'behindDecksImage', type: 'image'},
+    ],
+  },
+  gallery: {
+    label: 'Live In Action / Gallery',
+    fields: [
+      {label: 'Gallery Title', key: 'title', type: 'text'},
+      {label: 'Gallery Subtitle', key: 'subtitle', type: 'text'},
+      {label: 'Gallery Images', key: 'liveActionImages', type: 'gallery'},
     ],
   },
   about: {
@@ -63,11 +203,27 @@ function ManageThemeContent() {
   const template =
     templates[themeId as keyof typeof templates] || templates.azura;
 
+  // Fetch current user config
+  const { data: userRes, isLoading: isUserLoading } = useGetCurrentProfileQuery();
+  const tenantConfig = userRes?.data?.tenant?.config;
+
   // Content & Theme State
   const [content, setContent] = useState<Content>(template.defaultContent);
-  const [themeSettings, setThemeSettings] = useState<Theme>(
-    template.defaultTheme,
-  );
+  const [themeSettings, setThemeSettings] = useState<Theme>(template.defaultTheme);
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  useEffect(() => {
+    if (!isUserLoading && !isInitialized) {
+      if (tenantConfig?.content) {
+        setContent({ ...template.defaultContent, ...tenantConfig.content });
+      }
+      if (tenantConfig?.theme) {
+        setThemeSettings({ ...template.defaultTheme, ...tenantConfig.theme });
+      }
+      setIsInitialized(true);
+    }
+  }, [tenantConfig, isUserLoading, isInitialized, template]);
+
   const [view, setView] = useState<'landing' | 'booking'>('landing');
 
   // UX Enhancements State
@@ -83,7 +239,10 @@ function ManageThemeContent() {
 
   const handlePublish = async () => {
     try {
-      await assignTheme({ themeId }).unwrap();
+      await assignTheme({ 
+        themeSlug: themeId, 
+        config: { content, theme: themeSettings } 
+      }).unwrap();
       toast.success('Theme published successfully!');
     } catch (error: any) {
       toast.error(error?.data?.error?.message || error?.data?.message || 'Failed to publish theme');
@@ -284,7 +443,7 @@ function ManageThemeContent() {
                                     className="w-full p-2.5 bg-white border border-slate-200 rounded-lg text-[13px] text-slate-700 focus:ring-2 focus:ring-[#F63131]/20 focus:border-[#F63131] outline-none transition-all placeholder:text-slate-300 shadow-sm"
                                     placeholder={`Enter ${field.label.toLowerCase()}...`}
                                   />
-                                ) : (
+                                ) : field.type === 'textarea' ? (
                                   <textarea
                                     value={content[field.key] || ''}
                                     onChange={(e) =>
@@ -296,7 +455,18 @@ function ManageThemeContent() {
                                     className="w-full p-2.5 bg-white border border-slate-200 rounded-lg text-[13px] text-slate-700 h-24 focus:ring-2 focus:ring-[#F63131]/20 focus:border-[#F63131] outline-none transition-all resize-none placeholder:text-slate-300 shadow-sm"
                                     placeholder={`Enter ${field.label.toLowerCase()}...`}
                                   />
-                                )}
+                                ) : field.type === 'image' ? (
+                                  <ImageUploader
+                                    value={content[field.key] || ''}
+                                    onChange={(url) => handleContentChange(field.key, url)}
+                                    label={field.label}
+                                  />
+                                ) : field.type === 'gallery' ? (
+                                  <GalleryUploader
+                                    images={content[field.key] || []}
+                                    onChange={(urls) => handleContentChange(field.key, urls)}
+                                  />
+                                ) : null}
                               </div>
                             ))}
                           </div>

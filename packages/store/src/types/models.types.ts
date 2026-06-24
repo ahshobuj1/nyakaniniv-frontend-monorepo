@@ -264,7 +264,7 @@ export interface LandingPageMarquee {
 }
 
 export interface LandingPageContent {
-  heroes: LandingPageHero[];
+  hero: LandingPageHero | null;
   steps: LandingPageStep[];
   services: LandingPageService[];
   faqs: LandingPageFaq[];
