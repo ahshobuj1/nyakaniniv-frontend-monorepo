@@ -149,52 +149,9 @@ function GalleryUploader({
   );
 }
 
-// ==========================================
-// 1. Section Editor Configuration
-// ==========================================
-const SECTION_EDITORS: Record<
-  string,
-  {
-    label: string;
-    fields: {label: string; key: string; type: 'text' | 'textarea' | 'list' | 'image' | 'gallery'}[];
-  }
-> = {
-  hero: {
-    label: 'Hero Section',
-    fields: [
-      {label: 'Main Title', key: 'heroTitle', type: 'text'},
-      {label: 'Sub Description', key: 'heroDescription', type: 'textarea'},
-      {label: 'Background Image', key: 'heroImage', type: 'image'},
-    ],
-  },
-  'behind-decks': {
-    label: 'Behind the Decks',
-    fields: [
-      {label: 'Section Title', key: 'behindDecksTitle', type: 'text'},
-      {label: 'Biography', key: 'behindDecksBio', type: 'textarea'},
-      {label: 'Featured Image', key: 'behindDecksImage', type: 'image'},
-    ],
-  },
-  gallery: {
-    label: 'Live In Action / Gallery',
-    fields: [
-      {label: 'Gallery Title', key: 'title', type: 'text'},
-      {label: 'Gallery Subtitle', key: 'subtitle', type: 'text'},
-      {label: 'Gallery Images', key: 'liveActionImages', type: 'gallery'},
-    ],
-  },
-  about: {
-    label: 'About Section',
-    fields: [{label: 'About Content', key: 'aboutText', type: 'textarea'}],
-  },
-  contact: {
-    label: 'Contact Info',
-    fields: [
-      {label: 'Email Address', key: 'email', type: 'text'},
-      {label: 'Phone Number', key: 'phone', type: 'text'},
-      {label: 'Location', key: 'location', type: 'text'},
-    ],
-  },
+// Helper for nested objects
+const getNestedValue = (obj: any, path: string) => {
+  return path.split('.').reduce((acc, part) => acc && acc[part], obj);
 };
 
 function ManageThemeContent() {
@@ -202,6 +159,8 @@ function ManageThemeContent() {
   const themeId = searchParams.get('themeId') || 'azura';
   const template =
     templates[themeId as keyof typeof templates] || templates.azura;
+
+  const SECTION_EDITORS = template.editorConfig || {};
 
   // Fetch current user config
   const { data: userRes, isLoading: isUserLoading } = useGetCurrentProfileQuery();
@@ -263,8 +222,24 @@ function ManageThemeContent() {
     return () => observer.disconnect();
   }, []);
 
-  const handleContentChange = (key: string, value: string) => {
-    setContent((prev) => ({...prev, [key]: value}));
+  const handleContentChange = (key: string, value: string | string[]) => {
+    setContent((prev) => {
+      const keys = key.split('.');
+      if (keys.length === 1) {
+        return { ...prev, [key]: value };
+      }
+      
+      // Deep clone to avoid mutating state directly
+      const newContent = JSON.parse(JSON.stringify(prev));
+      let current = newContent;
+      for (let i = 0; i < keys.length - 1; i++) {
+        const k = keys[i];
+        if (!current[k]) current[k] = {};
+        current = current[k];
+      }
+      current[keys[keys.length - 1]] = value;
+      return newContent;
+    });
   };
 
   const handleThemeChange = (key: keyof Theme, value: string) => {
@@ -433,7 +408,7 @@ function ManageThemeContent() {
                                 {field.type === 'text' ? (
                                   <input
                                     type="text"
-                                    value={content[field.key] || ''}
+                                    value={getNestedValue(content, field.key) || ''}
                                     onChange={(e) =>
                                       handleContentChange(
                                         field.key,
@@ -445,7 +420,7 @@ function ManageThemeContent() {
                                   />
                                 ) : field.type === 'textarea' ? (
                                   <textarea
-                                    value={content[field.key] || ''}
+                                    value={getNestedValue(content, field.key) || ''}
                                     onChange={(e) =>
                                       handleContentChange(
                                         field.key,
@@ -457,13 +432,13 @@ function ManageThemeContent() {
                                   />
                                 ) : field.type === 'image' ? (
                                   <ImageUploader
-                                    value={content[field.key] || ''}
+                                    value={getNestedValue(content, field.key) || ''}
                                     onChange={(url) => handleContentChange(field.key, url)}
                                     label={field.label}
                                   />
                                 ) : field.type === 'gallery' ? (
                                   <GalleryUploader
-                                    images={content[field.key] || []}
+                                    images={getNestedValue(content, field.key) || []}
                                     onChange={(urls) => handleContentChange(field.key, urls)}
                                   />
                                 ) : null}

@@ -2,33 +2,36 @@
 
 import {motion} from 'framer-motion';
 
-export default function UpcomingEvents() {
-  const events = [
-    {
-      id: 1,
-      month: 'DEC',
-      day: '06',
-      title: 'Global Tech Conference 2024',
-      venue: 'Convention Center',
-      location: 'San Francisco, USA',
-    },
-    {
-      id: 2,
-      month: 'JAN',
-      day: '12',
-      title: 'Winter Music Festival 2024',
-      venue: 'Snow Valley Park',
-      location: 'Aspen, USA',
-    },
-    {
-      id: 3,
-      month: 'FEB',
-      day: '20',
-      title: 'Culinary Expo 2024',
-      venue: 'Downtown Plaza',
-      location: 'Chicago, USA',
-    },
-  ];
+export default function UpcomingEvents({content}: any) {
+  const eventsData = content?.events || {
+    list: [
+      {
+        id: 1,
+        month: 'DEC',
+        day: '06',
+        title: 'Global Tech Conference 2024',
+        venue: 'Convention Center',
+        location: 'San Francisco, USA',
+      },
+      {
+        id: 2,
+        month: 'JAN',
+        day: '12',
+        title: 'Winter Music Festival 2024',
+        venue: 'Snow Valley Park',
+        location: 'Aspen, USA',
+      },
+      {
+        id: 3,
+        month: 'FEB',
+        day: '20',
+        title: 'Culinary Expo 2024',
+        venue: 'Downtown Plaza',
+        location: 'Chicago, USA',
+      },
+    ]
+  };
+  const events = eventsData.list;
 
   return (
     <section className="bg-[#fafafa] py-8 lg:py-[80px] font-sans">

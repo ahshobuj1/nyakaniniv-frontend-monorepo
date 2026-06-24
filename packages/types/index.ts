@@ -13,6 +13,19 @@ export type Section = {
   component: React.ComponentType<any>;
 };
 
+export type EditorField = {
+  label: string;
+  key: string;
+  type: 'text' | 'textarea' | 'list' | 'image' | 'gallery';
+};
+
+export type EditorSection = {
+  label: string;
+  fields: EditorField[];
+};
+
+export type EditorConfig = Record<string, EditorSection>;
+
 export type Template = {
   id: string;
   Navbar: React.ComponentType<any>;
@@ -21,6 +34,7 @@ export type Template = {
   BookingPage: React.ComponentType<any>;
   defaultContent: Content;
   defaultTheme: Theme;
+  editorConfig: EditorConfig;
 };
 
 export type Content = Record<string, any>;

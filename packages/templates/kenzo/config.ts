@@ -220,4 +220,37 @@ export const kenzoTemplate: Template = {
       },
     },
   },
+  editorConfig: {
+    hero: {
+      label: 'Hero Section',
+      fields: [
+        {label: 'Main Title', key: 'hero.heroTitle', type: 'text'},
+        {label: 'Sub Description', key: 'hero.heroDescription', type: 'textarea'},
+        {label: 'Background Image', key: 'hero.heroImage', type: 'image'},
+      ],
+    },
+    story: {
+      label: 'The Story',
+      fields: [
+        {label: 'Description 1', key: 'story.description1', type: 'textarea'},
+        {label: 'Description 2', key: 'story.description2', type: 'textarea'},
+        {label: 'Main Image', key: 'story.mainImage', type: 'image'},
+        {label: 'Background Image', key: 'story.bgImage', type: 'image'},
+      ],
+    },
+    gallery: {
+      label: 'Gallery Highlights',
+      fields: [
+        {label: 'Gallery Images', key: 'gallery.images', type: 'gallery'},
+      ],
+    },
+    contact: {
+      label: 'Contact Info',
+      fields: [
+        {label: 'Email Address', key: 'contact.email', type: 'text'},
+        {label: 'Phone Number', key: 'contact.phone', type: 'text'},
+        {label: 'Location', key: 'contact.location', type: 'text'},
+      ],
+    },
+  },
 };
