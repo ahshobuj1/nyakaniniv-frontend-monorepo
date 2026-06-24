@@ -38,14 +38,21 @@ export default function PublicProfile({ username }: PublicProfileProps) {
 
   // Map tenant config to the template content
   // Assuming tenant.config contains the overrides for the template
+  const content = tenant.config?.content;
   const mergedContent = {
     ...template.defaultContent,
-    ...tenant.config?.content,
+    ...content,
+    djName: content?.djName || tenant.stageName || template.defaultContent.djName || 'DJ AURA',
+    navbar: {
+      ...template.defaultContent.navbar,
+      ...content?.navbar,
+      djName: content?.navbar?.djName || tenant.stageName || template.defaultContent.navbar?.djName || 'KENZO',
+    },
     // Map dynamic entities (mixTapes, events) into template expected formats
     mixes: tenant.mixTapes?.length ? tenant.mixTapes.map(m => ({
       img: m.coverUrl || template.defaultContent.heroImage || '/theme/aura/mixes-video-avator-1.png',
       title: m.title,
-      genre: m.genre || 'Various',
+      genre: 'Various',
       time: '00:00',
       audioUrl: m.audioUrl,
     })) : template.defaultContent.mixes || [
@@ -61,7 +68,7 @@ export default function PublicProfile({ username }: PublicProfileProps) {
       tracks: tenant.mixTapes?.length ? tenant.mixTapes.map((m, i) => ({
         id: m.id || i,
         title: m.title,
-        genre: m.genre || 'Various',
+        genre: 'Various',
         duration: '00:00',
         currentTime: '00:00',
         progress: 0,

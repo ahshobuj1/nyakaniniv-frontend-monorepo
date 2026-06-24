@@ -221,6 +221,12 @@ export const kenzoTemplate: Template = {
     },
   },
   editorConfig: {
+    navbar: {
+      label: 'Navbar',
+      fields: [
+        {label: 'DJ Name', key: 'navbar.djName', type: 'text'},
+      ],
+    },
     hero: {
       label: 'Hero Section',
       fields: [
@@ -236,6 +242,12 @@ export const kenzoTemplate: Template = {
         {label: 'Description 2', key: 'story.description2', type: 'textarea'},
         {label: 'Main Image', key: 'story.mainImage', type: 'image'},
         {label: 'Background Image', key: 'story.bgImage', type: 'image'},
+        {label: 'Stat 1 Value', key: 'story.stats.0.value', type: 'text'},
+        {label: 'Stat 1 Label', key: 'story.stats.0.label', type: 'text'},
+        {label: 'Stat 2 Value', key: 'story.stats.1.value', type: 'text'},
+        {label: 'Stat 2 Label', key: 'story.stats.1.label', type: 'text'},
+        {label: 'Stat 3 Value', key: 'story.stats.2.value', type: 'text'},
+        {label: 'Stat 3 Label', key: 'story.stats.2.label', type: 'text'},
       ],
     },
     gallery: {
@@ -250,6 +262,14 @@ export const kenzoTemplate: Template = {
         {label: 'Email Address', key: 'contact.email', type: 'text'},
         {label: 'Phone Number', key: 'contact.phone', type: 'text'},
         {label: 'Location', key: 'contact.location', type: 'text'},
+      ],
+    },
+    social: {
+      label: 'Social Links',
+      fields: [
+        {label: 'Instagram URL', key: 'social.instagram', type: 'text'},
+        {label: 'Facebook URL', key: 'social.facebook', type: 'text'},
+        {label: 'LinkedIn URL', key: 'social.linkedin', type: 'text'},
       ],
     },
   },

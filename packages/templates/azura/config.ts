@@ -68,6 +68,12 @@ export const azuraTemplate: Template = {
     },
   },
   editorConfig: {
+    navbar: {
+      label: 'Navbar',
+      fields: [
+        {label: 'DJ Name', key: 'djName', type: 'text'},
+      ],
+    },
     hero: {
       label: 'Hero Section',
       fields: [
@@ -82,6 +88,9 @@ export const azuraTemplate: Template = {
         {label: 'Section Title', key: 'behindDecksTitle', type: 'text'},
         {label: 'Biography', key: 'behindDecksBio', type: 'textarea'},
         {label: 'Featured Image', key: 'behindDecksImage', type: 'image'},
+        {label: 'Signature Sounds (Comma separated)', key: 'signatureSounds', type: 'text'},
+        {label: 'Events Played', key: 'eventsPlayed', type: 'text'},
+        {label: 'Cities Toured', key: 'citiesToured', type: 'text'},
       ],
     },
     gallery: {
@@ -102,6 +111,14 @@ export const azuraTemplate: Template = {
         {label: 'Email Address', key: 'email', type: 'text'},
         {label: 'Phone Number', key: 'phone', type: 'text'},
         {label: 'Location', key: 'location', type: 'text'},
+      ],
+    },
+    social: {
+      label: 'Social Links',
+      fields: [
+        {label: 'Instagram URL', key: 'instagram', type: 'text'},
+        {label: 'Facebook URL', key: 'facebook', type: 'text'},
+        {label: 'LinkedIn URL', key: 'linkedin', type: 'text'},
       ],
     },
   },

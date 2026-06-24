@@ -181,10 +181,16 @@ function ManageThemeContent() {
       const mergedContent = {
         ...template.defaultContent,
         ...currentConfig?.content,
+        djName: currentConfig?.content?.djName || currentTenant?.stageName || template.defaultContent.djName || 'DJ AURA',
+        navbar: {
+          ...template.defaultContent.navbar,
+          ...currentConfig?.content?.navbar,
+          djName: currentConfig?.content?.navbar?.djName || currentTenant?.stageName || template.defaultContent.navbar?.djName || 'KENZO',
+        },
         mixes: currentTenant?.mixTapes?.length ? currentTenant.mixTapes.map(m => ({
           img: m.coverUrl || template.defaultContent.heroImage || '/theme/aura/mixes-video-avator-1.png',
           title: m.title,
-          genre: m.genre || 'Various',
+          genre: 'Various',
           time: '00:00',
           audioUrl: m.audioUrl,
         })) : template.defaultContent.mixes || [],
@@ -193,7 +199,7 @@ function ManageThemeContent() {
           tracks: currentTenant?.mixTapes?.length ? currentTenant.mixTapes.map((m, i) => ({
             id: m.id || i,
             title: m.title,
-            genre: m.genre || 'Various',
+            genre: 'Various',
             duration: '00:00',
             currentTime: '00:00',
             progress: 0,
