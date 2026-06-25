@@ -24,6 +24,20 @@ export default function WebsiteThemesPage() {
   };
 
   const activeTheme = themes.find(t => t.id === activeThemeId);
+  const subdomain = profileResponse?.data?.tenant?.subdomain || 'demo';
+
+  const getLiveWebsiteUrl = () => {
+    if (typeof window === 'undefined') return '#';
+    const hostname = window.location.hostname;
+    const port = window.location.port ? `:${window.location.port}` : '';
+    
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+      return `http://${subdomain}.localhost${port}`;
+    }
+    
+    const rootDomain = hostname.includes('upbeatafrica.com') ? 'upbeatafrica.com' : hostname;
+    return `https://${subdomain}.${rootDomain}`;
+  };
 
   return (
     <div className="w-full bg-[#f4f6f8] min-h-screen p-6 font-sans">
@@ -39,7 +53,9 @@ export default function WebsiteThemesPage() {
             </p>
           </div>
 
-          <button className="bg-primary hover:bg-red-600 text-white text-sm font-medium py-2.5 px-5 rounded-lg shadow-sm transition-colors flex items-center justify-center gap-2">
+          <button 
+            onClick={() => window.open(getLiveWebsiteUrl(), '_blank')}
+            className="bg-primary hover:bg-red-600 text-white text-sm font-medium py-2.5 px-5 rounded-lg shadow-sm transition-colors flex items-center justify-center gap-2">
             View My Website <ArrowRight className="w-4 h-4" />
           </button>
         </div>

@@ -16,6 +16,14 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'additional-user.s3.eu-north-1.amazonaws.com',
       },
+       {
+      protocol: "https",
+      hostname: "**",
+    },
+    {
+      protocol: "http",
+      hostname: "**",
+    },
     ],
   },
 };

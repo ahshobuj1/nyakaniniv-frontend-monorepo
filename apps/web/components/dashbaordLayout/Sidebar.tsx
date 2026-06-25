@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import {useSidebar} from './SidebarContext';
 import Image from 'next/image';
+import { useSelector } from 'react-redux';
 
 const sidebarGroups = [
   {
@@ -53,6 +54,22 @@ const sidebarGroups = [
 export function Sidebar() {
   const pathname = usePathname();
   const {isCollapsed, isMobileOpen, closeMobile} = useSidebar();
+  const user = useSelector((state: any) => state.auth.user);
+  
+  const subdomain = user?.tenant?.subdomain || 'demo';
+  
+  const getLiveWebsiteUrl = () => {
+    if (typeof window === 'undefined') return '#';
+    const hostname = window.location.hostname;
+    const port = window.location.port ? `:${window.location.port}` : '';
+    
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+      return `http://${subdomain}.localhost${port}`;
+    }
+    
+    const rootDomain = hostname.includes('upbeatafrica.com') ? 'upbeatafrica.com' : hostname;
+    return `https://${subdomain}.${rootDomain}`;
+  };
 
   return (
     <>
@@ -147,7 +164,7 @@ export function Sidebar() {
         <div
           className={`p-4 border-t border-gray-100 ${isCollapsed ? 'md:flex md:flex-col md:items-center' : ''}`}>
           <Link
-            href="https://subdomainafrica.vercel.app/aura"
+            href={getLiveWebsiteUrl()}
             target="_blank"
             className={`flex items-center justify-center gap-2 w-full bg-[#fff0f0] text-primary ${isCollapsed ? 'md:py-3' : 'py-2.5'} rounded-md text-sm font-semibold hover:bg-[#ffe5e5] transition-colors mb-4`}
             title={isCollapsed ? 'View My Website' : ''}>

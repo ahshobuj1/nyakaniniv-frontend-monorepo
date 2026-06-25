@@ -55,7 +55,7 @@ export default function UpcomingEvents({content}: any) {
         </div>
 
         <div className="flex flex-col gap-[16px]">
-          {events.map((event, index) => (
+          {events.map((event: any, index: number) => (
             <motion.div
               key={event.id}
               initial={{opacity: 0, y: 20}}

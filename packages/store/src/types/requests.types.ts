@@ -59,6 +59,7 @@ export interface OnboardTenantRequest {
 }
 
 export interface UpdateTenantProfileRequest {
+  stageName?: string;
   country?: string;
   city?: string;
   genres?: string[];

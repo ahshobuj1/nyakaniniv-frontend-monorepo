@@ -42,11 +42,28 @@ export default function PublicProfile({ username }: PublicProfileProps) {
   const mergedContent = {
     ...template.defaultContent,
     ...content,
-    djName: content?.djName || tenant.stageName || template.defaultContent.djName || 'DJ AURA',
+    djName: tenant.stageName || content?.djName || template.defaultContent.djName || 'DJ AURA',
     navbar: {
       ...template.defaultContent.navbar,
       ...content?.navbar,
-      djName: content?.navbar?.djName || tenant.stageName || template.defaultContent.navbar?.djName || 'KENZO',
+      djName: tenant.stageName || content?.navbar?.djName || template.defaultContent.navbar?.djName || 'KENZO',
+    },
+    // Map Azura root level socials
+    instagram: tenant.socialLinks?.instagram || content?.instagram || template.defaultContent.instagram || '#',
+    facebook: tenant.socialLinks?.facebook || content?.facebook || template.defaultContent.facebook || '#',
+    linkedin: tenant.socialLinks?.linkedin || content?.linkedin || template.defaultContent.linkedin || '#',
+    // Map Kenzo nested socials
+    social: {
+      ...template.defaultContent.social,
+      ...content?.social,
+      instagram: tenant.socialLinks?.instagram || content?.social?.instagram || template.defaultContent.social?.instagram || '#',
+      facebook: tenant.socialLinks?.facebook || content?.social?.facebook || template.defaultContent.social?.facebook || '#',
+      linkedin: tenant.socialLinks?.linkedin || content?.social?.linkedin || template.defaultContent.social?.linkedin || '#',
+    },
+    footer: {
+      ...template.defaultContent.footer,
+      ...content?.footer,
+      logoText: tenant.stageName || content?.footer?.logoText || template.defaultContent.footer?.logoText || 'DJ AURA',
     },
     // Map dynamic entities (mixTapes, events) into template expected formats
     mixes: tenant.mixTapes?.length ? tenant.mixTapes.map(m => ({

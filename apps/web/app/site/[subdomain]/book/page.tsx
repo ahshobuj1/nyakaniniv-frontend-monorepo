@@ -7,7 +7,7 @@ import {useParams} from 'next/navigation';
 
 export default function UserBookingPage() {
   const params = useParams();
-  const username = params.username as string;
+  const username = params.subdomain as string;
   
   // In a real production app, fetch the user's specific theme and content from the database.
   const themeId = 'azura'; 

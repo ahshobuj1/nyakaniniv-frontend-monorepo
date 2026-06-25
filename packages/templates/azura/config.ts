@@ -121,5 +121,6 @@ export const azuraTemplate: Template = {
         {label: 'LinkedIn URL', key: 'linkedin', type: 'text'},
       ],
     },
+
   },
 };

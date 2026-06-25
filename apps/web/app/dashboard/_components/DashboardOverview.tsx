@@ -146,7 +146,25 @@ const CustomTooltip = ({active, payload, label}: any) => {
 // ==========================================
 // 3. Main Dashboard Component
 // ==========================================
+import { useSelector } from 'react-redux';
+
 export default function DashboardOverview() {
+  const user = useSelector((state: any) => state.auth.user);
+  const subdomain = user?.tenant?.subdomain || 'demo';
+  
+  const getLiveWebsiteUrl = () => {
+    if (typeof window === 'undefined') return '#';
+    const hostname = window.location.hostname;
+    const port = window.location.port ? `:${window.location.port}` : '';
+    
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+      return `http://${subdomain}.localhost${port}`;
+    }
+    
+    const rootDomain = hostname.includes('upbeatafrica.com') ? 'upbeatafrica.com' : hostname;
+    return `https://${subdomain}.${rootDomain}`;
+  };
+
   return (
     <div className="w-full bg-[#F5F5F5] min-h-screen p-4 md:p-4">
       <div className="mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -161,7 +179,7 @@ export default function DashboardOverview() {
             </p>
           </div>
 
-          <Link href={'https://subdomainafrica.vercel.app/shobuj'}>
+          <Link href={getLiveWebsiteUrl()} target="_blank">
             <Button className="bg-primary hover:bg-primary/90 text-white font-semibold px-6 h-11 rounded-lg shadow-sm transition-all active:scale-[0.98]">
               View My Website
               <ArrowRight className="w-4 h-4 ml-1 stroke-[2.5]" />

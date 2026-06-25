@@ -31,6 +31,7 @@ export const tenantApi = baseApi.injectEndpoints({
 
         if (body.logo || body.banner) {
           const formData = new FormData();
+          if (body.stageName) formData.append('stageName', body.stageName);
           if (body.country) formData.append('country', body.country);
           if (body.city) formData.append('city', body.city);
           if (body.genres) {

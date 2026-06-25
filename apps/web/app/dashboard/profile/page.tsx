@@ -29,10 +29,16 @@ import Image from 'next/image';
 const profileSchema = z.object({
   firstName: z.string().min(1, 'First name is required'),
   lastName: z.string().min(1, 'Last name is required'),
+  stageName: z.string().min(1, 'Stage name is required'),
   city: z.string().min(1, 'City is required'),
   country: z.string().min(1, 'Country is required'),
   email: z.string().email('Invalid email address'),
   genres: z.array(z.string()),
+  socialLinks: z.object({
+    instagram: z.string().url('Invalid URL').optional().or(z.literal('')),
+    facebook: z.string().url('Invalid URL').optional().or(z.literal('')),
+    linkedin: z.string().url('Invalid URL').optional().or(z.literal('')),
+  }).optional(),
 });
 
 const passwordSchema = z.object({
@@ -89,10 +95,16 @@ export default function ProfileContent() {
     defaultValues: {
       firstName: '',
       lastName: '',
+      stageName: '',
       city: '',
       country: '',
       email: '',
       genres: [],
+      socialLinks: {
+        instagram: '',
+        facebook: '',
+        linkedin: '',
+      },
     },
   });
 
@@ -124,10 +136,16 @@ export default function ProfileContent() {
       reset({
         firstName: user.firstName || '',
         lastName: user.lastName || '',
+        stageName: tenant?.stageName || '',
         email: user.email || '',
         country: tenant?.country || '',
         city: tenant?.city || '',
         genres: tenant?.genres || [],
+        socialLinks: {
+          instagram: tenant?.socialLinks?.instagram || '',
+          facebook: tenant?.socialLinks?.facebook || '',
+          linkedin: tenant?.socialLinks?.linkedin || '',
+        },
       });
     }
   }, [profileResponse, reset]);
@@ -179,9 +197,11 @@ export default function ProfileContent() {
       // Update Tenant Level Data (if applicable)
       if (profileResponse?.data?.tenant) {
         await updateTenant({
+          stageName: data.stageName,
           country: data.country,
           city: data.city,
           genres: data.genres,
+          socialLinks: data.socialLinks,
         }).unwrap();
       }
 
@@ -256,6 +276,36 @@ export default function ProfileContent() {
               {errors.lastName && (
                 <p className="text-red-500 text-xs mt-1.5">
                   {errors.lastName.message}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <label className={labelClass}>Stage Name</label>
+              <input
+                {...register('stageName')}
+                placeholder="DJ Aura"
+                className={inputBaseClass}
+              />
+              {errors.stageName && (
+                <p className="text-red-500 text-xs mt-1.5">
+                  {errors.stageName.message}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <label className={labelClass}>Email</label>
+              <input
+                type="email"
+                {...register('email')}
+                placeholder="kwame@djkwamebeats.com"
+                className={inputBaseClass}
+                disabled
+              />
+              {errors.email && (
+                <p className="text-red-500 text-xs mt-1.5">
+                  {errors.email.message}
                 </p>
               )}
             </div>
@@ -389,18 +439,53 @@ export default function ProfileContent() {
               )}
             </div>
 
+          </div>
+        </div>
+
+        {/* Section: Social Links */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8">
+          <h3 className="text-base font-bold text-gray-800 pb-6 mb-6 border-b border-gray-200">
+            Social Links
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className={labelClass}>Email</label>
+              <label className={labelClass}>Instagram URL</label>
               <input
-                type="email"
-                {...register('email')}
-                placeholder="kwame@djkwamebeats.com"
+                {...register('socialLinks.instagram')}
+                placeholder="https://instagram.com/djkwame"
                 className={inputBaseClass}
-                disabled
               />
-              {errors.email && (
+              {errors.socialLinks?.instagram && (
                 <p className="text-red-500 text-xs mt-1.5">
-                  {errors.email.message}
+                  {errors.socialLinks.instagram.message}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <label className={labelClass}>Facebook URL</label>
+              <input
+                {...register('socialLinks.facebook')}
+                placeholder="https://facebook.com/djkwame"
+                className={inputBaseClass}
+              />
+              {errors.socialLinks?.facebook && (
+                <p className="text-red-500 text-xs mt-1.5">
+                  {errors.socialLinks.facebook.message}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <label className={labelClass}>LinkedIn URL</label>
+              <input
+                {...register('socialLinks.linkedin')}
+                placeholder="https://linkedin.com/in/djkwame"
+                className={inputBaseClass}
+              />
+              {errors.socialLinks?.linkedin && (
+                <p className="text-red-500 text-xs mt-1.5">
+                  {errors.socialLinks.linkedin.message}
                 </p>
               )}
             </div>

@@ -18,6 +18,7 @@ import {
   useAssignThemeMutation,
   useGetCurrentProfileQuery,
   useUploadTenantMediaMutation,
+  useUpdateTenantProfileMutation,
 } from '@repo/store';
 import { toast } from 'sonner';
 
@@ -181,11 +182,26 @@ function ManageThemeContent() {
       const mergedContent = {
         ...template.defaultContent,
         ...currentConfig?.content,
-        djName: currentConfig?.content?.djName || currentTenant?.stageName || template.defaultContent.djName || 'DJ AURA',
+        djName: currentTenant?.stageName || currentConfig?.content?.djName || template.defaultContent.djName || 'DJ AURA',
         navbar: {
           ...template.defaultContent.navbar,
           ...currentConfig?.content?.navbar,
-          djName: currentConfig?.content?.navbar?.djName || currentTenant?.stageName || template.defaultContent.navbar?.djName || 'KENZO',
+          djName: currentTenant?.stageName || currentConfig?.content?.navbar?.djName || template.defaultContent.navbar?.djName || 'KENZO',
+        },
+        instagram: currentTenant?.socialLinks?.instagram || currentConfig?.content?.instagram || template.defaultContent.instagram || '#',
+        facebook: currentTenant?.socialLinks?.facebook || currentConfig?.content?.facebook || template.defaultContent.facebook || '#',
+        linkedin: currentTenant?.socialLinks?.linkedin || currentConfig?.content?.linkedin || template.defaultContent.linkedin || '#',
+        social: {
+          ...template.defaultContent.social,
+          ...currentConfig?.content?.social,
+          instagram: currentTenant?.socialLinks?.instagram || currentConfig?.content?.social?.instagram || template.defaultContent.social?.instagram || '#',
+          facebook: currentTenant?.socialLinks?.facebook || currentConfig?.content?.social?.facebook || template.defaultContent.social?.facebook || '#',
+          linkedin: currentTenant?.socialLinks?.linkedin || currentConfig?.content?.social?.linkedin || template.defaultContent.social?.linkedin || '#',
+        },
+        footer: {
+          ...template.defaultContent.footer,
+          ...currentConfig?.content?.footer,
+          logoText: currentTenant?.stageName || currentConfig?.content?.footer?.logoText || template.defaultContent.footer?.logoText || 'DJ AURA',
         },
         mixes: currentTenant?.mixTapes?.length ? currentTenant.mixTapes.map(m => ({
           img: m.coverUrl || template.defaultContent.heroImage || '/theme/aura/mixes-video-avator-1.png',
@@ -243,13 +259,44 @@ function ManageThemeContent() {
 
   // APIs
   const [assignTheme, { isLoading: isAssigning }] = useAssignThemeMutation();
+  const [updateTenantProfile] = useUpdateTenantProfileMutation();
 
   const handlePublish = async () => {
     try {
+      // Extract Stage Name and Social Links to save globally
+      const stageName = content.djName || content.navbar?.djName || tenant?.stageName;
+      const socialLinks = {
+        instagram: content.instagram || content.social?.instagram || tenant?.socialLinks?.instagram || '',
+        facebook: content.facebook || content.social?.facebook || tenant?.socialLinks?.facebook || '',
+        linkedin: content.linkedin || content.social?.linkedin || tenant?.socialLinks?.linkedin || '',
+      };
+
+      // Clean up local content so it doesn't override globally managed fields
+      const configContentToSave = JSON.parse(JSON.stringify(content));
+      delete configContentToSave.djName;
+      if (configContentToSave.navbar) delete configContentToSave.navbar.djName;
+      delete configContentToSave.instagram;
+      delete configContentToSave.facebook;
+      delete configContentToSave.linkedin;
+      if (configContentToSave.social) {
+        delete configContentToSave.social.instagram;
+        delete configContentToSave.social.facebook;
+        delete configContentToSave.social.linkedin;
+      }
+
       await assignTheme({ 
         themeSlug: themeId, 
-        config: { content, theme: themeSettings } 
+        config: { content: configContentToSave, theme: themeSettings } 
       }).unwrap();
+
+      // Save globally
+      if (stageName || socialLinks.instagram || socialLinks.facebook || socialLinks.linkedin) {
+        await updateTenantProfile({
+          stageName,
+          socialLinks,
+        }).unwrap();
+      }
+
       toast.success('Theme published successfully!');
     } catch (error: any) {
       toast.error(error?.data?.error?.message || error?.data?.message || 'Failed to publish theme');
@@ -634,23 +681,6 @@ function ManageThemeContent() {
                     </div>
                   </section>
 
-                  {/* Media Library */}
-                  <section className="p-5 border border-slate-200 rounded-2xl bg-white shadow-[0_2px_10px_rgba(0,0,0,0.02)]">
-                    <div className="mb-4">
-                      <h3 className="text-[14px] font-bold text-slate-800">
-                        Media Library
-                      </h3>
-                    </div>
-
-                    <div className="group border-2 border-dashed border-slate-200 rounded-xl p-8 flex flex-col items-center justify-center text-slate-400 bg-slate-50 hover:bg-[#F63131]/5 hover:border-[#F63131]/30 transition-all cursor-pointer">
-                      <div className="p-3 bg-white rounded-xl shadow-sm border border-slate-100 group-hover:scale-110 group-hover:text-[#F63131] transition-transform">
-                        <Upload className="w-5 h-5" />
-                      </div>
-                      <span className="text-[12px] font-bold uppercase tracking-widest mt-3 text-slate-500 group-hover:text-[#F63131]">
-                        Upload Asset
-                      </span>
-                    </div>
-                  </section>
                 </div>
               )}
             </div>

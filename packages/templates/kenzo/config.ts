@@ -272,5 +272,6 @@ export const kenzoTemplate: Template = {
         {label: 'LinkedIn URL', key: 'social.linkedin', type: 'text'},
       ],
     },
+
   },
 };
