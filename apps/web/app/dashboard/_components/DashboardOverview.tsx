@@ -145,12 +145,11 @@ const CustomTooltip = ({active, payload, label}: any) => {
 
 // ==========================================
 // 3. Main Dashboard Component
-// ==========================================
-import { useSelector } from 'react-redux';
+import { useGetCurrentProfileQuery } from '@repo/store';
 
 export default function DashboardOverview() {
-  const user = useSelector((state: any) => state.auth.user);
-  const subdomain = user?.tenant?.subdomain || 'demo';
+  const { data: profileResponse } = useGetCurrentProfileQuery();
+  const subdomain = profileResponse?.data?.tenant?.subdomain || 'demo';
   
   const getLiveWebsiteUrl = () => {
     if (typeof window === 'undefined') return '#';

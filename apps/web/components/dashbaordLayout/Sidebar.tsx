@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 import {useSidebar} from './SidebarContext';
 import Image from 'next/image';
-import { useSelector } from 'react-redux';
+import { useGetCurrentProfileQuery } from '@repo/store';
 
 const sidebarGroups = [
   {
@@ -54,9 +54,8 @@ const sidebarGroups = [
 export function Sidebar() {
   const pathname = usePathname();
   const {isCollapsed, isMobileOpen, closeMobile} = useSidebar();
-  const user = useSelector((state: any) => state.auth.user);
-  
-  const subdomain = user?.tenant?.subdomain || 'demo';
+  const { data: profileResponse } = useGetCurrentProfileQuery();
+  const subdomain = profileResponse?.data?.tenant?.subdomain || 'demo';
   
   const getLiveWebsiteUrl = () => {
     if (typeof window === 'undefined') return '#';
