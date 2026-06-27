@@ -29,7 +29,8 @@ export default function middleware(req: NextRequest) {
     'www.upbeatafrica.com',
     'localhost:3000',
     'app.upbeatafrica.com',
-    'admin.upbeatafrica.com'
+    'admin.upbeatafrica.com',
+    'upbeatafrica.vercel.app'
   ];
 
   // If the request is for the main domain, app dashboard, or admin, let it pass normally.

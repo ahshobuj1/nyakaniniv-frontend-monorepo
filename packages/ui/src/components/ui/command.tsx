@@ -8,10 +8,13 @@ import { Search } from "lucide-react"
 import { cn } from "../../lib/utils"
 import { Dialog, DialogContent } from "./dialog"
 
-const Command = React.forwardRef<
+const Command: React.ForwardRefExoticComponent<
+  React.ComponentPropsWithoutRef<typeof CommandPrimitive> & React.RefAttributes<React.ElementRef<typeof CommandPrimitive>>
+> = React.forwardRef<
   React.ElementRef<typeof CommandPrimitive>,
   React.ComponentPropsWithoutRef<typeof CommandPrimitive>
 >(({ className, ...props }, ref) => (
+  // @ts-ignore React 19 type incompatibility
   <CommandPrimitive
     ref={ref}
     className={cn(
@@ -37,12 +40,15 @@ const CommandDialog = ({ children, ...props }: CommandDialogProps) => {
   )
 }
 
-const CommandInput = React.forwardRef<
+const CommandInput: React.ForwardRefExoticComponent<
+  React.ComponentPropsWithoutRef<typeof CommandPrimitive.Input> & React.RefAttributes<React.ElementRef<typeof CommandPrimitive.Input>>
+> = React.forwardRef<
   React.ElementRef<typeof CommandPrimitive.Input>,
   React.ComponentPropsWithoutRef<typeof CommandPrimitive.Input>
 >(({ className, ...props }, ref) => (
   <div className="flex items-center border-b px-3" cmdk-input-wrapper="">
     <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
+    {/* @ts-ignore React 19 type incompatibility */}
     <CommandPrimitive.Input
       ref={ref}
       className={cn(
@@ -56,10 +62,13 @@ const CommandInput = React.forwardRef<
 
 CommandInput.displayName = CommandPrimitive.Input.displayName
 
-const CommandList = React.forwardRef<
+const CommandList: React.ForwardRefExoticComponent<
+  React.ComponentPropsWithoutRef<typeof CommandPrimitive.List> & React.RefAttributes<React.ElementRef<typeof CommandPrimitive.List>>
+> = React.forwardRef<
   React.ElementRef<typeof CommandPrimitive.List>,
   React.ComponentPropsWithoutRef<typeof CommandPrimitive.List>
 >(({ className, ...props }, ref) => (
+  // @ts-ignore React 19 type incompatibility
   <CommandPrimitive.List
     ref={ref}
     className={cn("max-h-[300px] overflow-y-auto overflow-x-hidden", className)}
@@ -69,10 +78,13 @@ const CommandList = React.forwardRef<
 
 CommandList.displayName = CommandPrimitive.List.displayName
 
-const CommandEmpty = React.forwardRef<
+const CommandEmpty: React.ForwardRefExoticComponent<
+  React.ComponentPropsWithoutRef<typeof CommandPrimitive.Empty> & React.RefAttributes<React.ElementRef<typeof CommandPrimitive.Empty>>
+> = React.forwardRef<
   React.ElementRef<typeof CommandPrimitive.Empty>,
   React.ComponentPropsWithoutRef<typeof CommandPrimitive.Empty>
 >((props, ref) => (
+  // @ts-ignore React 19 type incompatibility
   <CommandPrimitive.Empty
     ref={ref}
     className="py-6 text-center text-sm"
@@ -82,10 +94,13 @@ const CommandEmpty = React.forwardRef<
 
 CommandEmpty.displayName = CommandPrimitive.Empty.displayName
 
-const CommandGroup = React.forwardRef<
+const CommandGroup: React.ForwardRefExoticComponent<
+  React.ComponentPropsWithoutRef<typeof CommandPrimitive.Group> & React.RefAttributes<React.ElementRef<typeof CommandPrimitive.Group>>
+> = React.forwardRef<
   React.ElementRef<typeof CommandPrimitive.Group>,
   React.ComponentPropsWithoutRef<typeof CommandPrimitive.Group>
 >(({ className, ...props }, ref) => (
+  // @ts-ignore React 19 type incompatibility
   <CommandPrimitive.Group
     ref={ref}
     className={cn(
@@ -98,10 +113,13 @@ const CommandGroup = React.forwardRef<
 
 CommandGroup.displayName = CommandPrimitive.Group.displayName
 
-const CommandSeparator = React.forwardRef<
+const CommandSeparator: React.ForwardRefExoticComponent<
+  React.ComponentPropsWithoutRef<typeof CommandPrimitive.Separator> & React.RefAttributes<React.ElementRef<typeof CommandPrimitive.Separator>>
+> = React.forwardRef<
   React.ElementRef<typeof CommandPrimitive.Separator>,
   React.ComponentPropsWithoutRef<typeof CommandPrimitive.Separator>
 >(({ className, ...props }, ref) => (
+  // @ts-ignore React 19 type incompatibility
   <CommandPrimitive.Separator
     ref={ref}
     className={cn("-mx-1 h-px bg-border", className)}
@@ -110,10 +128,13 @@ const CommandSeparator = React.forwardRef<
 ))
 CommandSeparator.displayName = CommandPrimitive.Separator.displayName
 
-const CommandItem = React.forwardRef<
+const CommandItem: React.ForwardRefExoticComponent<
+  React.ComponentPropsWithoutRef<typeof CommandPrimitive.Item> & React.RefAttributes<React.ElementRef<typeof CommandPrimitive.Item>>
+> = React.forwardRef<
   React.ElementRef<typeof CommandPrimitive.Item>,
   React.ComponentPropsWithoutRef<typeof CommandPrimitive.Item>
 >(({ className, ...props }, ref) => (
+  // @ts-ignore React 19 type incompatibility
   <CommandPrimitive.Item
     ref={ref}
     className={cn(

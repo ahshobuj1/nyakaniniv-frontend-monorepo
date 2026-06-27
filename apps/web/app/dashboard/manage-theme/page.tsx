@@ -363,10 +363,10 @@ function ManageThemeContent() {
           </div>
 
           <div className="flex items-center gap-3">
-            <a href={`http://localhost:3000/${subdomain}`} target="_blank" rel="noreferrer" className="hidden md:flex items-center gap-2 px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">
+            {/* <a href={`http://localhost:3000/${subdomain}`} target="_blank" rel="noreferrer" className="hidden md:flex items-center gap-2 px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">
               <Eye className="w-4 h-4" /> Preview Site
-            </a>
-            <div className="h-6 w-px bg-slate-200 mx-1 hidden md:block" />
+            </a> */}
+            {/* <div className="h-6 w-px bg-slate-200 mx-1 hidden md:block" /> */}
             <button 
               onClick={handlePublish}
               disabled={isAssigning}
