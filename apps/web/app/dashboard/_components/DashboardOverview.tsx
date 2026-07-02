@@ -10,6 +10,9 @@ import {
   Mail,
   CheckCircle2,
   Clock,
+  AlertCircle,
+  Phone,
+  MapPin,
 } from 'lucide-react';
 import {
   AreaChart,
@@ -23,111 +26,14 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 
-import {Card, CardContent, Button} from '@repo/ui';
+import {Card, CardContent, Button, Dialog, DialogContent, DialogHeader, DialogTitle, Input} from '@repo/ui';
 import Link from 'next/link';
+import { toast } from 'sonner';
 
 // ==========================================
 // 1. Dummy Data
 // ==========================================
-const summaryStats = [
-  {
-    title: 'Total Earnings',
-    value: '45,280',
-    trend: '+22.5%',
-    isPositive: true,
-    subtitle: 'vs last month',
-  },
-  {
-    title: 'This Month',
-    value: '8,400',
-    trend: '+18.4%',
-    isPositive: true,
-    subtitle: 'vs last month',
-  },
-  {
-    title: 'Upcoming Events',
-    value: '06',
-    trend: '+22.5%',
-    isPositive: true,
-    subtitle: 'vs last month',
-  },
-  {
-    title: 'Profile Views',
-    value: '12,847',
-    trend: '-22.5%',
-    isPositive: false,
-    subtitle: 'vs last month',
-  },
-];
-
-const revenueData = [
-  {name: 'Jan', value: 3500},
-  {name: 'Feb', value: 4500},
-  {name: 'Mar', value: 4000},
-  {name: 'Apr', value: 6000},
-  {name: 'May', value: 5500},
-  {name: 'Jun', value: 7500},
-  {name: 'Jul', value: 7000},
-  {name: 'Aug', value: 8500},
-  {name: 'Sep', value: 8000},
-  {name: 'Oct', value: 9500},
-];
-
-const bookingsData = [
-  {name: 'Jan', value: 8},
-  {name: 'Feb', value: 12},
-  {name: 'Mar', value: 10},
-  {name: 'Apr', value: 14},
-  {name: 'May', value: 12},
-  {name: 'Jun', value: 18},
-  {name: 'Jul', value: 16},
-  {name: 'Aug', value: 20},
-  {name: 'Sep', value: 17},
-  {name: 'Oct', value: 24},
-];
-
-const recentBookings = [
-  {
-    id: '1',
-    clientName: 'Afia Mensah',
-    eventType: 'Birthday Party',
-    date: '22 Dec 2025',
-    email: 'afia.mensah@example.com',
-    status: 'Confirmed',
-  },
-  {
-    id: '2',
-    clientName: 'Jonas Kim',
-    eventType: 'Business Meeting',
-    date: '01 Jan 2026',
-    email: 'jonas.kim@example.com',
-    status: 'Pending',
-  },
-  {
-    id: '3',
-    clientName: 'Lila Chen',
-    eventType: 'Art Exhibition',
-    date: '14 Feb 2026',
-    email: 'lila.chen@example.com',
-    status: 'Confirmed',
-  },
-  {
-    id: '4',
-    clientName: 'Marco Rossi',
-    eventType: 'Wedding Reception',
-    date: '03 Mar 2026',
-    email: 'marco.rossi@example.com',
-    status: 'Confirmed',
-  },
-  {
-    id: '5',
-    clientName: 'Sofia Patel',
-    eventType: 'Corporate Retreat',
-    date: '19 Apr 2026',
-    email: 'sofia.patel@example.com',
-    status: 'Pending',
-  },
-];
+// Removed dummy data
 
 // ==========================================
 // 2. Custom Tooltip for Recharts
@@ -145,12 +51,116 @@ const CustomTooltip = ({active, payload, label}: any) => {
 
 // ==========================================
 // 3. Main Dashboard Component
-import { useGetCurrentProfileQuery } from '@repo/store';
+import { 
+  useGetCurrentProfileQuery,
+  useGetTenantAnalyticsQuery,
+  useGetTenantChartsQuery,
+  useUpdateBookingStatusMutation,
+  useMarkBookingPaidMutation
+} from '@repo/store';
 
 export default function DashboardOverview() {
+  const [bookingToUpdate, setBookingToUpdate] = React.useState<{ 
+    id: string; 
+    currentStatus: string;
+    isCashRequested?: boolean;
+    paymentId?: string;
+  } | null>(null);
+  const [priceInput, setPriceInput] = React.useState('');
+
+  const [updateStatus, { isLoading: isUpdating }] = useUpdateBookingStatusMutation();
+  const [markPaid, { isLoading: isMarkingPaid }] = useMarkBookingPaidMutation();
+
+  const handleStatusUpdate = async (newStatus: 'ACCEPTED' | 'COMPLETED') => {
+    if (!bookingToUpdate) return;
+    
+    if (newStatus === 'ACCEPTED' && !priceInput) {
+      toast.error('Please enter a total amount for the booking');
+      return;
+    }
+
+    try {
+      const payload: any = {
+        id: bookingToUpdate.id,
+        status: newStatus.toLowerCase(),
+      };
+      
+      if (newStatus === 'ACCEPTED') {
+        payload.totalAmount = parseFloat(priceInput);
+      }
+
+      await updateStatus(payload).unwrap();
+      toast.success(`Booking marked as ${newStatus.toLowerCase()}!`);
+      setBookingToUpdate(null);
+      setPriceInput('');
+    } catch (error: any) {
+      toast.error(error?.data?.error?.message || error?.data?.message || 'Failed to update status');
+    }
+  };
+
+  const handleMarkCashPaid = async (paymentId: string) => {
+    try {
+      await markPaid(paymentId).unwrap();
+      toast.success('Payment marked as paid via Cash!');
+      setBookingToUpdate(null);
+    } catch (error: any) {
+      toast.error(error?.data?.error?.message || error?.data?.message || 'Failed to mark as paid');
+    }
+  };
+
   const { data: profileResponse } = useGetCurrentProfileQuery();
   const subdomain = profileResponse?.data?.tenant?.subdomain || 'demo';
-  
+  const stageName = profileResponse?.data?.tenant?.stageName || 'DJ';
+
+  const { data: analyticsResponse, error: analyticsError } = useGetTenantAnalyticsQuery();
+  const { data: chartsResponse, error: chartsError } = useGetTenantChartsQuery();
+
+  const analytics = analyticsResponse?.data;
+  const charts = chartsResponse?.data;
+
+  const summaryStats = [
+    {
+      title: 'Total Earnings',
+      value: `KES ${analytics?.totalEarnings?.toLocaleString() || 0}`,
+      trend: 'Total',
+      isPositive: true,
+      subtitle: 'all time',
+    },
+    {
+      title: 'Pending Invoices',
+      value: `KES ${analytics?.pendingInvoices?.toLocaleString() || 0}`,
+      trend: 'Unpaid',
+      isPositive: false,
+      subtitle: 'awaiting payment',
+    },
+    {
+      title: 'Accepted Bookings',
+      value: analytics?.bookings?.accepted?.toString() || '0',
+      trend: 'Confirmed',
+      isPositive: true,
+      subtitle: 'approved events',
+    },
+    {
+      title: 'Pending Bookings',
+      value: analytics?.bookings?.pending?.toString() || '0',
+      trend: 'Action needed',
+      isPositive: false,
+      subtitle: 'awaiting review',
+    },
+  ];
+
+  const revenueData = charts?.earningsChart?.map((item: any) => ({
+    name: new Date(item.month + '-01').toLocaleDateString('en-US', { month: 'short', year: '2-digit' }),
+    value: item.amount,
+  })) || [];
+
+  const bookingsData = charts?.bookingsChart?.map((item: any) => ({
+    name: new Date(item.month + '-01').toLocaleDateString('en-US', { month: 'short', year: '2-digit' }),
+    value: item.count,
+  })) || [];
+
+  const recentBookings = analytics?.recentRequests || [];
+
   const getLiveWebsiteUrl = () => {
     if (typeof window === 'undefined') return '#';
     const hostname = window.location.hostname;
@@ -167,11 +177,21 @@ export default function DashboardOverview() {
   return (
     <div className="w-full bg-[#F5F5F5] min-h-screen p-4 md:p-4">
       <div className="mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+        {/* Subscription Warning */}
+        {((analyticsError as any)?.status === 403 || (chartsError as any)?.status === 403) && (
+          <div className="bg-[#FFF8E6] border border-[#FDE68A] text-[#D97706] px-4 py-3 rounded-lg flex items-center gap-3">
+            <AlertCircle className="w-5 h-5 shrink-0" />
+            <p className="text-[14px] font-medium">
+              You need an active subscription to view real-time analytics and charts. Please upgrade your plan in the Subscription tab.
+            </p>
+          </div>
+        )}
+
         {/* Header Section */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div className="space-y-1">
             <h1 className="text-[28px] font-bold tracking-tight text-[#111620]">
-              Welcome, KENZO
+              Welcome, {stageName.toUpperCase()}
             </h1>
             <p className="text-[#787878] text-[15px]">
               Here&apos;s what&apos;s happening with your business today.
@@ -358,76 +378,227 @@ export default function DashboardOverview() {
               <h2 className="text-[18px] font-bold text-[#111620]">
                 Recent Bookings
               </h2>
-              <button className="text-primary text-[14px] font-bold flex items-center hover:underline">
+              <Link href="/dashboard/bookings" className="text-primary text-[14px] font-bold flex items-center hover:underline">
                 View All <ArrowRight className="w-4 h-4 ml-1 stroke-[2.5]" />
-              </button>
+              </Link>
             </div>
 
             <div className="overflow-x-auto">
               <table className="w-full min-w-225 text-left border-collapse">
                 <thead>
                   <tr>
-                    <th className="py-4 px-8 text-[12px] font-semibold text-[#A1A1AA] uppercase tracking-wider w-[20%]">
+                    <th className="py-4 px-8 text-[12px] font-semibold text-[#A1A1AA] uppercase tracking-wider w-[25%]">
                       Client
                     </th>
-                    <th className="py-4 px-8 text-[12px] font-semibold text-[#A1A1AA] uppercase tracking-wider w-[20%]">
-                      Event Type
-                    </th>
-                    <th className="py-4 px-8 text-[12px] font-semibold text-[#A1A1AA] uppercase tracking-wider w-[20%]">
-                      Date
+                    <th className="py-4 px-8 text-[12px] font-semibold text-[#A1A1AA] uppercase tracking-wider w-[15%]">
+                      Phone
                     </th>
                     <th className="py-4 px-8 text-[12px] font-semibold text-[#A1A1AA] uppercase tracking-wider w-[25%]">
-                      Email
+                      Event Type
                     </th>
                     <th className="py-4 px-8 text-[12px] font-semibold text-[#A1A1AA] uppercase tracking-wider w-[15%]">
-                      Status
+                      Date
+                    </th>
+                    <th className="py-4 px-8 text-[12px] font-semibold text-[#A1A1AA] uppercase tracking-wider w-[15%]">
+                      Amount
+                    </th>
+                    <th className="py-4 px-8 text-[12px] font-semibold text-[#A1A1AA] uppercase tracking-wider w-[1%] whitespace-nowrap">
+                      Status & Action
                     </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {recentBookings.map((booking, index) => (
-                    <tr
-                      key={booking.id}
-                      className={`${index % 2 === 0 ? 'bg-[#F9FAFB]' : 'bg-white'} hover:bg-gray-100/50 transition-colors`}>
-                      <td className="py-5 px-8 text-[14px] font-semibold text-[#111620]">
-                        {booking.clientName}
-                      </td>
-                      <td className="py-5 px-8 text-[14px] text-[#787878]">
-                        {booking.eventType}
-                      </td>
-                      <td className="py-5 px-8 text-[14px] text-[#787878]">
-                        <div className="flex items-center gap-2">
-                          <Calendar className="w-3.75 h-3.75 text-[#A1A1AA]" />
-                          {booking.date}
-                        </div>
-                      </td>
-                      <td className="py-5 px-8 text-[14px] text-[#787878]">
-                        <div className="flex items-center gap-2">
-                          <Mail className="w-3.75 h-3.75 text-[#A1A1AA]" />
-                          {booking.email}
-                        </div>
-                      </td>
-                      <td className="py-5 px-8">
-                        {booking.status === 'Confirmed' ? (
-                          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-[#10B981] text-white text-[13px] font-medium">
-                            <CheckCircle2 className="w-3.5 h-3.5" />
-                            Confirmed
+                  {recentBookings.length > 0 ? (
+                    recentBookings.map((booking: any, index: number) => {
+                      const isCashRequested = booking.payment?.method === 'CASH' && booking.payment?.status === 'unpaid';
+                      
+                      return (
+                      <tr
+                        key={booking.id}
+                        className={`${index % 2 === 0 ? 'bg-[#F9FAFB]' : 'bg-white'} hover:bg-gray-100/50 transition-colors`}>
+                        <td className="py-5 px-8 text-[14px] font-semibold text-[#111620]">
+                          <div className="flex flex-col gap-1">
+                            <span>{booking.client?.name || 'Unknown Client'}</span>
+                            <span className="text-[12px] text-[#787878] font-normal flex items-center gap-1.5">
+                              <Mail className="w-3.5 h-3.5 shrink-0" />
+                              <span className="truncate">{booking.client?.email || 'N/A'}</span>
+                            </span>
                           </div>
-                        ) : (
-                          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-[#F59E0B] text-white text-[13px] font-medium">
-                            <Clock className="w-3.5 h-3.5" />
-                            Pending
+                        </td>
+                        <td className="py-5 px-8 text-[14px] text-[#787878]">
+                          {booking.client?.phone ? (
+                            <span className="text-[13px] font-medium flex items-center gap-1.5 text-[#111620]">
+                              <Phone className="w-3.5 h-3.5 shrink-0 text-[#787878]" />
+                              <span className="truncate">{booking.client.phone}</span>
+                            </span>
+                          ) : '-'}
+                        </td>
+                        <td className="py-5 px-8 text-[14px] text-[#787878]">
+                          <div className="flex flex-col gap-1">
+                            <span className="font-medium text-[#111620]">{booking.eventType}</span>
+                            {booking.address && (
+                              <span className="text-[12px] text-[#787878] font-normal flex items-center gap-1.5">
+                                <MapPin className="w-3 h-3 shrink-0" />
+                                <span className="truncate max-w-[150px]" title={booking.address}>{booking.address}</span>
+                              </span>
+                            )}
                           </div>
-                        )}
+                        </td>
+                        <td className="py-5 px-8 text-[14px] text-[#787878]">
+                          <div className="flex flex-col gap-1">
+                            <div className="flex items-center gap-2 font-medium text-[#111620]">
+                              <Calendar className="w-3.75 h-3.75 text-[#A1A1AA]" />
+                              Event: {new Date(booking.eventDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+                            </div>
+                            {booking.createdAt && (
+                              <div className="flex items-center gap-2 text-[12px] text-[#787878]">
+                                <Clock className="w-3.5 h-3.5 text-[#A1A1AA]" />
+                                Req: {new Date(booking.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+                              </div>
+                            )}
+                          </div>
+                        </td>
+                        <td className="py-5 px-8 text-[14px] font-medium text-[#111620]">
+                          {booking.totalAmount ? `$${booking.totalAmount}` : '-'}
+                        </td>
+                        <td className="py-5 px-8 flex flex-col items-start gap-2">
+                          <button
+                            onClick={() => {
+                              setBookingToUpdate({ 
+                                id: booking.id, 
+                                currentStatus: booking.status,
+                                isCashRequested: isCashRequested,
+                                paymentId: booking.payment?.id
+                              });
+                              setPriceInput('');
+                            }}
+                            className="focus:outline-none focus:ring-2 cursor-pointer focus:ring-primary/20 rounded-md transition-transform hover:scale-105 active:scale-95"
+                          >
+                            {booking.status?.toLowerCase() === 'completed' ? (
+                              <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-[#10B981] text-white text-[13px] font-medium">
+                                <CheckCircle2 className="w-3.5 h-3.5" />
+                                Completed
+                              </div>
+                            ) : booking.status?.toLowerCase() === 'accepted' ? (
+                              <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-blue-500 text-white text-[13px] font-medium">
+                                <CheckCircle2 className="w-3.5 h-3.5" />
+                                Accepted
+                              </div>
+                            ) : (
+                              <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-[#F59E0B] text-white text-[13px] font-medium">
+                                <Clock className="w-3.5 h-3.5" />
+                                Pending
+                              </div>
+                            )}
+                          </button>
+
+                          {isCashRequested && (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-[#FFF8E6] border border-[#FDE68A] text-[#D97706] text-[11px] font-bold">
+                              Cash Requested
+                            </span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })
+                  ) : (
+                    <tr>
+                      <td
+                        colSpan={6}
+                        className="py-12 text-center text-[#787878]">
+                        No recent bookings found.
                       </td>
                     </tr>
-                  ))}
+                  )}
                 </tbody>
               </table>
             </div>
           </CardContent>
         </Card>
       </div>
+
+      {/* Status Update Dialog */}
+      <Dialog open={!!bookingToUpdate} onOpenChange={(open) => !open && setBookingToUpdate(null)}>
+        <DialogContent className="sm:max-w-[425px] bg-white rounded-2xl border-none">
+          <DialogHeader>
+            <DialogTitle className="text-[20px] font-bold text-[#111620]">
+              Update Booking Status
+            </DialogTitle>
+          </DialogHeader>
+          <div className="py-4 space-y-4">
+            <p className="text-[14px] text-[#787878]">
+              Current status: <span className="font-semibold text-black uppercase">{bookingToUpdate?.currentStatus || 'Unknown'}</span>
+            </p>
+            
+            {bookingToUpdate?.currentStatus?.toLowerCase() === 'pending' && (
+              <div className="space-y-2">
+                <label className="text-[14px] font-semibold text-[#111620]">
+                  Total Amount / Price
+                </label>
+                <Input
+                  type="number"
+                  placeholder="Enter total amount (e.g. 500)"
+                  value={priceInput}
+                  onChange={(e) => setPriceInput(e.target.value)}
+                  className="bg-[#F5F5F5] border-transparent h-11 rounded-[10px] focus-visible:ring-1 focus-visible:ring-primary shadow-none"
+                />
+                <p className="text-[12px] text-gray-500">
+                  Accepting this booking will generate an invoice for the client. An email will send to the client with the invoice and payment link.
+                </p>
+              </div>
+            )}
+            
+            {bookingToUpdate?.isCashRequested && (
+              <div className="bg-[#FFF8E6] border border-[#FDE68A] rounded-xl p-4 flex items-center gap-3 text-[#D97706]">
+                <AlertCircle className="w-5 h-5 shrink-0" />
+                <p className="text-[13px] font-medium">
+                  The client has requested to pay by cash. You can mark this booking as paid once you receive the cash.
+                </p>
+              </div>
+            )}
+            
+            <div className="flex flex-col gap-3 pt-4">
+              {bookingToUpdate?.currentStatus?.toLowerCase() === 'pending' && (
+                <Button 
+                  onClick={() => handleStatusUpdate('ACCEPTED')}
+                  disabled={isUpdating}
+                  className="bg-primary hover:bg-primary/90 text-white font-bold h-11 w-full rounded-[10px]"
+                >
+                  {isUpdating ? 'Updating...' : 'Accept Booking'}
+                </Button>
+              )}
+
+              {bookingToUpdate?.currentStatus?.toLowerCase() === 'accepted' && !bookingToUpdate.isCashRequested && (
+                <Button 
+                  onClick={() => handleStatusUpdate('COMPLETED')}
+                  disabled={isUpdating}
+                  className="bg-[#10B981] hover:bg-[#10B981]/90 text-white font-bold h-11 w-full rounded-[10px]"
+                >
+                  {isUpdating ? 'Updating...' : 'Mark as Completed'}
+                </Button>
+              )}
+
+              {bookingToUpdate?.isCashRequested && bookingToUpdate.paymentId && (
+                <Button 
+                  onClick={() => handleMarkCashPaid(bookingToUpdate.paymentId!)}
+                  disabled={isMarkingPaid}
+                  className="bg-[#10B981] hover:bg-[#10B981]/90 text-white font-bold h-11 w-full rounded-[10px]"
+                >
+                  {isMarkingPaid ? 'Processing...' : 'Confirm Cash Received & Mark Paid'}
+                </Button>
+              )}
+
+              <Button 
+                variant="outline" 
+                onClick={() => setBookingToUpdate(null)}
+                className="h-11 w-full rounded-[10px]"
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -22,7 +22,7 @@ export const baseApi = createApi({
     const result = await baseQuery(args, api, extraOptions);
 
     // Auto logout if token is invalid/expired
-    if (result?.error?.status === 401 || result?.error?.status === 403) {
+    if (result?.error?.status === 401) {
       // For Redux Persist, we usually dispatch clearAuth, but localstorage removal works too
       // However, it's safer to let the store handle it, or we can just remove the item.
       if (typeof window !== 'undefined') {

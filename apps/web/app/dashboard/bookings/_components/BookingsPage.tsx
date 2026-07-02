@@ -50,7 +50,7 @@ export default function BookingsPage() {
     try {
       const payload: any = {
         id: bookingToUpdate.id,
-        status: newStatus,
+        status: newStatus.toLowerCase(),
       };
       
       if (newStatus === 'ACCEPTED') {
@@ -244,9 +244,17 @@ export default function BookingsPage() {
                             </div>
                           </td>
                           <td className="py-5 px-8 text-[14px] text-[#787878]">
-                            <div className="flex items-center gap-2">
-                              <Calendar className="w-3.75 h-3.75 text-[#A1A1AA]" />
-                              {new Date(booking.eventDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+                            <div className="flex flex-col gap-1">
+                              <div className="flex items-center gap-2 font-medium text-[#111620]">
+                                <Calendar className="w-3.75 h-3.75 text-[#A1A1AA]" />
+                                Event: {new Date(booking.eventDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+                              </div>
+                              {booking.createdAt && (
+                                <div className="flex items-center gap-2 text-[12px] text-[#787878]">
+                                  <Clock className="w-3.5 h-3.5 text-[#A1A1AA]" />
+                                  Req: {new Date(booking.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+                                </div>
+                              )}
                             </div>
                           </td>
                           <td className="py-5 px-8 text-[14px] font-medium text-[#111620]">

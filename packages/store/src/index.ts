@@ -22,6 +22,7 @@ export * from './api/stripeConnectApi';
 export * from './api/clientApi';
 export * from './api/ticketApi';
 export * from './api/notificationApi';
+export * from './api/analyticsApi';
 
 // Features (Reducers)
 export * from './features/auth/authSlice';
