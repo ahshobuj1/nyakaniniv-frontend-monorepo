@@ -16,6 +16,7 @@ export default function BehindDecks({content}: any) {
 
   return (
     <motion.section
+      id="about"
       initial="hidden"
       whileInView="show"
       viewport={{once: true, amount: 0.15}}

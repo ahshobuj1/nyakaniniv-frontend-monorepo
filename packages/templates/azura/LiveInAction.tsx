@@ -24,7 +24,7 @@ export default function LiveInAction({content}: LiveInActionProps) {
   ];
 
   return (
-    <section className="bg-[#f2f2f2] py-[80px]">
+    <section id="gallery" className="bg-[#f2f2f2] py-[80px]">
       <div className="max-w-[1140px] mx-auto px-6">
         <div className="text-center mb-[48px] flex flex-col gap-[8px]">
           <motion.h2

@@ -36,7 +36,7 @@ export default function UpcomingEvents({content}: any) {
   };
 
   return (
-    <section className="bg-[#f4f4f4] py-8 lg:py-[100px]">
+    <section id="events" className="bg-[#f4f4f4] py-8 lg:py-[100px]">
       <div className="max-w-[800px] mx-auto px-6 lg:px-12">
         {/* Header */}
         <motion.div

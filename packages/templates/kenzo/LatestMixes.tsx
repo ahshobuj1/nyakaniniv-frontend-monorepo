@@ -142,7 +142,7 @@ export default function LatestMixes({content}: any) {
   };
 
   return (
-    <section className="bg-[#fcfcfc] py-8 lg:py-[100px]">
+    <section id="music" className="bg-[#fcfcfc] py-8 lg:py-[100px]">
       <div className="max-w-[1200px] mx-auto px-6 lg:px-12">
         
         {/* Hidden Audio Element */}

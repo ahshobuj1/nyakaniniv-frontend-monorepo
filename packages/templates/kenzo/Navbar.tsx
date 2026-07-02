@@ -42,10 +42,10 @@ export default function Navbar({content, view, onViewChange}: any) {
       onClick: handleHomeClick,
       active: view !== 'booking',
     },
-    {name: 'About', href: '#', active: false},
-    {name: 'Music', href: '#', active: false},
-    {name: 'Events', href: '#', active: false},
-    {name: 'Gallery', href: '#', active: false},
+    {name: 'About', href: `${homeLink}#about`, active: false},
+    {name: 'Music', href: `${homeLink}#music`, active: false},
+    {name: 'Events', href: `${homeLink}#events`, active: false},
+    {name: 'Gallery', href: `${homeLink}#gallery`, active: false},
   ];
   return (
     <nav className="absolute top-0 left-0 w-full z-50 py-6 px-6 lg:px-12">
@@ -68,6 +68,8 @@ export default function Navbar({content, view, onViewChange}: any) {
               className={`text-[15px] transition-colors ${
                 link.active
                   ? 'text-[var(--primary)] border border-[var(--primary)] px-6 py-2 rounded-full'
+                  : view === 'booking'
+                  ? 'text-[#111111] font-medium hover:text-[var(--primary)]'
                   : 'text-gray-300 hover:text-white'
               }`}>
               {link.name}
@@ -89,7 +91,7 @@ export default function Navbar({content, view, onViewChange}: any) {
         <div className="lg:hidden">
           <button
             onClick={() => setIsOpen(!isOpen)}
-            className="text-white p-2 focus:outline-none">
+            className={`p-2 focus:outline-none ${view === 'booking' ? 'text-[#111111]' : 'text-white'}`}>
             <svg
               className="w-7 h-7"
               fill="none"

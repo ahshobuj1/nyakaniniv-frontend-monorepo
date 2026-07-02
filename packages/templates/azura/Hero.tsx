@@ -2,6 +2,8 @@
 
 import {motion} from 'framer-motion';
 import Image from 'next/image';
+import Link from 'next/link';
+import {usePathname, useSearchParams} from 'next/navigation';
 
 interface HeroProps {
   content?: {
@@ -9,9 +11,32 @@ interface HeroProps {
     heroDescription?: string;
     heroImage?: string;
   };
+  onViewChange?: (view: string) => void;
+  view?: string;
 }
 
-export default function Hero({content}: HeroProps) {
+export default function Hero({content, onViewChange, view}: HeroProps) {
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const isPreviewPage = pathname?.includes('/themes/preview');
+  const themeId = searchParams?.get('themeId');
+
+  const bookingLink = isPreviewPage
+    ? `/themes/preview?themeId=${themeId}&view=booking`
+    : '/book';
+
+  const homeLink = isPreviewPage
+    ? `/themes/preview?themeId=${themeId}&view=landing`
+    : '/';
+
+  const handleBookingClick = (e: React.MouseEvent) => {
+    if (onViewChange) {
+      e.preventDefault();
+      onViewChange('booking');
+    }
+  };
+
   const title =
     content?.heroTitle || 'Bringing the energy to every dancefloor.';
   const description =
@@ -23,7 +48,7 @@ export default function Hero({content}: HeroProps) {
     "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 800' preserveAspectRatio='none'%3E%3Cdefs%3E%3Cfilter id='r' x='-20%25' y='-20%25' width='140%25' height='140%25'%3E%3CfeGaussianBlur in='SourceGraphic' stdDeviation='8' result='blur' /%3E%3CfeColorMatrix in='blur' mode='matrix' values='1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 25 -10' result='goo' /%3E%3C/filter%3E%3C/defs%3E%3Cpolygon points='-50,-50 500,-50 500,80 630,80 630,160 730,160 730,240 850,240 850,850 300,850 300,720 170,720 170,640 80,640 80,560 -50,560' fill='black' filter='url(%23r)' /%3E%3C/svg%3E";
 
   return (
-    <section className="bg-[#f0f0f0] py-[80px]">
+    <section id="home" className="bg-[#f0f0f0] py-[80px]">
       <div className="max-w-[1440px] mx-auto px-6 lg:px-[80px] grid grid-cols-1 md:grid-cols-2 gap-[65px] items-center">
         <motion.div
           initial={{opacity: 0, x: -40}}
@@ -50,22 +75,26 @@ export default function Hero({content}: HeroProps) {
           </p>
 
           <div className="flex flex-wrap gap-3 md:gap-4">
-            <motion.button
-              whileHover={{
-                scale: 1.03,
-                boxShadow: '0 10px 30px rgba(var(--primary-rgb),0.35)',
-              }}
-              whileTap={{scale: 0.97}}
-              className="bg-[var(--primary)] text-white px-5 md:px-8 py-[16px] rounded-[16px] text-base lg:text-[18px] font-semibold">
-              Book The DJ
-            </motion.button>
+            <Link href={bookingLink} onClick={handleBookingClick}>
+              <motion.button
+                whileHover={{
+                  scale: 1.03,
+                  boxShadow: '0 10px 30px rgba(var(--primary-rgb),0.35)',
+                }}
+                whileTap={{scale: 0.97}}
+                className="bg-[var(--primary)] text-white px-5 md:px-8 py-[16px] rounded-[16px] text-base lg:text-[18px] font-semibold">
+                Book The DJ
+              </motion.button>
+            </Link>
 
-            <motion.button
-              whileHover={{scale: 1.03}}
-              whileTap={{scale: 0.97}}
-              className="bg-[#e5e5e5] hover:bg-[#ddd] transition-colors text-[#0f0f0f] px-5 lg:px-8 py-[16px] rounded-[16px] text-base lg:text-[18px] font-semibold">
-              Listen to Mixes
-            </motion.button>
+            <Link href={`${homeLink}#music`}>
+              <motion.button
+                whileHover={{scale: 1.03}}
+                whileTap={{scale: 0.97}}
+                className="bg-[#e5e5e5] hover:bg-[#ddd] transition-colors text-[#0f0f0f] px-5 lg:px-8 py-[16px] rounded-[16px] text-base lg:text-[18px] font-semibold">
+                Listen to Mixes
+              </motion.button>
+            </Link>
           </div>
         </motion.div>
 

@@ -2,6 +2,8 @@
 
 import {motion} from 'framer-motion';
 import Image from 'next/image';
+import Link from 'next/link';
+import {usePathname, useSearchParams} from 'next/navigation';
 
 interface HeroProps {
   content?: {
@@ -12,9 +14,31 @@ interface HeroProps {
       badgeText?: string;
     };
   };
+  onViewChange?: (view: string) => void;
+  view?: string;
 }
 
-export default function Hero({content}: HeroProps) {
+export default function Hero({content, onViewChange, view}: HeroProps) {
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const isPreviewPage = pathname?.includes('/themes/preview');
+  const themeId = searchParams?.get('themeId');
+
+  const bookingLink = isPreviewPage
+    ? `/themes/preview?themeId=${themeId}&view=booking`
+    : '/book';
+
+  const homeLink = isPreviewPage
+    ? `/themes/preview?themeId=${themeId}&view=landing`
+    : '/';
+
+  const handleBookingClick = (e: React.MouseEvent) => {
+    if (onViewChange) {
+      e.preventDefault();
+      onViewChange('booking');
+    }
+  };
   const title = content?.hero?.heroTitle || 'Feel the Energy.\nOwn the Night.';
   const description =
     content?.hero?.heroDescription ||
@@ -24,7 +48,7 @@ export default function Hero({content}: HeroProps) {
   const badgeText = content?.hero?.badgeText || 'AVAILABLE FOR BOOKING';
 
   return (
-    <section className="relative w-full min-h-screen flex items-center overflow-hidden bg-black">
+    <section id="home" className="relative w-full min-h-screen flex items-center overflow-hidden bg-black">
       <div className="absolute inset-0 z-0">
         <Image
           src={content?.hero?.heroImage || image}
@@ -64,18 +88,22 @@ export default function Hero({content}: HeroProps) {
           </p>
 
           <div className="flex flex-wrap items-center gap-[16px] mt-4">
-            <motion.button
-              whileHover={{scale: 1.03}}
-              whileTap={{scale: 0.97}}
-              className="bg-[var(--primary)] text-white px-8 py-3.5 rounded-[12px] text-[16px] font-semibold transition-shadow">
-              Book The DJ
-            </motion.button>
-            <motion.button
-              whileHover={{scale: 1.03}}
-              whileTap={{scale: 0.97}}
-              className="bg-white text-black px-8 py-3.5 rounded-[12px] text-[16px] font-semibold transition-shadow">
-              Listen to Mixes
-            </motion.button>
+            <Link href={bookingLink} onClick={handleBookingClick}>
+              <motion.button
+                whileHover={{scale: 1.03}}
+                whileTap={{scale: 0.97}}
+                className="bg-[var(--primary)] text-white px-8 py-3.5 rounded-[12px] text-[16px] font-semibold transition-shadow">
+                Book The DJ
+              </motion.button>
+            </Link>
+            <Link href={`${homeLink}#music`}>
+              <motion.button
+                whileHover={{scale: 1.03}}
+                whileTap={{scale: 0.97}}
+                className="bg-white text-black px-8 py-3.5 rounded-[12px] text-[16px] font-semibold transition-shadow">
+                Listen to Mixes
+              </motion.button>
+            </Link>
           </div>
         </motion.div>
       </div>

@@ -34,7 +34,7 @@ export default function UpcomingEvents({content}: any) {
   const events = eventsData.list;
 
   return (
-    <section className="bg-[#fafafa] py-8 lg:py-[80px] font-sans">
+    <section id="events" className="bg-[#fafafa] py-8 lg:py-[80px] font-sans">
       <div className="max-w-7xl mx-auto px-6">
         <div className="mb-[40px]">
           <motion.h2

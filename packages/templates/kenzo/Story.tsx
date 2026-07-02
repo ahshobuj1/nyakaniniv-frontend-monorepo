@@ -22,7 +22,7 @@ export default function Story({content}: any) {
   ];
 
   return (
-    <section className="bg-[#f4f4f4] py-8 lg:py-[100px] overflow-hidden">
+    <section id="about" className="bg-[#f4f4f4] py-8 lg:py-[100px] overflow-hidden">
       <div className="max-w-[1200px] mx-auto px-6 lg:px-12">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-[60px] lg:gap-[100px] items-center">
           <motion.div

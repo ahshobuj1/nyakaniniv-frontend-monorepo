@@ -143,6 +143,7 @@ export default function LatestMixes({content}: any) {
 
   return (
     <motion.section
+      id="music"
       initial="hidden"
       whileInView="show"
       viewport={{once: true, amount: 0.15}}
