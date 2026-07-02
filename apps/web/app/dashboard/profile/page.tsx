@@ -33,12 +33,14 @@ const profileSchema = z.object({
   city: z.string().min(1, 'City is required'),
   country: z.string().min(1, 'Country is required'),
   email: z.string().email('Invalid email address'),
+  subdomain: z.string().optional(),
   genres: z.array(z.string()),
   socialLinks: z.object({
     instagram: z.string().url('Invalid URL').optional().or(z.literal('')),
     facebook: z.string().url('Invalid URL').optional().or(z.literal('')),
     linkedin: z.string().url('Invalid URL').optional().or(z.literal('')),
   }).optional(),
+  profileImage: z.any().optional(),
 });
 
 const passwordSchema = z.object({
@@ -99,12 +101,14 @@ export default function ProfileContent() {
       city: '',
       country: '',
       email: '',
+      subdomain: '',
       genres: [],
       socialLinks: {
         instagram: '',
         facebook: '',
         linkedin: '',
       },
+      profileImage: undefined,
     },
   });
 
@@ -138,6 +142,7 @@ export default function ProfileContent() {
         lastName: user.lastName || '',
         stageName: tenant?.stageName || '',
         email: user.email || '',
+        subdomain: tenant?.subdomain || '',
         country: tenant?.country || '',
         city: tenant?.city || '',
         genres: tenant?.genres || [],
@@ -146,6 +151,7 @@ export default function ProfileContent() {
           facebook: tenant?.socialLinks?.facebook || '',
           linkedin: tenant?.socialLinks?.linkedin || '',
         },
+        profileImage: undefined,
       });
     }
   }, [profileResponse, reset]);
@@ -192,6 +198,7 @@ export default function ProfileContent() {
       await updateUser({
         firstName: data.firstName,
         lastName: data.lastName,
+        profileImage: data.profileImage,
       }).unwrap();
 
       // Update Tenant Level Data (if applicable)
@@ -249,6 +256,54 @@ export default function ProfileContent() {
 
       {/* Main Profile Form */}
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 mb-12">
+        {/* Profile Image Section */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8 flex flex-col items-center sm:flex-row sm:items-start gap-6">
+          <div className="relative group">
+            <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full overflow-hidden bg-gray-100 border-4 border-white shadow-md flex items-center justify-center relative">
+              {watch('profileImage') ? (
+                <Image 
+                  src={URL.createObjectURL(watch('profileImage'))} 
+                  alt="Profile" 
+                  fill 
+                  className="object-cover"
+                />
+              ) : profileResponse?.data?.profileImg ? (
+                <Image 
+                  src={profileResponse.data.profileImg} 
+                  alt="Profile" 
+                  fill 
+                  className="object-cover"
+                />
+              ) : (
+                <span className="text-3xl text-gray-400 font-bold">
+                  {watch('firstName')?.[0]}{watch('lastName')?.[0]}
+                </span>
+              )}
+              
+              <label className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                <span className="text-white text-xs font-semibold">Upload</span>
+                <input 
+                  type="file" 
+                  accept="image/*" 
+                  className="hidden" 
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      setValue('profileImage', file, { shouldDirty: true });
+                    }
+                  }} 
+                />
+              </label>
+            </div>
+          </div>
+          <div className="text-center sm:text-left mt-2 sm:mt-4">
+            <h3 className="text-lg font-bold text-gray-900">Profile Image</h3>
+            <p className="text-sm text-gray-500 max-w-sm mt-1">
+              Upload a professional picture. It will be displayed on your dashboard and landing page.
+            </p>
+          </div>
+        </div>
+
         {/* Section 1: Personal Information Card */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -292,6 +347,21 @@ export default function ProfileContent() {
                   {errors.stageName.message}
                 </p>
               )}
+            </div>
+
+            <div>
+              <label className={labelClass}>Subdomain</label>
+              <div className="flex items-center">
+                <input
+                  {...register('subdomain')}
+                  placeholder="aura"
+                  className={`${inputBaseClass} rounded-r-none border-r-0 text-gray-500`}
+                  disabled
+                />
+                <span className="bg-gray-100 border border-transparent border-l-gray-200 px-4 py-3 text-sm text-gray-500 rounded-r-xl font-medium">
+                  .upbeatafrica.com
+                </span>
+              </div>
             </div>
 
             <div>

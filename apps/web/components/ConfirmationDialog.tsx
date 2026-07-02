@@ -28,7 +28,7 @@ export const ConfirmationDialog = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4">
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6 transform transition-all">
         <h3 className="text-xl font-bold text-gray-900 mb-2">{title}</h3>
         <div className="text-gray-600 mb-8">{description}</div>
