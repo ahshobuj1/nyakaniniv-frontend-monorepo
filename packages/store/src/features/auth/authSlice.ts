@@ -26,6 +26,9 @@ const authSlice = createSlice({
     clearAuth: (state) => {
       state.user = null;
       state.token = null;
+      if (typeof window !== 'undefined') {
+        sessionStorage.removeItem('stripePopupDismissed');
+      }
     },
   },
   extraReducers: (builder) => {
@@ -38,6 +41,9 @@ const authSlice = createSlice({
           state.token = data.token;
           if (data.user) {
             state.user = data.user;
+          }
+          if (typeof window !== 'undefined') {
+            sessionStorage.removeItem('stripePopupDismissed');
           }
         }
       }

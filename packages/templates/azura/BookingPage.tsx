@@ -2,13 +2,17 @@
 
 import { motion } from 'framer-motion';
 import { useForm } from 'react-hook-form';
+import { useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { toast } from 'sonner';
+import { useCreateBookingMutation } from '@repo/store';
 
 const bookingSchema = z.object({
   fullName: z.string().min(2, 'Full name is required'),
   email: z.string().email('Valid email is required'),
+  clientPhone: z.string().min(5, 'Phone number is required'),
+  address: z.string().min(5, 'Address is required'),
   eventDate: z.string().min(1, 'Event date is required'),
   eventType: z.string().min(1, 'Event type is required'),
   details: z.string().min(10, 'Please provide some event details'),
@@ -17,7 +21,11 @@ const bookingSchema = z.object({
 
 type BookingFormValues = z.infer<typeof bookingSchema>;
 
-export default function BookingPage() {
+export default function BookingPage({ content }: any) {
+  const [createBooking] = useCreateBookingMutation();
+  const tenantId = content?.tenantId || '';
+  const [submitStatus, setSubmitStatus] = useState<{type: 'success' | 'error', message: string} | null>(null);
+
   const {
     register,
     handleSubmit,
@@ -25,13 +33,41 @@ export default function BookingPage() {
     formState: { errors, isSubmitting },
   } = useForm<BookingFormValues>({
     resolver: zodResolver(bookingSchema),
+    defaultValues: {
+      eventType: "",
+    }
   });
 
   const onSubmit = async (data: BookingFormValues) => {
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    console.log(data);
-    toast.success('Booking request sent successfully!');
-    reset();
+    setSubmitStatus(null);
+    if (!tenantId) {
+      toast.error('Unable to process booking: Tenant ID is missing.');
+      setSubmitStatus({ type: 'error', message: 'Unable to process booking: Tenant ID is missing.' });
+      return;
+    }
+    try {
+      const res = await createBooking({
+        tenantId,
+        clientName: data.fullName,
+        clientEmail: data.email,
+        clientPhone: data.clientPhone,
+        address: data.address,
+        eventDate: new Date(data.eventDate).toISOString(),
+        eventType: data.eventType,
+        eventDetails: data.details,
+      }).unwrap();
+      toast.success(res?.message || 'Booking request sent successfully!');
+     
+      setSubmitStatus({
+        type: 'success', 
+        message: "Your request has been sent to the DJ for review. If your booking is accepted, you'll receive an email with a secure payment link to confirm your reservation."
+      });
+      reset();
+    } catch (error: any) {
+      const errorMsg = error?.data?.message || 'Failed to send booking request. Please try again.';
+      toast.error(errorMsg);
+      setSubmitStatus({ type: 'error', message: errorMsg });
+    }
   };
 
   return (
@@ -93,6 +129,38 @@ export default function BookingPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-[24px]">
               <div className="flex flex-col gap-[8px]">
+                <label className="text-[13px] font-bold text-[#111111]">Phone Number</label>
+                <input
+                  type="tel"
+                  placeholder="Enter your phone number"
+                  {...register('clientPhone')}
+                  className={`w-full bg-white border ${
+                    errors.clientPhone ? 'border-red-500' : 'border-[#e5e5e5]'
+                  } rounded-[8px] px-[16px] py-[12px] text-[14px] text-[#111111] placeholder-[#a3a3a3] outline-none focus:border-[var(--primary)] transition-colors`}
+                />
+                {errors.clientPhone && (
+                  <span className="text-red-500 text-[12px]">{errors.clientPhone.message}</span>
+                )}
+              </div>
+
+              <div className="flex flex-col gap-[8px]">
+                <label className="text-[13px] font-bold text-[#111111]">Address / Location</label>
+                <input
+                  type="text"
+                  placeholder="Enter event address"
+                  {...register('address')}
+                  className={`w-full bg-white border ${
+                    errors.address ? 'border-red-500' : 'border-[#e5e5e5]'
+                  } rounded-[8px] px-[16px] py-[12px] text-[14px] text-[#111111] placeholder-[#a3a3a3] outline-none focus:border-[var(--primary)] transition-colors`}
+                />
+                {errors.address && (
+                  <span className="text-red-500 text-[12px]">{errors.address.message}</span>
+                )}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-[24px]">
+              <div className="flex flex-col gap-[8px]">
                 <label className="text-[13px] font-bold text-[#111111]">Event Date</label>
                 <div className="relative">
                   <input
@@ -117,7 +185,7 @@ export default function BookingPage() {
                       errors.eventType ? 'border-red-500' : 'border-[#e5e5e5]'
                     } rounded-[8px] px-[16px] py-[12px] text-[14px] text-[#111111] outline-none focus:border-[var(--primary)] transition-colors appearance-none`}
                   >
-                    <option value="" disabled selected hidden>Select type</option>
+                    <option value="" disabled hidden>Select type</option>
                     <option value="wedding">Wedding</option>
                     <option value="corporate">Corporate Event</option>
                     <option value="club">Club Gig</option>
@@ -170,6 +238,20 @@ export default function BookingPage() {
                 'Book Now'
               )}
             </motion.button>
+
+            {submitStatus && (
+              <motion.div 
+                initial={{ opacity: 0, y: -10 }} 
+                animate={{ opacity: 1, y: 0 }}
+                className={`text-center text-[14px] font-medium leading-relaxed mt-[8px] p-[12px] rounded-[8px] ${
+                  submitStatus.type === 'success' 
+                    ? 'bg-green-50 text-green-700 border border-green-200' 
+                    : 'bg-red-50 text-red-600 border border-red-200'
+                }`}
+              >
+                {submitStatus.message}
+              </motion.div>
+            )}
           </form>
         </motion.div>
       </div>

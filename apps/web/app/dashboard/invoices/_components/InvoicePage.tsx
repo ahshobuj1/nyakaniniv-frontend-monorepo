@@ -3,7 +3,7 @@
 import React, {useState} from 'react';
 import {Calendar, CheckCircle2, Clock, Eye, Download, Receipt, Music} from 'lucide-react';
 import {Card, CardContent} from '@repo/ui';
-import {useGetMyInvoicesQuery, UnifiedInvoice} from '@repo/store/src/api/invoiceApi';
+import {useGetMyInvoicesQuery, UnifiedInvoice} from '@repo/store';
 
 // ==========================================
 // 1. Types & Interfaces

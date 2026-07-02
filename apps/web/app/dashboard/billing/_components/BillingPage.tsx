@@ -1,7 +1,7 @@
 'use client';
 
 import {useState} from 'react';
-import {Zap, Check, X, Calendar, CheckCircle2} from 'lucide-react';
+import {Zap, Check, X, Calendar, CheckCircle2, CreditCard, ExternalLink} from 'lucide-react';
 import {
   Card, 
   CardContent, 
@@ -22,7 +22,10 @@ import {
   useSubscribeMutation,
   useCancelSubscriptionMutation,
   useGetMyInvoicesQuery,
-  SubscriptionPlan
+  SubscriptionPlan,
+  useGetCurrentProfileQuery,
+  useCheckAccountStatusQuery,
+  useGetOnboardingLinkMutation
 } from '@repo/store';
 
 const ALL_FEATURES = [
@@ -52,6 +55,12 @@ export default function BillingSubscriptionPage() {
   const { data: subResponse, isLoading: isLoadingSub, refetch: refetchSub } = useGetMySubscriptionQuery();
   const { data: invoicesResponse, isLoading: isLoadingInvoices } = useGetMyInvoicesQuery();
 
+  const { data: profileResponse } = useGetCurrentProfileQuery();
+  const tenantId = profileResponse?.data?.tenant?.id;
+  const { data: stripeStatusResponse, isLoading: isLoadingStripe } = useCheckAccountStatusQuery(tenantId || '', { skip: !tenantId });
+  const [getOnboardingLink, { isLoading: isGettingStripeLink }] = useGetOnboardingLinkMutation();
+  const stripeStatus = stripeStatusResponse?.data;
+
   const [subscribe, { isLoading: isSubscribing }] = useSubscribeMutation();
   const [cancelSubscription, { isLoading: isCanceling }] = useCancelSubscriptionMutation();
 
@@ -79,6 +88,22 @@ export default function BillingSubscriptionPage() {
     }
   };
 
+  const handleStripeConnect = async () => {
+    if (!tenantId) return;
+    try {
+      const res = await getOnboardingLink({
+        tenantId,
+        returnUrl: window.location.href,
+        refreshUrl: window.location.href,
+      }).unwrap();
+      if (res.data?.url) {
+        window.location.href = res.data.url;
+      }
+    } catch (error: any) {
+      toast.error(error?.data?.message || 'Failed to connect Stripe');
+    }
+  };
+
   const handleCancel = async () => {
     try {
       await cancelSubscription().unwrap();
@@ -102,6 +127,53 @@ export default function BillingSubscriptionPage() {
             Manage your plan, payment methods and billing history.
           </p>
         </div>
+
+
+         {/* Payouts & Payments Section */}
+        <Card className="border-none shadow-[0_2px_20px_rgba(0,0,0,0.03)] overflow-hidden rounded-2xl bg-white mb-8">
+          <CardContent className="p-0">
+            <div className="p-6 md:p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border-b border-gray-100">
+              <div className="flex items-center gap-5">
+                <div className="w-14 h-14 rounded-xl bg-[#F5F5F5] flex items-center justify-center shrink-0">
+                  <CreditCard className="w-6 h-6 text-[#111620]" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-3 mb-1">
+                    <h2 className="text-[20px] font-bold text-[#111620]">
+                      Payouts via Stripe
+                    </h2>
+                    {isLoadingStripe ? null : stripeStatus?.isConnected && stripeStatus?.detailsSubmitted ? (
+                      <Badge className="bg-[#10B981] hover:bg-[#10B981] text-white text-[10px] font-bold px-2 py-0.5 rounded uppercase">
+                        CONNECTED
+                      </Badge>
+                    ) : (
+                      <Badge className="bg-[#F59E0B] hover:bg-[#F59E0B] text-white text-[10px] font-bold px-2 py-0.5 rounded uppercase">
+                        NOT CONNECTED
+                      </Badge>
+                    )}
+                  </div>
+                  <p className="text-[#787878] text-[14px]">
+                    {stripeStatus?.externalAccount ? (
+                      `Payouts are sent to your ${stripeStatus.externalAccount.type === 'bank_account' ? 'bank account' : 'card'} ending in •••• ${stripeStatus.externalAccount.last4}`
+                    ) : stripeStatus?.isConnected && stripeStatus?.detailsSubmitted ? (
+                      "Your payout settings and payment methods are securely managed by Stripe."
+                    ) : (
+                      "Connect your payment method to receive payments from client bookings."
+                    )}
+                  </p>
+                </div>
+              </div>
+              <div className="flex flex-col md:flex-row items-center gap-3 w-full md:w-auto">
+                <Button
+                  onClick={handleStripeConnect}
+                  disabled={isGettingStripeLink}
+                  className="flex-1 md:flex-none bg-primary hover:bg-primary/90 text-white font-semibold h-11 rounded-lg">
+                  {isGettingStripeLink ? 'Loading...' : (stripeStatus?.isConnected && stripeStatus?.detailsSubmitted ? 'Manage Stripe Account' : 'Connect with Stripe')}
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Current Plan & Usage Section */}
         {isLoadingSub ? (
@@ -174,6 +246,8 @@ export default function BillingSubscriptionPage() {
             </CardContent>
           </Card>
         )}
+
+        
 
         {/* Pricing/Available Plans Section */}
         <div>
@@ -329,6 +403,8 @@ export default function BillingSubscriptionPage() {
             </div>
           )}
         </div>
+
+       
 
         {/* Billing History Table */}
         <Card className="border-none shadow-[0_2px_20px_rgba(0,0,0,0.03)] overflow-hidden rounded-2xl bg-white">

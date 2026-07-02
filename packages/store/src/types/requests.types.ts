@@ -153,6 +153,12 @@ export interface StripeStatusResponse {
   isConnected: boolean;
   detailsSubmitted: boolean;
   payoutsEnabled: boolean;
+  externalAccount?: {
+    type: string;
+    last4: string;
+    bankName?: string;
+    brand?: string;
+  };
 }
 
 // --- Ticket Requests ---

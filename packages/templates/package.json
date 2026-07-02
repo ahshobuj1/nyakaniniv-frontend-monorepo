@@ -9,6 +9,7 @@
     "./*": "./*"
   },
   "dependencies": {
+    "@repo/store": "workspace:*",
     "@repo/types": "workspace:*",
     "@hookform/resolvers": "^5.2.2",
     "framer-motion": "^12.38.0",
@@ -21,6 +22,7 @@
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
+    "@types/node": "^26.1.0",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "typescript": "5.9.2"

@@ -5,6 +5,8 @@ import {TopNav} from '@/components/dashbaordLayout/TopNav';
 import {SidebarProvider} from '@/components/dashbaordLayout/SidebarContext';
 import {ProtectedRoute} from '@/components/ProtectedRoute';
 
+import {StripeConnectPopup} from './_components/StripeConnectPopup';
+
 export default function DashboardLayout({
   children,
 }: {
@@ -22,6 +24,7 @@ export default function DashboardLayout({
             </main>
           </div>
         </div>
+        <StripeConnectPopup />
       </SidebarProvider>
     </ProtectedRoute>
   );
