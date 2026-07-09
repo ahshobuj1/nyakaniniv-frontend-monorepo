@@ -18,7 +18,7 @@ export * from './api/mixTapeApi';
 export * from './api/bookingApi';
 export * from './api/subscriptionApi';
 export * from './api/invoiceApi';
-export * from './api/stripeConnectApi';
+export * from './api/paystackConnectApi';
 export * from './api/clientApi';
 export * from './api/ticketApi';
 export * from './api/notificationApi';

@@ -3,6 +3,8 @@ import type { RootState } from '../store';
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'production' ? 'https://upbeatafrica-api.onrender.com' : 'http://localhost:3030');
 
+// console.log(process.env.NEXT_PUBLIC_API_URL)
+
 const baseQuery = fetchBaseQuery({
   baseUrl: BASE_URL,
   credentials: 'include',
@@ -34,7 +36,7 @@ export const baseApi = createApi({
   },
   tagTypes: [
     'Auth', 'User', 'Tenant', 'Theme', 'Event', 'MixTape', 
-    'Booking', 'Subscription', 'Invoice', 'StripeConnect', 
+    'Booking', 'Subscription', 'Invoice', 'PaystackConnect', 
     'Client', 'Ticket', 'Notification', 'LandingPage'
   ],
   endpoints: () => ({}), // Endpoints are injected in separate files

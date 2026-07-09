@@ -24,8 +24,10 @@ import {
   useGetMyInvoicesQuery,
   SubscriptionPlan,
   useGetCurrentProfileQuery,
-  useCheckAccountStatusQuery,
-  useGetOnboardingLinkMutation
+  useCheckPaystackAccountStatusQuery,
+  useGetPaystackOnboardingLinkMutation,
+  useGetPaystackBanksQuery,
+  useDisconnectPaystackAccountMutation
 } from '@repo/store';
 
 const ALL_FEATURES = [
@@ -57,9 +59,17 @@ export default function BillingSubscriptionPage() {
 
   const { data: profileResponse } = useGetCurrentProfileQuery();
   const tenantId = profileResponse?.data?.tenant?.id;
-  const { data: stripeStatusResponse, isLoading: isLoadingStripe } = useCheckAccountStatusQuery(tenantId || '', { skip: !tenantId });
-  const [getOnboardingLink, { isLoading: isGettingStripeLink }] = useGetOnboardingLinkMutation();
-  const stripeStatus = stripeStatusResponse?.data;
+  const { data: paystackStatusResponse, isLoading: isLoadingPaystack } = useCheckPaystackAccountStatusQuery(tenantId || '', { skip: !tenantId });
+  const [getOnboardingLink, { isLoading: isGettingPaystackLink }] = useGetPaystackOnboardingLinkMutation();
+  const [disconnectAccount, { isLoading: isDisconnecting }] = useDisconnectPaystackAccountMutation();
+  const paystackStatus = paystackStatusResponse?.data;
+
+  const [paystackDialogOpen, setPaystackDialogOpen] = useState(false);
+  const [paystackDisconnectDialogOpen, setPaystackDisconnectDialogOpen] = useState(false);
+  const [paystackForm, setPaystackForm] = useState({ bankCode: '', accountNumber: '', businessName: '', country: 'nigeria' });
+
+  const { data: banksResponse, isLoading: isLoadingBanks } = useGetPaystackBanksQuery(paystackForm.country, { skip: !paystackDialogOpen });
+  const banksList = banksResponse?.data || [];
 
   const [subscribe, { isLoading: isSubscribing }] = useSubscribeMutation();
   const [cancelSubscription, { isLoading: isCanceling }] = useCancelSubscriptionMutation();
@@ -88,19 +98,34 @@ export default function BillingSubscriptionPage() {
     }
   };
 
-  const handleStripeConnect = async () => {
+  const handlePaystackSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     if (!tenantId) return;
     try {
       const res = await getOnboardingLink({
         tenantId,
-        returnUrl: window.location.href,
-        refreshUrl: window.location.href,
+        ...paystackForm
       }).unwrap();
-      if (res.data?.url) {
-        window.location.href = res.data.url;
+      
+      if (res.success) {
+        toast.success('Successfully connected Paystack account!');
+        setPaystackDialogOpen(false);
       }
     } catch (error: any) {
-      toast.error(error?.data?.message || 'Failed to connect Stripe');
+      toast.error(error?.data?.message || 'Failed to connect Paystack');
+    }
+  };
+
+  const handleDisconnectPaystack = async () => {
+    if (!tenantId) return;
+    try {
+      const res = await disconnectAccount({ tenantId }).unwrap();
+      if (res.success) {
+        toast.success('Successfully removed Paystack account');
+        setPaystackDisconnectDialogOpen(false);
+      }
+    } catch (error: any) {
+      toast.error(error?.data?.message || 'Failed to remove account');
     }
   };
 
@@ -140,9 +165,9 @@ export default function BillingSubscriptionPage() {
                 <div>
                   <div className="flex items-center gap-3 mb-1">
                     <h2 className="text-[20px] font-bold text-[#111620]">
-                      Payouts via Stripe
+                      Payouts via Paystack
                     </h2>
-                    {isLoadingStripe ? null : stripeStatus?.isConnected && stripeStatus?.detailsSubmitted ? (
+                    {isLoadingPaystack ? null : paystackStatus?.isConnected ? (
                       <Badge className="bg-[#10B981] hover:bg-[#10B981] text-white text-[10px] font-bold px-2 py-0.5 rounded uppercase">
                         CONNECTED
                       </Badge>
@@ -153,23 +178,118 @@ export default function BillingSubscriptionPage() {
                     )}
                   </div>
                   <p className="text-[#787878] text-[14px]">
-                    {stripeStatus?.externalAccount ? (
-                      `Payouts are sent to your ${stripeStatus.externalAccount.type === 'bank_account' ? 'bank account' : 'card'} ending in •••• ${stripeStatus.externalAccount.last4}`
-                    ) : stripeStatus?.isConnected && stripeStatus?.detailsSubmitted ? (
-                      "Your payout settings and payment methods are securely managed by Stripe."
+                    {paystackStatus?.isConnected ? (
+                      `Payouts are securely sent to your ${paystackStatus.bankName || 'bank'} account ending in •••• ${paystackStatus.accountNumber?.slice(-4) || '****'}.`
                     ) : (
-                      "Connect your payment method to receive payments from client bookings."
+                      "Connect your bank account to receive payments from client bookings."
                     )}
                   </p>
                 </div>
               </div>
               <div className="flex flex-col md:flex-row items-center gap-3 w-full md:w-auto">
-                <Button
-                  onClick={handleStripeConnect}
-                  disabled={isGettingStripeLink}
-                  className="flex-1 md:flex-none bg-primary hover:bg-primary/90 text-white font-semibold h-11 rounded-lg">
-                  {isGettingStripeLink ? 'Loading...' : (stripeStatus?.isConnected && stripeStatus?.detailsSubmitted ? 'Manage Stripe Account' : 'Connect with Stripe')}
-                </Button>
+                {paystackStatus?.isConnected ? (
+                  <Dialog open={paystackDisconnectDialogOpen} onOpenChange={setPaystackDisconnectDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className="flex-1 md:flex-none text-red-600 hover:text-red-700 hover:bg-red-50 font-semibold h-11 rounded-lg">
+                        Remove Account
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Remove Connected Bank Account</DialogTitle>
+                        <DialogDescription>
+                          Are you sure you want to remove this bank account? You will not be able to receive booking payouts until you connect a new one.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <DialogFooter className="mt-4">
+                        <Button type="button" variant="outline" onClick={() => setPaystackDisconnectDialogOpen(false)}>Cancel</Button>
+                        <Button 
+                          type="button" 
+                          className="bg-red-600 hover:bg-red-700 text-white" 
+                          onClick={handleDisconnectPaystack} 
+                          disabled={isDisconnecting}
+                        >
+                          {isDisconnecting ? 'Removing...' : 'Yes, Remove Account'}
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                ) : (
+                  <Dialog open={paystackDialogOpen} onOpenChange={setPaystackDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button
+                        className="flex-1 md:flex-none bg-primary hover:bg-primary/90 text-white font-semibold h-11 rounded-lg">
+                        Connect with Paystack
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Connect Paystack Account</DialogTitle>
+                        <DialogDescription>
+                          Enter your bank details to receive booking payouts directly to your account.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <form onSubmit={handlePaystackSubmit} className="space-y-4 mt-4">
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium">Business Name</label>
+                          <input 
+                            required 
+                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+                            value={paystackForm.businessName} 
+                            onChange={e => setPaystackForm({...paystackForm, businessName: e.target.value})} 
+                            placeholder="Your DJ Name" 
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium">Country</label>
+                          <select
+                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+                            value={paystackForm.country}
+                            onChange={e => setPaystackForm({...paystackForm, country: e.target.value, bankCode: ''})}
+                          >
+                            <option value="nigeria">Nigeria</option>
+                            <option value="kenya">Kenya</option>
+                            <option value="ghana">Ghana</option>
+                            <option value="south africa">South Africa</option>
+                          </select>
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium">Bank</label>
+                          <select 
+                            required 
+                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+                            value={paystackForm.bankCode} 
+                            onChange={e => setPaystackForm({...paystackForm, bankCode: e.target.value})} 
+                            disabled={isLoadingBanks}
+                          >
+                            <option value="">{isLoadingBanks ? 'Loading banks...' : 'Select your bank'}</option>
+                            {banksList.map((bank: any) => (
+                              <option key={bank.id} value={bank.code}>{bank.name}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium">Account Number</label>
+                          <input 
+                            required 
+                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+                            value={paystackForm.accountNumber} 
+                            onChange={e => setPaystackForm({...paystackForm, accountNumber: e.target.value})} 
+                            placeholder="0000000000" 
+                          />
+                        </div>
+                        <DialogFooter className="mt-6">
+                          <Button type="button" variant="outline" onClick={() => setPaystackDialogOpen(false)}>Cancel</Button>
+                          <Button type="submit" disabled={isGettingPaystackLink}>
+                            {isGettingPaystackLink ? 'Connecting...' : 'Connect'}
+                          </Button>
+                        </DialogFooter>
+                      </form>
+                    </DialogContent>
+                  </Dialog>
+                )}
               </div>
             </div>
           </CardContent>

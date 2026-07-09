@@ -27,7 +27,7 @@ export default function NotificationsPage() {
   const [markAsRead] = useMarkAsReadMutation();
 
   const notifications = notificationsData?.data || [];
-  const meta = notificationsData?.meta?.pagination;
+  const meta = notificationsData?.meta;
 
   const handleMarkAsRead = async (id: string, isRead?: boolean) => {
     if (isRead) return;
@@ -132,7 +132,7 @@ export default function NotificationsPage() {
           <Button
             variant="outline"
             onClick={() => setPage((p) => Math.max(1, p - 1))}
-            disabled={!meta.hasPrevious}
+            disabled={meta.page <= 1}
           >
             Previous
           </Button>
@@ -142,7 +142,7 @@ export default function NotificationsPage() {
           <Button
             variant="outline"
             onClick={() => setPage((p) => p + 1)}
-            disabled={!meta.hasNext}
+            disabled={meta.page >= meta.totalPages}
           >
             Next
           </Button>

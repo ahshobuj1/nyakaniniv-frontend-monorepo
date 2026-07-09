@@ -5,8 +5,9 @@ import {TopNav} from '@/components/dashbaordLayout/TopNav';
 import {SidebarProvider} from '@/components/dashbaordLayout/SidebarContext';
 import {ProtectedRoute} from '@/components/ProtectedRoute';
 
-import {StripeConnectPopup} from './_components/StripeConnectPopup';
+
 import {TenantOnboardingPopup} from './_components/TenantOnboardingPopup';
+import {PaystackConnectPopup} from './_components/PaystackConnectPopup';
 
 export default function DashboardLayout({
   children,
@@ -25,8 +26,9 @@ export default function DashboardLayout({
             </main>
           </div>
         </div>
-        <StripeConnectPopup />
+
         <TenantOnboardingPopup />
+        <PaystackConnectPopup />
       </SidebarProvider>
     </ProtectedRoute>
   );

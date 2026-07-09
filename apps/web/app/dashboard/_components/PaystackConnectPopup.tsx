@@ -12,9 +12,9 @@ import {
   DialogTitle,
   Button
 } from '@repo/ui';
-import { useGetCurrentProfileQuery, useCheckAccountStatusQuery } from '@repo/store';
+import { useGetCurrentProfileQuery, useCheckPaystackAccountStatusQuery } from '@repo/store';
 
-export function StripeConnectPopup() {
+export function PaystackConnectPopup() {
   const router = useRouter();
   const [open, setOpen] = useState(false);
 
@@ -22,34 +22,39 @@ export function StripeConnectPopup() {
   const { data: profileResponse, isLoading: isLoadingProfile } = useGetCurrentProfileQuery();
   const tenantId = profileResponse?.data?.tenant?.id;
 
-  // Check stripe status
-  const { data: statusResponse, isLoading: isLoadingStatus } = useCheckAccountStatusQuery(tenantId || '', {
+  // Check paystack status
+  const { data: statusResponse, isLoading: isLoadingStatus } = useCheckPaystackAccountStatusQuery(tenantId || '', {
     skip: !tenantId,
   });
 
   useEffect(() => {
+    // Only show for DJs
+    if (profileResponse?.data?.role !== 'DJ') return;
+
     if (!isLoadingProfile && !isLoadingStatus && statusResponse?.data) {
-      const { isConnected, detailsSubmitted } = statusResponse.data;
-      if (!isConnected || !detailsSubmitted) {
+      const { isConnected } = statusResponse.data;
+      if (!isConnected) {
         // Check session storage so we don't annoy them if they dismissed it in this session
-        const hasDismissed = sessionStorage.getItem('stripePopupDismissed');
+        const hasDismissed = sessionStorage.getItem(`paystackPopupDismissed_${tenantId}`);
         if (!hasDismissed) {
           setOpen(true);
         }
       }
     }
-  }, [isLoadingProfile, isLoadingStatus, statusResponse]);
+  }, [isLoadingProfile, isLoadingStatus, statusResponse, tenantId]);
 
   const handleOpenChange = (newOpen: boolean) => {
     setOpen(newOpen);
-    if (!newOpen) {
-      sessionStorage.setItem('stripePopupDismissed', 'true');
+    if (!newOpen && tenantId) {
+      sessionStorage.setItem(`paystackPopupDismissed_${tenantId}`, 'true');
     }
   };
 
   const handleConnectClick = () => {
     setOpen(false);
-    sessionStorage.setItem('stripePopupDismissed', 'true');
+    if (tenantId) {
+      sessionStorage.setItem(`paystackPopupDismissed_${tenantId}`, 'true');
+    }
     router.push('/dashboard/billing');
   };
 
@@ -62,7 +67,7 @@ export function StripeConnectPopup() {
           </div>
           <DialogTitle className="text-center text-xl">Set up Payouts</DialogTitle>
           <DialogDescription className="text-center text-gray-500 pt-2">
-            Connect your payment method to receive payments from client bookings directly to your bank account. Without a payment method, you won't be able to receive payouts for your paid bookings.
+            Connect your Paystack account to receive payments from client bookings directly to your bank account. Without a payment method, you won't be able to receive payouts for your paid bookings.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter className="sm:justify-center gap-2 pt-4">

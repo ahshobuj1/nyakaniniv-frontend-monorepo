@@ -137,28 +137,30 @@ export interface SubscribeResponse {
   url: string;
 }
 
-// --- Stripe Connect Requests ---
-export interface StripeOnboardRequest {
+// --- Paystack Connect Requests ---
+export interface PaystackOnboardRequest {
   tenantId: string;
-  returnUrl: string;
-  refreshUrl: string;
+  bankCode: string;
+  accountNumber: string;
+  businessName: string;
 }
 
-export interface StripeOnboardResponse {
-  url: string;
-  accountId: string;
+export interface PaystackOnboardResponse {
+  success: boolean;
+  subaccountCode: string;
 }
 
-export interface StripeStatusResponse {
+export interface PaystackStatusResponse {
   isConnected: boolean;
-  detailsSubmitted: boolean;
-  payoutsEnabled: boolean;
-  externalAccount?: {
-    type: string;
-    last4: string;
-    bankName?: string;
-    brand?: string;
-  };
+  subaccountCode?: string;
+  bankName?: string;
+  accountNumber?: string;
+}
+
+export interface PaystackBank {
+  name: string;
+  code: string;
+  id: number;
 }
 
 // --- Ticket Requests ---

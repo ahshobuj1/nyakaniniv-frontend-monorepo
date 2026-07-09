@@ -28,6 +28,7 @@ export function UserDropdown() {
     dispatch(clearAuth());
     setIsLogoutDialogOpen(false);
     setIsOpen(false);
+    sessionStorage.clear();
     router.push('/auth/login');
   };
 
