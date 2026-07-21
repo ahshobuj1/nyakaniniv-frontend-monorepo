@@ -18,35 +18,43 @@ export const config = {
 export default function middleware(req: NextRequest) {
   const url = req.nextUrl;
 
-  // Get hostname of request (e.g. demo.upbeatafrica.com, demo.localhost:3000)
-  const hostname = req.headers
-    .get('host')!
-    .replace('.localhost:3000', `.${process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'upbeatafrica.com'}`);
+  // Get hostname of request
+  let hostname = req.headers.get('host')!;
 
-  // Define allowed root domains (including local dev variations)
+  // Map localhost development domains to production equivalents for testing
+  if (hostname.includes('.localhost:3000')) {
+    hostname = hostname.replace('.localhost:3000', '.deejay.africa');
+  } else if (hostname === 'localhost:3000') {
+    hostname = 'upbeat.africa';
+  }
+
+  // Define allowed root domains for the MAIN web app
   const rootDomains = [
+    'upbeat.africa',
+    'www.upbeat.africa',
+    // fallback domains
     'upbeatafrica.com',
     'www.upbeatafrica.com',
-    'localhost:3000',
     'app.upbeatafrica.com',
     'admin.upbeatafrica.com',
     'upbeatafrica.vercel.app'
   ];
 
-  // If the request is for the main domain, app dashboard, or admin, let it pass normally.
+  // 1. If it's a main domain, pass normally to standard pages
   if (rootDomains.includes(hostname)) {
     return NextResponse.next();
   }
 
-  // Extract the subdomain. e.g. "djkwame.upbeatafrica.com" -> "djkwame"
-  const currentHost =
-    process.env.NODE_ENV === 'production' && process.env.VERCEL === '1'
-      ? hostname.replace(`.upbeatafrica.com`, '')
-      : hostname.replace(`.upbeatafrica.com`, '').replace('.localhost:3000', '');
-
-  // Rewrite subdomain requests to /site/[subdomain]/[path]
-  if (currentHost && currentHost !== 'www' && currentHost !== 'app' && currentHost !== 'admin') {
-    return NextResponse.rewrite(new URL(`/site/${currentHost}${url.pathname}`, req.url));
+  // 2. Check for subdomains on deejay.africa
+  if (hostname.endsWith('.deejay.africa')) {
+    // Extract subdomain (e.g. "shobuj.deejay.africa" -> "shobuj")
+    const subdomain = hostname.replace('.deejay.africa', '');
+    
+    // Ignore "www" or empty subdomain on deejay.africa
+    if (subdomain && subdomain !== 'www') {
+      // Rewrite subdomain requests to /site/[subdomain]/[path]
+      return NextResponse.rewrite(new URL(`/site/${subdomain}${url.pathname}`, req.url));
+    }
   }
 
   return NextResponse.next();
