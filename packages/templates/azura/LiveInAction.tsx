@@ -8,13 +8,15 @@ interface LiveInActionProps {
     title?: string;
     subtitle?: string;
     images?: string[];
+    liveActionImages?: string[];
+    [key: string]: any;
   };
 }
 
 export default function LiveInAction({content}: LiveInActionProps) {
   const title = content?.title || 'Live In Action';
   const subtitle = content?.subtitle || 'Energy from recent performances.';
-  const images = content?.images || [
+  const images = content?.liveActionImages || content?.images || [
     '/theme/aura/default/live-action-1.png',
     '/theme/aura/default/live-action-2.png',
     '/theme/aura/default/live-action-3.png',
@@ -22,7 +24,7 @@ export default function LiveInAction({content}: LiveInActionProps) {
   ];
 
   return (
-    <section className="bg-[#f2f2f2] py-[80px]">
+    <section id="gallery" className="bg-[#f2f2f2] py-[80px]">
       <div className="max-w-[1140px] mx-auto px-6">
         <div className="text-center mb-[48px] flex flex-col gap-[8px]">
           <motion.h2
@@ -50,7 +52,7 @@ export default function LiveInAction({content}: LiveInActionProps) {
             transition={{duration: 0.6}}
             className="relative h-[400px] md:h-[600px] w-full rounded-[16px] overflow-hidden">
             <Image
-              src={images[0]}
+              src={images[0] || '/theme/aura/default/live-action-1.png'}
               alt="Live Performance Main"
               fill
               className="object-cover"
@@ -66,7 +68,7 @@ export default function LiveInAction({content}: LiveInActionProps) {
               transition={{duration: 0.6, delay: 0.1}}
               className="relative h-[250px] md:h-[292px] w-full rounded-[16px] overflow-hidden">
               <Image
-                src={images[1]}
+                src={images[1] || '/theme/aura/default/live-action-2.png'}
                 alt="Live Performance Secondary"
                 fill
                 className="object-cover"
@@ -82,7 +84,7 @@ export default function LiveInAction({content}: LiveInActionProps) {
                 transition={{duration: 0.6, delay: 0.2}}
                 className="relative min-h-[200px] w-full rounded-[16px] overflow-hidden">
                 <Image
-                  src={images[2]}
+                  src={images[2] || '/theme/aura/default/live-action-3.png'}
                   alt="DJ Equipment"
                   fill
                   className="object-cover"
@@ -96,7 +98,7 @@ export default function LiveInAction({content}: LiveInActionProps) {
                 transition={{duration: 0.6, delay: 0.3}}
                 className="relative min-h-[200px] w-full rounded-[16px] overflow-hidden">
                 <Image
-                  src={images[3]}
+                  src={images[3] || '/theme/aura/default/live-action-4.png'}
                   alt="Live Performance Detail"
                   fill
                   className="object-cover"

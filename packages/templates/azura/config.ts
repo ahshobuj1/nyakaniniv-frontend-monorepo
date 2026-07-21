@@ -67,4 +67,60 @@ export const azuraTemplate: Template = {
       poweredBy: 'UpBeat Africa',
     },
   },
+  editorConfig: {
+    navbar: {
+      label: 'Navbar',
+      fields: [
+        {label: 'DJ Name', key: 'djName', type: 'text'},
+      ],
+    },
+    hero: {
+      label: 'Hero Section',
+      fields: [
+        {label: 'Main Title', key: 'heroTitle', type: 'text'},
+        {label: 'Sub Description', key: 'heroDescription', type: 'textarea'},
+        {label: 'Background Image', key: 'heroImage', type: 'image'},
+      ],
+    },
+    'behind-decks': {
+      label: 'Behind the Decks',
+      fields: [
+        {label: 'Section Title', key: 'behindDecksTitle', type: 'text'},
+        {label: 'Biography', key: 'behindDecksBio', type: 'textarea'},
+        {label: 'Featured Image', key: 'behindDecksImage', type: 'image'},
+        {label: 'Signature Sounds (Comma separated)', key: 'signatureSounds', type: 'text'},
+        {label: 'Events Played', key: 'eventsPlayed', type: 'text'},
+        {label: 'Cities Toured', key: 'citiesToured', type: 'text'},
+      ],
+    },
+    gallery: {
+      label: 'Live In Action / Gallery',
+      fields: [
+        {label: 'Gallery Title', key: 'title', type: 'text'},
+        {label: 'Gallery Subtitle', key: 'subtitle', type: 'text'},
+        {label: 'Gallery Images', key: 'liveActionImages', type: 'gallery'},
+      ],
+    },
+    about: {
+      label: 'About Section',
+      fields: [{label: 'About Content', key: 'aboutText', type: 'textarea'}],
+    },
+    contact: {
+      label: 'Contact Info',
+      fields: [
+        {label: 'Email Address', key: 'email', type: 'text'},
+        {label: 'Phone Number', key: 'phone', type: 'text'},
+        {label: 'Location', key: 'location', type: 'text'},
+      ],
+    },
+    social: {
+      label: 'Social Links',
+      fields: [
+        {label: 'Instagram URL', key: 'instagram', type: 'text'},
+        {label: 'Facebook URL', key: 'facebook', type: 'text'},
+        {label: 'LinkedIn URL', key: 'linkedin', type: 'text'},
+      ],
+    },
+
+  },
 };

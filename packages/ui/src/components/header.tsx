@@ -35,7 +35,11 @@ export const navLinks = [
   },
 ];
 
-export function Header() {
+export interface HeaderProps {
+  userDropdown?: React.ReactNode;
+}
+
+export function Header({ userDropdown }: HeaderProps = {}) {
   const scrolled = useScroll(10);
   const pathname = usePathname();
   const [activeSection, setActiveSection] = useState('');
@@ -117,17 +121,22 @@ export function Header() {
         </div>
 
         <div className="hidden items-center md:flex">
-          <Link href={'/auth/login'}>
-            <Button
-              size="lg"
-              className="bg-primary rounded-[2px] px-10 py-4 text-lg font-semibold text-white hover:bg-[#e02a30]">
-              Log In
-            </Button>
-          </Link>
+          {userDropdown ? (
+            userDropdown
+          ) : (
+            <Link href={'/auth/login'}>
+              <Button
+                size="lg"
+                className="bg-primary rounded-[2px] px-10 py-4 text-lg font-semibold text-white hover:bg-[#e02a30]">
+                Log In
+              </Button>
+            </Link>
+          )}
         </div>
 
-        <div className="md:hidden">
-          <MobileNav />
+        <div className="flex items-center gap-4 md:hidden">
+          {userDropdown && <div className="scale-90 origin-right">{userDropdown}</div>}
+          <MobileNav showLogin={!userDropdown} />
         </div>
       </nav>
     </header>

@@ -2,6 +2,8 @@
 
 import {Menu, Search, Bell, ChevronsRight} from 'lucide-react';
 import {useSidebar} from './SidebarContext';
+import {NotificationDropdown} from './NotificationDropdown';
+import {UserDropdown} from '../shared/UserDropdown';
 
 export function TopNav() {
   const {toggleCollapse, toggleMobile, isCollapsed} = useSidebar();
@@ -40,13 +42,9 @@ export function TopNav() {
           />
         </div>
 
-        <button className="p-2 bg-[#f4f4f4] rounded-md text-gray-500 hover:text-gray-700 transition-colors">
-          <Bell size={18} />
-        </button>
+        <NotificationDropdown />
 
-        <button className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-[#fff0f0] text-primary font-bold text-xs md:text-sm flex items-center justify-center hover:bg-[#ffe5e5] transition-colors">
-          K
-        </button>
+        <UserDropdown />
       </div>
     </header>
   );

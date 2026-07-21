@@ -16,6 +16,7 @@ export default function BehindDecks({content}: any) {
 
   return (
     <motion.section
+      id="about"
       initial="hidden"
       whileInView="show"
       viewport={{once: true, amount: 0.15}}
@@ -59,16 +60,16 @@ export default function BehindDecks({content}: any) {
               SIGNATURE SOUNDS
             </p>
             <div className="flex flex-wrap gap-[12px]">
-              {tags.map((t: string, i: number) => (
+              {(content?.signatureSounds ? content.signatureSounds.split(',') : tags).map((t: string, i: number) => (
                 <motion.span
-                  key={t}
+                  key={i}
                   initial={{opacity: 0, y: 10}}
                   whileInView={{opacity: 1, y: 0}}
                   viewport={{once: true}}
                   transition={{delay: 0.1 + i * 0.06}}
                   whileHover={{y: -2}}
                   className="bg-[var(--primary)]/10 border border-[var(--primary)]/20 rounded-[12px] px-[17px] py-[9px] text-[14px] text-[#0f0f0f] font-medium font-sans">
-                  {t}
+                  {typeof t === 'string' ? t.trim() : t}
                 </motion.span>
               ))}
             </div>
@@ -76,8 +77,8 @@ export default function BehindDecks({content}: any) {
 
           <div className="grid grid-cols-2 gap-[30px] pt-[31px] border-t border-[#c3c3c3]">
             {[
-              {v: '350+', l: 'Events Played'},
-              {v: '15', l: 'Cities Toured'},
+              {v: content?.eventsPlayed || '350+', l: 'Events Played'},
+              {v: content?.citiesToured || '15', l: 'Cities Toured'},
             ].map((s) => (
               <div key={s.l}>
                 <div className="text-[var(--primary)] font-bold text-[40px] leading-[48px]">

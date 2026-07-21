@@ -8,6 +8,8 @@ import {toast} from 'sonner';
 import Image from 'next/image';
 import Link from 'next/link';
 import {Button} from '@repo/ui';
+import {useSearchParams, useRouter} from 'next/navigation';
+import {useVerifyOtpMutation, useResendOtpMutation} from '@repo/store';
 
 const verifySchema = z.object({
   code: z
@@ -18,8 +20,15 @@ const verifySchema = z.object({
 type VerifyFormValues = z.infer<typeof verifySchema>;
 
 export default function VerificationPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const email = searchParams.get('email');
+
   const [otp, setOtp] = useState<string[]>(new Array(6).fill(''));
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+  const [verifyOtp, { isLoading: isVerifying }] = useVerifyOtpMutation();
+  const [resendOtp, { isLoading: isResending }] = useResendOtpMutation();
 
   const {
     handleSubmit,
@@ -77,9 +86,32 @@ export default function VerificationPage() {
   };
 
   const onSubmit = async (data: VerifyFormValues) => {
-    console.log(data);
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    toast.success('Verification successful!');
+    if (!email) {
+      toast.error('Email is missing from the URL. Please register again.');
+      return;
+    }
+    try {
+      const response = await verifyOtp({ email, otp: data.code }).unwrap();
+      toast.success(response.message || 'Verification successful!');
+      router.push('/auth/setup-profile');
+    } catch (error: any) {
+      const errorMsg = error?.data?.error?.message || error?.data?.message || 'Failed to verify OTP.';
+      toast.error(errorMsg);
+    }
+  };
+
+  const handleResend = async () => {
+    if (!email) {
+      toast.error('Email is missing from the URL.');
+      return;
+    }
+    try {
+      const response = await resendOtp({ email }).unwrap();
+      toast.success(response.message || 'OTP resent successfully!');
+    } catch (error: any) {
+      const errorMsg = error?.data?.error?.message || error?.data?.message || 'Failed to resend OTP.';
+      toast.error(errorMsg);
+    }
   };
 
   return (
@@ -138,9 +170,9 @@ export default function VerificationPage() {
           <div className="w-full px-2 sm:px-0">
             <Button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isSubmitting || isVerifying}
               className="w-full bg-primary rounded-none text-white py-6 text-[15px] font-semibold hover:bg-[#e03939] transition-colors disabled:opacity-70 disabled:cursor-not-allowed shadow-sm">
-              {isSubmitting ? 'Verifying...' : 'Submit'}
+              {isSubmitting || isVerifying ? 'Verifying...' : 'Submit'}
             </Button>
           </div>
         </form>
@@ -148,8 +180,10 @@ export default function VerificationPage() {
         <div className="mt-6 text-center">
           <button
             type="button"
-            className="text-primary duration-300 cursor-pointer text-[14px] font-semibold hover:underline">
-            Resend It
+            onClick={handleResend}
+            disabled={isResending}
+            className="text-primary duration-300 cursor-pointer text-[14px] font-semibold hover:underline disabled:opacity-50">
+            {isResending ? 'Resending...' : 'Resend It'}
           </button>
         </div>
       </div>

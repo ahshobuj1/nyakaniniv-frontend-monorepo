@@ -24,8 +24,12 @@ import {
 } from '@repo/ui';
 import {Country, City} from 'country-state-city';
 import {useEffect, useState} from 'react';
+import {useOnboardTenantMutation} from '@repo/store';
+import {useRouter} from 'next/navigation';
 
 const profileSchema = z.object({
+  stageName: z.string().min(1, 'Stage name is required'),
+  subdomain: z.string().min(3, 'Subdomain must be at least 3 characters'),
   country: z.string().min(1, 'Please select a country'),
   city: z.string().min(1, 'Please select a city'),
   genres: z
@@ -57,7 +61,11 @@ const availableGenres = [
 ];
 
 export default function SetupProfilePage() {
+  const router = useRouter();
+  const [onboardTenant, {isLoading}] = useOnboardTenantMutation();
+
   const {
+    register,
     handleSubmit,
     setValue,
     watch,
@@ -65,6 +73,8 @@ export default function SetupProfilePage() {
   } = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
+      stageName: '',
+      subdomain: '',
       country: 'KE',
       city: '',
       genres: [],
@@ -115,9 +125,13 @@ export default function SetupProfilePage() {
   };
 
   const onSubmit = async (data: ProfileFormValues) => {
-    console.log(data);
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    toast.success('Profile setup complete!');
+    try {
+      const response = await onboardTenant(data).unwrap();
+      toast.success(response.message || 'Profile setup complete!');
+      router.push('/dashboard');
+    } catch (error: any) {
+      toast.error(error?.data?.message || 'Failed to setup profile.');
+    }
   };
 
   return (
@@ -146,6 +160,56 @@ export default function SetupProfilePage() {
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label
+                htmlFor="stageName"
+                className="block text-[13px] font-bold text-gray-900 mb-2">
+                Stage Name
+              </label>
+              <input
+                id="stageName"
+                type="text"
+                placeholder="e.g. DJ Khalid"
+                className={`w-full px-4 py-3.5 bg-white text-sm placeholder:text-gray-400 outline-none transition-all border ${
+                  errors.stageName
+                    ? 'border-red-500'
+                    : 'border-transparent focus:border-gray-300 shadow-sm'
+                }`}
+                {...register('stageName')}
+              />
+              {errors.stageName && (
+                <p className="text-red-500 text-xs mt-1.5">
+                  {errors.stageName.message}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <label
+                htmlFor="subdomain"
+                className="block text-[13px] font-bold text-gray-900 mb-2">
+                Subdomain URL
+              </label>
+              <input
+                id="subdomain"
+                type="text"
+                placeholder="e.g. dj-khalid"
+                className={`w-full px-4 py-3.5 bg-white text-sm placeholder:text-gray-400 outline-none transition-all border ${
+                  errors.subdomain
+                    ? 'border-red-500'
+                    : 'border-transparent focus:border-gray-300 shadow-sm'
+                }`}
+                {...register('subdomain')}
+              />
+              {errors.subdomain && (
+                <p className="text-red-500 text-xs mt-1.5">
+                  {errors.subdomain.message}
+                </p>
+              )}
+            </div>
+          </div>
+
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label
@@ -328,9 +392,9 @@ export default function SetupProfilePage() {
 
             <Button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isSubmitting || isLoading}
               className="w-1/2 bg-primary rounded-none text-white py-6 border-primary text-lg font-medium hover:bg-[#e03939] border-2 transition-colors disabled:opacity-70 disabled:cursor-not-allowed shadow-sm">
-              {isSubmitting ? 'Processing...' : 'Continue'}
+              {isSubmitting || isLoading ? 'Processing...' : 'Continue'}
             </Button>
           </div>
         </form>

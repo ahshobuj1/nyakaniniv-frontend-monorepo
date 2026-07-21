@@ -20,7 +20,7 @@ export default function Gallery({content}: any) {
   const images = galleryData.images;
 
   return (
-    <section className="bg-[#fcfcfc] py-8 lg:py-[100px] font-sans">
+    <section id="gallery" className="bg-[#fcfcfc] py-8 lg:py-[100px] font-sans">
       <div className="max-w-[1200px] mx-auto px-6 lg:px-12">
         {/* Header */}
         <motion.div

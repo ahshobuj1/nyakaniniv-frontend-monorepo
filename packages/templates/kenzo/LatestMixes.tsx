@@ -71,11 +71,88 @@ export default function LatestMixes({content}: any) {
   };
 
   const [activeTrackIndex, setActiveTrackIndex] = useState(0);
-  const activeTrack = mixContent.tracks[activeTrackIndex];
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [currentTimeStr, setCurrentTimeStr] = useState('00:00');
+  const [durationStr, setDurationStr] = useState('00:00');
+  const audioRef = React.useRef<HTMLAudioElement | null>(null);
+
+  const activeTrack = mixContent.tracks[activeTrackIndex] || mixContent.tracks[0];
+
+  React.useEffect(() => {
+    if (audioRef.current) {
+      if (isPlaying) {
+        audioRef.current.play().catch(e => console.log('Audio playback failed:', e));
+      } else {
+        audioRef.current.pause();
+      }
+    }
+  }, [isPlaying, activeTrackIndex]);
+
+  const handleTimeUpdate = () => {
+    if (audioRef.current) {
+      const current = audioRef.current.currentTime;
+      const dur = audioRef.current.duration;
+      if (dur > 0) setProgress((current / dur) * 100);
+      
+      const formatTime = (time: number) => {
+        if (isNaN(time)) return '00:00';
+        const m = Math.floor(time / 60);
+        const s = Math.floor(time % 60);
+        return `${m}:${s.toString().padStart(2, '0')}`;
+      };
+      setCurrentTimeStr(formatTime(current));
+      setDurationStr(formatTime(dur));
+    }
+  };
+
+  const handleEnded = () => {
+    setIsPlaying(false);
+    setProgress(0);
+    setCurrentTimeStr('00:00');
+  };
+
+  const togglePlay = () => {
+    if (!activeTrack.audioUrl) return;
+    setIsPlaying(!isPlaying);
+  };
+
+  const playMix = (index: number) => {
+    if (!mixContent.tracks[index].audioUrl) return;
+    if (index === activeTrackIndex) {
+      togglePlay();
+    } else {
+      setActiveTrackIndex(index);
+      setIsPlaying(true);
+    }
+  };
+
+  const nextTrack = () => {
+    if (activeTrackIndex < mixContent.tracks.length - 1) {
+      setActiveTrackIndex(activeTrackIndex + 1);
+      setIsPlaying(true);
+    }
+  };
+
+  const prevTrack = () => {
+    if (activeTrackIndex > 0) {
+      setActiveTrackIndex(activeTrackIndex - 1);
+      setIsPlaying(true);
+    }
+  };
 
   return (
-    <section className="bg-[#fcfcfc] py-8 lg:py-[100px]">
+    <section id="music" className="bg-[#fcfcfc] py-8 lg:py-[100px]">
       <div className="max-w-[1200px] mx-auto px-6 lg:px-12">
+        
+        {/* Hidden Audio Element */}
+        <audio 
+          ref={audioRef} 
+          src={activeTrack?.audioUrl} 
+          onTimeUpdate={handleTimeUpdate}
+          onEnded={handleEnded}
+        />
+
         {/* Header */}
         <motion.div
           initial={{opacity: 0, y: 20}}
@@ -103,8 +180,8 @@ export default function LatestMixes({content}: any) {
               {/* Cover Image */}
               <div className="relative w-full aspect-square rounded-[16px] overflow-hidden mb-[30px] shadow-md">
                 <Image
-                  src={mixContent.coverImage}
-                  alt={activeTrack.title}
+                  src={activeTrack?.coverImage || mixContent.coverImage}
+                  alt={activeTrack?.title || 'Cover'}
                   fill
                   className="object-cover"
                 />
@@ -113,34 +190,32 @@ export default function LatestMixes({content}: any) {
               {/* Track Info */}
               <div className="mb-[24px]">
                 <h3 className="text-[20px] font-bold text-[#111111] mb-[6px]">
-                  {activeTrack.title}
+                  {activeTrack?.title || 'Track Title'}
                 </h3>
                 <p className="text-[#888888] text-[14px]">
-                  {activeTrack.genre}
+                  {activeTrack?.genre || 'Genre'}
                 </p>
               </div>
 
               {/* Progress Bar */}
               <div className="mb-[24px]">
-                <div className="w-full h-[4px] bg-[#e0e0e0] rounded-full overflow-hidden mb-[10px]">
+                <div className="w-full h-[4px] bg-[#e0e0e0] rounded-full overflow-hidden mb-[10px] relative">
                   <div
-                    className="h-full bg-[var(--primary)] rounded-full"
-                    style={{width: `${activeTrack.progress || 10}%`}}
+                    className="absolute top-0 left-0 h-full bg-[var(--primary)] rounded-full transition-all duration-300"
+                    style={{width: `${progress}%`}}
                   />
                 </div>
                 <div className="flex justify-between items-center text-[12px] font-medium text-[#888888]">
-                  <span>{activeTrack.currentTime || '00:00'}</span>
-                  <span>{activeTrack.duration}</span>
+                  <span>{currentTimeStr}</span>
+                  <span>{durationStr}</span>
                 </div>
               </div>
 
               {/* Player Controls */}
               <div className="flex items-center justify-center gap-[30px]">
                 <button
-                  onClick={() =>
-                    setActiveTrackIndex((prev) => Math.max(0, prev - 1))
-                  }
-                  className="text-[#888888] hover:text-[#111111] transition-colors">
+                  onClick={prevTrack}
+                  className={`transition-colors ${activeTrackIndex > 0 ? 'text-[#888888] hover:text-[#111111]' : 'text-[#d0d0d0]'}`}>
                   <svg
                     width="24"
                     height="24"
@@ -155,28 +230,37 @@ export default function LatestMixes({content}: any) {
                   </svg>
                 </button>
 
-                <button className="w-[56px] h-[56px] rounded-full bg-[var(--primary)] flex items-center justify-center text-white shadow-lg hover:scale-105 transition-transform">
-                  <svg
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="3"
-                    strokeLinecap="round"
-                    strokeLinejoin="round">
-                    <rect x="6" y="4" width="4" height="16"></rect>
-                    <rect x="14" y="4" width="4" height="16"></rect>
-                  </svg>
+                <button 
+                  onClick={togglePlay}
+                  className="w-[56px] h-[56px] rounded-full bg-[var(--primary)] flex items-center justify-center text-white shadow-lg hover:scale-105 transition-transform">
+                  {isPlaying ? (
+                    <svg
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="3"
+                      strokeLinecap="round"
+                      strokeLinejoin="round">
+                      <rect x="6" y="4" width="4" height="16"></rect>
+                      <rect x="14" y="4" width="4" height="16"></rect>
+                    </svg>
+                  ) : (
+                    <svg
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                      className="ml-1">
+                      <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                    </svg>
+                  )}
                 </button>
 
                 <button
-                  onClick={() =>
-                    setActiveTrackIndex((prev) =>
-                      Math.min(mixContent.tracks.length - 1, prev + 1),
-                    )
-                  }
-                  className="text-[#888888] hover:text-[#111111] transition-colors">
+                  onClick={nextTrack}
+                  className={`transition-colors ${activeTrackIndex < mixContent.tracks.length - 1 ? 'text-[#888888] hover:text-[#111111]' : 'text-[#d0d0d0]'}`}>
                   <svg
                     width="24"
                     height="24"
@@ -206,11 +290,10 @@ export default function LatestMixes({content}: any) {
 
               return (
                 <div
-                  key={track.id}
-                  onClick={() => setActiveTrackIndex(index)}
+                  key={track.id || index}
+                  onClick={() => playMix(index)}
                   style={{
                     borderColor: isActive ? 'var(--primary)' : 'transparent',
-                    // Using inline opacity background trick for the active state
                     backgroundColor: isActive
                       ? 'rgba(var(--primary-rgb, 252, 56, 56), 0.05)'
                       : '#f4f4f4',
@@ -228,7 +311,7 @@ export default function LatestMixes({content}: any) {
                         color: isActive ? 'white' : '#888888',
                       }}
                       className="w-[40px] h-[40px] rounded-full flex items-center justify-center shrink-0 transition-colors group-hover:bg-[#d4d4d4]">
-                      {isActive ? (
+                      {isActive && isPlaying ? (
                         <svg
                           width="14"
                           height="14"
@@ -270,7 +353,7 @@ export default function LatestMixes({content}: any) {
                   <div
                     style={{color: isActive ? 'var(--primary)' : '#888888'}}
                     className="text-[13px] font-medium">
-                    {track.duration}
+                    {track.duration || '00:00'}
                   </div>
                 </div>
               );

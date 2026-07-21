@@ -1,7 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  transpilePackages: ["@repo/ui", "@repo/builder", "@repo/templates"],
+  output: "standalone",
+  transpilePackages: ["@repo/ui", "@repo/builder", "@repo/templates", "@repo/store"],
   images: {
     remotePatterns: [
       {
@@ -12,6 +13,18 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'flagcdn.com',
       },
+      {
+        protocol: 'https',
+        hostname: 'additional-user.s3.eu-north-1.amazonaws.com',
+      },
+       {
+      protocol: "https",
+      hostname: "**",
+    },
+    {
+      protocol: "http",
+      hostname: "**",
+    },
     ],
   },
 };

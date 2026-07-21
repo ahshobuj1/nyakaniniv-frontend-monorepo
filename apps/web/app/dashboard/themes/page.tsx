@@ -3,32 +3,40 @@
 import {Check, ArrowRight, ChevronDown} from 'lucide-react';
 import {useRouter} from 'next/navigation';
 import {ThemeCard} from './_components/Themecard';
+import { useGetAllThemesQuery, useGetCurrentProfileQuery } from '@repo/store';
 
 export default function WebsiteThemesPage() {
   const router = useRouter();
 
-  // Mock Data for the themes - IDs updated to match template keys
-  const themes = [
-    {
-      id: 'azura',
-      title: 'Solar Flare',
-      description: 'Bright and energetic with orange and yellow hues',
-      imageUrl: '/theme/Theme1.png',
-    },
-    {
-      id: 'kenzo',
-      title: 'Abyss',
-      description: 'Sleek and modern with deep blues and blacks',
-      imageUrl: '/theme/Theme2.png',
-    },
-  ];
+  const { data: profileResponse } = useGetCurrentProfileQuery();
+  const activeThemeId = profileResponse?.data?.tenant?.themeId;
 
-  const handleApplyTheme = (themeId: string) => {
-    router.push(`/dashboard/manage-theme?themeId=${themeId}`);
+  const { data: themesResponse, isLoading } = useGetAllThemesQuery();
+  const themes = themesResponse?.data || [];
+
+  const handleApplyTheme = (themeSlug: string) => {
+    // Redirect to manage-theme to customize and publish
+    router.push(`/dashboard/manage-theme?themeId=${themeSlug}`);
   };
 
-  const handlePreviewTheme = (themeId: string) => {
-    router.push(`/themes/preview?themeId=${themeId}`);
+  const handlePreviewTheme = (themeSlug: string) => {
+    router.push(`/themes/preview?themeId=${themeSlug}`);
+  };
+
+  const activeTheme = themes.find(t => t.id === activeThemeId);
+  const subdomain = profileResponse?.data?.tenant?.subdomain || 'demo';
+
+  const getLiveWebsiteUrl = () => {
+    if (typeof window === 'undefined') return '#';
+    const hostname = window.location.hostname;
+    const port = window.location.port ? `:${window.location.port}` : '';
+    
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+      return `http://${subdomain}.localhost${port}`;
+    }
+    
+    const rootDomain = hostname.includes('upbeatafrica.com') ? 'upbeatafrica.com' : hostname;
+    return `https://${subdomain}.${rootDomain}`;
   };
 
   return (
@@ -45,23 +53,27 @@ export default function WebsiteThemesPage() {
             </p>
           </div>
 
-          <button className="bg-primary hover:bg-red-600 text-white text-sm font-medium py-2.5 px-5 rounded-lg shadow-sm transition-colors flex items-center justify-center gap-2">
+          <button 
+            onClick={() => window.open(getLiveWebsiteUrl(), '_blank')}
+            className="bg-primary hover:bg-red-600 text-white text-sm font-medium py-2.5 px-5 rounded-lg shadow-sm transition-colors flex items-center justify-center gap-2">
             View My Website <ArrowRight className="w-4 h-4" />
           </button>
         </div>
 
         {/* Active Theme Banner */}
-        <div className="bg-[#fff1f2] border border-red-100 rounded-xl p-4 flex items-center gap-3">
-          <div className="bg-[#fecdd3] p-1 rounded-md">
-            <Check className="w-4 h-4 text-red-600" strokeWidth={3} />
+        {activeTheme && (
+          <div className="bg-[#fff1f2] border border-red-100 rounded-xl p-4 flex items-center gap-3">
+            <div className="bg-[#fecdd3] p-1 rounded-md">
+              <Check className="w-4 h-4 text-red-600" strokeWidth={3} />
+            </div>
+            <p className="text-[14px] text-gray-600">
+              <span className="font-bold text-gray-900">
+                Active Theme: {activeTheme.name}
+              </span>{' '}
+              Currently live on your website
+            </p>
           </div>
-          <p className="text-[14px] text-gray-600">
-            <span className="font-bold text-gray-900">
-              Active Theme: Solar Flare
-            </span>{' '}
-            Currently live on your website
-          </p>
-        </div>
+        )}
 
         {/* Filter Dropdown */}
         <div className="pt-2">
@@ -71,18 +83,24 @@ export default function WebsiteThemesPage() {
         </div>
 
         {/* Themes Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pt-2">
-          {themes.map((theme) => (
-            <ThemeCard
-              key={theme.id}
-              title={theme.title}
-              description={theme.description}
-              imageUrl={theme.imageUrl}
-              onApply={() => handleApplyTheme(theme.id)}
-              onPreview={() => handlePreviewTheme(theme.id)}
-            />
-          ))}
-        </div>
+        {isLoading ? (
+          <div className="flex justify-center items-center py-20">
+            <div className="w-8 h-8 border-4 border-gray-200 border-t-primary rounded-full animate-spin"></div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pt-2">
+            {themes.map((theme) => (
+              <ThemeCard
+                key={theme.id}
+                title={theme.name || 'Unnamed Theme'}
+                description={'No description available'}
+                imageUrl={theme.previewImageUrl || '/theme/Theme1.png'}
+                onApply={() => handleApplyTheme(theme.slug || String(theme.id))}
+                onPreview={() => handlePreviewTheme(theme.slug || String(theme.id))}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

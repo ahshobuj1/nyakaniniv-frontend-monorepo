@@ -8,6 +8,8 @@ import {
   LineChart,
   Smartphone,
 } from 'lucide-react';
+import Image from 'next/image';
+import { LandingPageService } from '@repo/store';
 
 export interface FeatureItem {
   title: string;
@@ -15,7 +17,7 @@ export interface FeatureItem {
   icon: React.ElementType;
 }
 
-const featuresData: FeatureItem[] = [
+const defaultFeaturesData: FeatureItem[] = [
   {
     title: 'Personal DJ Website',
     description:
@@ -54,7 +56,14 @@ const featuresData: FeatureItem[] = [
   },
 ];
 
-export default function Features() {
+interface FeaturesProps {
+  services?: LandingPageService[];
+}
+
+export default function Features({ services }: FeaturesProps) {
+  // Use API services if available, otherwise fallback
+  const hasDynamicServices = services && services.length > 0;
+
   return (
     <section className="bg-[#f0f0f0] py-24 px-6" id="features">
       <div className="max-w-7xl mx-auto">
@@ -71,30 +80,54 @@ export default function Features() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {featuresData.map((feature, index) => {
-            const Icon = feature.icon;
-
-            return (
+          {hasDynamicServices ? (
+            services.map((service, index) => (
               <div
-                key={index}
+                key={service.id || index}
                 className="bg-white p-10 group cursor-pointer shadow-sm hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] transition-all duration-500 ease-out transform hover:-translate-y-2">
-                <div className="w-14 h-14 bg-[#f0f0f0] flex items-center justify-center mb-8 transition-colors duration-300 group-hover:bg-primary/10">
-                  <Icon
-                    className="w-11 h-11 text-gray-400 group-hover:text-primary group-hover:scale-110 transition-all duration-300"
-                    strokeWidth={1.5}
-                  />
+                <div className="w-14 h-14 bg-[#f0f0f0] flex items-center justify-center mb-8 transition-colors duration-300 group-hover:bg-primary/10 relative overflow-hidden">
+                  {service.imageUrl ? (
+                    <Image src={service.imageUrl} alt={service.title || "Feature"} fill className="object-cover p-2" />
+                  ) : (
+                    <Globe className="w-11 h-11 text-gray-400 group-hover:text-primary group-hover:scale-110 transition-all duration-300" strokeWidth={1.5} />
+                  )}
                 </div>
 
                 <h3 className="text-xl font-semibold text-[#111620] mb-4 group-hover:text-primary transition-colors duration-300">
-                  {feature.title}
+                  {service.title}
                 </h3>
 
                 <p className="text-gray-500 leading-relaxed text-sm">
-                  {feature.description}
+                  {service.description}
                 </p>
               </div>
-            );
-          })}
+            ))
+          ) : (
+            defaultFeaturesData.map((feature, index) => {
+              const Icon = feature.icon;
+
+              return (
+                <div
+                  key={index}
+                  className="bg-white p-10 group cursor-pointer shadow-sm hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] transition-all duration-500 ease-out transform hover:-translate-y-2">
+                  <div className="w-14 h-14 bg-[#f0f0f0] flex items-center justify-center mb-8 transition-colors duration-300 group-hover:bg-primary/10">
+                    <Icon
+                      className="w-11 h-11 text-gray-400 group-hover:text-primary group-hover:scale-110 transition-all duration-300"
+                      strokeWidth={1.5}
+                    />
+                  </div>
+
+                  <h3 className="text-xl font-semibold text-[#111620] mb-4 group-hover:text-primary transition-colors duration-300">
+                    {feature.title}
+                  </h3>
+
+                  <p className="text-gray-500 leading-relaxed text-sm">
+                    {feature.description}
+                  </p>
+                </div>
+              );
+            })
+          )}
         </div>
       </div>
     </section>

@@ -6,7 +6,7 @@ import {navLinks} from './header';
 import {XIcon, MenuIcon} from 'lucide-react';
 import Link from 'next/link';
 
-export function MobileNav() {
+export function MobileNav({ showLogin = true }: { showLogin?: boolean }) {
   const [open, setOpen] = React.useState(false);
 
   return (
@@ -46,11 +46,13 @@ export function MobileNav() {
               ))}
             </div>
             <div className="mt-12 flex flex-col gap-2">
-              <Link href={'/auth/login'}>
-                <Button size="lg" className="w-full" variant="default">
-                  Log In
-                </Button>
-              </Link>
+              {showLogin && (
+                <Link href={'/auth/login'}>
+                  <Button size="lg" className="w-full" variant="default">
+                    Log In
+                  </Button>
+                </Link>
+              )}
             </div>
           </div>
         </Portal>

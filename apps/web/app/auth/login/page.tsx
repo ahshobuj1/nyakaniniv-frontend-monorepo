@@ -10,6 +10,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import {Button} from '@repo/ui';
 import {useRouter} from 'next/navigation';
+import {useLoginMutation} from '@repo/store';
 
 const loginSchema = z.object({
   email: z.string().min(1, 'Email is required').email('Invalid email address'),
@@ -21,6 +22,7 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 export default function LoginPage() {
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
+  const [loginApi, {isLoading}] = useLoginMutation();
 
   const {
     register,
@@ -31,10 +33,13 @@ export default function LoginPage() {
   });
 
   const onSubmit = async (data: LoginFormValues) => {
-    console.log(data);
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    toast.success('Successfully logged in!');
-    router.push('/dashboard');
+    try {
+      const response = await loginApi(data).unwrap();
+      toast.success(response.message || 'Successfully logged in!');
+      router.push('/dashboard');
+    } catch (error: any) {
+      toast.error(error?.data?.error?.message || 'Failed to log in. Please check your credentials.');
+    }
   };
 
   return (
@@ -132,9 +137,9 @@ export default function LoginPage() {
 
           <Button
             type="submit"
-            disabled={isSubmitting}
+            disabled={isSubmitting || isLoading}
             className="w-full bg-primary text-white py-6 text-[15px] font-semibold hover:bg-[#e03939] transition-colors disabled:opacity-70 disabled:cursor-not-allowed mt-4 shadow-sm rounded-none">
-            {isSubmitting ? 'Logging in...' : 'Log In'}
+            {isSubmitting || isLoading ? 'Logging in...' : 'Log In'}
           </Button>
         </form>
 

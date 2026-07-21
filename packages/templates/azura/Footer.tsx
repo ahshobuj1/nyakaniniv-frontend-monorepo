@@ -3,21 +3,7 @@
 import Link from 'next/link';
 
 interface FooterProps {
-  content?: {
-    footer?: {
-      logoText?: string;
-      description?: string;
-      instagram?: string;
-      facebook?: string;
-      linkedin?: string;
-      quickLinks?: Array<{label: string; url: string}>;
-      contactEmail?: string;
-      contactPhone?: string;
-      contactLocation?: string;
-      copyright?: string;
-      poweredBy?: string;
-    };
-  };
+  content?: any;
 }
 
 export default function Footer({content}: FooterProps) {
@@ -29,11 +15,11 @@ export default function Footer({content}: FooterProps) {
     facebook: '#',
     linkedin: '#',
     quickLinks: [
-      {label: 'Home', url: '#'},
-      {label: 'About', url: '#'},
-      {label: 'Music', url: '#'},
-      {label: 'Events', url: '#'},
-      {label: 'Gallery', url: '#'},
+      {label: 'Home', url: '#hero'},
+      {label: 'About', url: '#behind-decks'},
+      {label: 'Music', url: '#latest-mixes'},
+      {label: 'Events', url: '#about'},
+      {label: 'Gallery', url: '#live-action'},
     ],
     contactEmail: 'djaura@gmail.com',
     contactPhone: '+254 712 345678.',
@@ -55,7 +41,7 @@ export default function Footer({content}: FooterProps) {
             </p>
             <div className="flex gap-[12px] mt-2">
               <Link
-                href={footerData.instagram || '#'}
+                href={content?.instagram || footerData.instagram || '#'}
                 className="w-[40px] h-[40px] rounded-full bg-[#333333] flex items-center justify-center text-white hover:bg-[var(--primary)] transition-colors duration-300">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -73,7 +59,7 @@ export default function Footer({content}: FooterProps) {
                 </svg>
               </Link>
               <Link
-                href={footerData.facebook || '#'}
+                href={content?.facebook || footerData.facebook || '#'}
                 className="w-[40px] h-[40px] rounded-full bg-[#333333] flex items-center justify-center text-white hover:bg-[var(--primary)] transition-colors duration-300">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -89,7 +75,7 @@ export default function Footer({content}: FooterProps) {
                 </svg>
               </Link>
               <Link
-                href={footerData.linkedin || '#'}
+                href={content?.linkedin || footerData.linkedin || '#'}
                 className="w-[40px] h-[40px] rounded-full bg-[#333333] flex items-center justify-center text-white hover:bg-[var(--primary)] transition-colors duration-300">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -112,7 +98,7 @@ export default function Footer({content}: FooterProps) {
           <div className="flex flex-col gap-[24px]">
             <h3 className="text-[22px] font-bold text-white">Quick Links</h3>
             <ul className="flex flex-col gap-[16px] text-[#a3a3a3] text-[16px]">
-              {footerData.quickLinks?.map((link, index) => (
+              {footerData.quickLinks?.map((link: any, index: number) => (
                 <li key={index}>
                   <Link
                     href={link.url}
@@ -142,7 +128,7 @@ export default function Footer({content}: FooterProps) {
                   <rect width="20" height="16" x="2" y="4" rx="2" />
                   <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
                 </svg>
-                {footerData.contactEmail}
+                {content?.email || footerData.contactEmail}
               </li>
               <li className="flex items-center gap-[12px]">
                 <svg
@@ -158,7 +144,7 @@ export default function Footer({content}: FooterProps) {
                   className="text-[var(--primary)]">
                   <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
                 </svg>
-                {footerData.contactPhone}
+                {content?.phone || footerData.contactPhone}
               </li>
               <li className="flex items-center gap-[12px]">
                 <svg
@@ -175,7 +161,7 @@ export default function Footer({content}: FooterProps) {
                   <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
                   <circle cx="12" cy="10" r="3" />
                 </svg>
-                {footerData.contactLocation}
+                {content?.location || footerData.contactLocation}
               </li>
             </ul>
           </div>
