@@ -35,8 +35,7 @@ export default function WebsiteThemesPage() {
       return `http://${subdomain}.localhost${port}`;
     }
     
-    const rootDomain = hostname.includes('upbeatafrica.com') ? 'upbeatafrica.com' : hostname;
-    return `https://${subdomain}.${rootDomain}`;
+    return `https://${subdomain}.deejay.africa`;
   };
 
   return (
