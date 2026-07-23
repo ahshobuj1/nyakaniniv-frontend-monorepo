@@ -1,7 +1,7 @@
 'use client';
 
 import React, {useState} from 'react';
-import {AlertCircle, Calendar, Mail, CheckCircle2, Clock, Phone, MapPin} from 'lucide-react';
+import {AlertCircle, Calendar, Mail, CheckCircle2, Clock, Phone, MapPin, Eye} from 'lucide-react';
 import {Card, CardContent, Dialog, DialogContent, DialogHeader, DialogTitle, Input, Button} from '@repo/ui';
 import { useGetMyBookingsQuery, useUpdateBookingStatusMutation, useMarkBookingPaidMutation } from '@repo/store';
 import LoadingSpinner from '@/components/LoadingSpinner';
@@ -25,6 +25,7 @@ export default function BookingsPage() {
     paymentId?: string;
   } | null>(null);
   const [priceInput, setPriceInput] = useState('');
+  const [detailsModalContent, setDetailsModalContent] = useState<string | null>(null);
 
   const bookings = bookingsResponse?.data || [];
 
@@ -201,6 +202,9 @@ export default function BookingsPage() {
                       <th className="py-4 px-8 text-[12px] font-semibold text-[#A1A1AA] uppercase tracking-wider w-[15%]">
                         Amount
                       </th>
+                      <th className="py-4 px-8 text-[12px] font-semibold text-[#A1A1AA] uppercase tracking-wider w-[10%] text-center">
+                        Details
+                      </th>
                       <th className="py-4 px-8 text-[12px] font-semibold text-[#A1A1AA] uppercase tracking-wider w-[1%] whitespace-nowrap">
                         Status & Action
                       </th>
@@ -260,6 +264,15 @@ export default function BookingsPage() {
                           <td className="py-5 px-8 text-[14px] font-medium text-[#111620]">
                             {booking.totalAmount ? `$${booking.totalAmount}` : '-'}
                           </td>
+                          <td className="py-5 px-8 text-center">
+                            <button
+                              onClick={() => setDetailsModalContent(booking.eventDetails || 'No details provided.')}
+                              className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-50 text-blue-500 hover:bg-blue-100 transition-colors cursor-pointer"
+                              title="View Event Details"
+                            >
+                              <Eye className="w-4 h-4 " />
+                            </button>
+                          </td>
                           <td className="py-5 px-8 flex flex-col items-start gap-2">
                             <button
                               onClick={() => {
@@ -303,7 +316,7 @@ export default function BookingsPage() {
                     ) : (
                       <tr>
                         <td
-                          colSpan={5}
+                          colSpan={6}
                           className="py-12 text-center text-[#787878]">
                           No bookings found for the selected filter.
                         </td>
@@ -394,6 +407,32 @@ export default function BookingsPage() {
                 className="h-11 w-full rounded-[10px]"
               >
                 Cancel
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Event Details Dialog */}
+      <Dialog open={!!detailsModalContent} onOpenChange={(open) => !open && setDetailsModalContent(null)}>
+        <DialogContent className="sm:max-w-[500px] bg-white rounded-2xl border-none">
+          <DialogHeader>
+            <DialogTitle className="text-[20px] font-bold text-[#111620]">
+              Event Details
+            </DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <div className="bg-[#F9FAFB] rounded-xl p-4 border border-gray-100 max-h-[300px] overflow-y-auto">
+              <p className="text-[14px] text-[#4B5563] whitespace-pre-wrap leading-relaxed">
+                {detailsModalContent}
+              </p>
+            </div>
+            <div className="mt-6 flex justify-end">
+              <Button 
+                onClick={() => setDetailsModalContent(null)}
+                className="bg-primary hover:bg-primary/90 text-white font-bold px-6 h-10 rounded-[10px]"
+              >
+                Close
               </Button>
             </div>
           </div>
