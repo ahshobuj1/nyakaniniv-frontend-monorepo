@@ -65,7 +65,7 @@ export function NotificationDropdown() {
         <button className="relative p-2 bg-[#f4f4f4] rounded-md text-gray-500 hover:text-gray-700 hover:bg-gray-200 transition-colors focus:outline-none cursor-pointer">
           <Bell size={18} />
           {unreadCount > 0 && (
-            <span className="absolute top-0 right-0 inline-flex items-center justify-center w-4 h-4 text-[10px] font-bold text-white bg-red-500 rounded-full transform translate-x-1/3 -translate-y-1/3 border-2 border-white">
+            <span className="absolute top-0 right-0 inline-flex items-center justify-center w-5.5 h-5.5 text-[10px] font-bold text-white bg-red-500 rounded-full transform translate-x-1/3 -translate-y-1/3 border-2 border-white">
               {unreadCount > 99 ? '99+' : unreadCount}
             </span>
           )}
