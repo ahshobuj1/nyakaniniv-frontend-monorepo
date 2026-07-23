@@ -95,7 +95,7 @@ export default function BookingPage({content}: any) {
             className="flex flex-col gap-[40px] max-w-[480px]">
             <div>
               <h2 className="text-[36px] md:text-[42px] font-bold text-[#111111] mb-[16px] tracking-tight">
-                {bookingData.title}
+                {content?.djName ? `Ready to book ${content.djName}?` : bookingData.title}
               </h2>
               <p className="text-[#888888] text-[15px] md:text-[16px] leading-relaxed">
                 {bookingData.description}

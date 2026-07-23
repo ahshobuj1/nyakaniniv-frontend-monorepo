@@ -14,8 +14,7 @@ export function Section({ children, className = "" }: { children: React.ReactNod
 export function Logo({ className = "", name = "AURA" }: { className?: string; name?: string }) {
   return (
     <div className={`font-black tracking-tighter ${className} flex items-center`}>
-      <span className="text-[var(--primary)] text-[28px]">DJ</span>
-      <span className="text-[var(--primary)] text-[28px] ml-2 uppercase">{name}</span>
+      <span className="text-[var(--primary)] text-[28px] uppercase">{name}</span>
     </div>
   );
 }
