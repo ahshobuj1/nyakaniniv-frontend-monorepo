@@ -80,7 +80,7 @@ export default function BookingPage({ content }: any) {
           className="text-center mb-[40px]"
         >
           <h2 className="text-[32px] md:text-[40px] font-bold text-[#111111] mb-[12px]">
-            Ready to book DJ Aura?
+            Ready to book {content?.djName || 'Aura'}?
           </h2>
           <p className="text-[#787878] text-[16px] max-w-[550px] mx-auto leading-relaxed">
             Fill out the form below with your event details, and my team will

@@ -38,7 +38,12 @@ export default function LoginPage() {
       toast.success(response.message || 'Successfully logged in!');
       router.push('/dashboard');
     } catch (error: any) {
-      toast.error(error?.data?.error?.message || 'Failed to log in. Please check your credentials.');
+      const errorMsg = error?.data?.error?.message || error?.data?.message || 'Failed to log in. Please check your credentials.';
+      toast.error(errorMsg);
+      
+      if (errorMsg === 'Please verify your email before logging in') {
+        router.push(`/auth/verify-email?email=${encodeURIComponent(data.email)}`);
+      }
     }
   };
 

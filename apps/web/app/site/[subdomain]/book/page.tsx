@@ -43,6 +43,12 @@ export default function UserBookingPage() {
       content={{
         ...template.defaultContent,
         ...tenant.config?.content,
+        djName: tenant.stageName || tenant.config?.content?.djName || template.defaultContent.djName || 'Aura',
+        navbar: {
+          ...template.defaultContent.navbar,
+          ...tenant.config?.content?.navbar,
+          djName: tenant.stageName || tenant.config?.content?.navbar?.djName || template.defaultContent.navbar?.djName || 'KENZO',
+        },
         tenantId: tenant.id
       }}
       theme={{
