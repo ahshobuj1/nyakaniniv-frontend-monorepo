@@ -109,7 +109,7 @@ export default function PricingSection() {
           Choose your plan
         </h1>
         <p className="text-center text-gray-500 mb-8">
-          Start free, scale as you grow. All prices shown in USD.
+          Start free, scale as you grow. All prices shown in KES.
         </p>
 
         <div className="flex justify-center mb-16">

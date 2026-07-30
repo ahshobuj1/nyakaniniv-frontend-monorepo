@@ -56,6 +56,8 @@ export function Sidebar() {
   const {isCollapsed, isMobileOpen, closeMobile} = useSidebar();
   const { data: profileResponse } = useGetCurrentProfileQuery();
   const subdomain = profileResponse?.data?.tenant?.subdomain || 'demo';
+
+  console.log("=============>profileResponse", profileResponse?.data?.lastName)
   
   const getLiveWebsiteUrl = () => {
     if (typeof window === 'undefined') return '#';
@@ -98,7 +100,7 @@ export function Sidebar() {
                 height={200}
                 className="w-8"
               />
-              Kenzo
+              {profileResponse?.data?.firstName}
             </h1>
           </Link>
           {/* Logo icon for desktop collapsed state */}
