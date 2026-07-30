@@ -34,7 +34,7 @@ const ALL_FEATURES = [
   { key: 'CUSTOM_SUBDOMAIN', label: 'Custom Subdomain' },
   { key: 'BASIC_PROFILE', label: 'Basic DJ Profile' },
   { key: 'MANUAL_BOOKINGS', label: 'Manual Bookings' },
-  { key: 'ONLINE_PAYMENTS', label: 'Online Payments (Stripe)' },
+  { key: 'ONLINE_PAYMENTS', label: 'Online Payments (Paystack)' },
   { key: 'AUTOMATED_INVOICING', label: 'Automated Invoicing' },
   { key: 'MULTIPLE_THEMES', label: 'Multiple Themes' },
   { key: 'EMAIL_NOTIFICATIONS', label: 'Email Notifications' },
