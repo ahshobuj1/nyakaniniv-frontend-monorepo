@@ -3,6 +3,7 @@
 import React, {useState} from 'react';
 import {motion} from 'framer-motion';
 import Image from 'next/image';
+import ReactPlayer from 'react-player';
 
 export default function LatestMixes({content}: any) {
   const mixContent = content?.latestMixes || {
@@ -141,17 +142,52 @@ export default function LatestMixes({content}: any) {
     }
   };
 
+  const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = parseFloat(e.target.value);
+    setProgress(val);
+    if (audioRef.current && audioRef.current.duration) {
+      audioRef.current.currentTime = (val / 100) * audioRef.current.duration;
+    }
+  };
+
   return (
     <section id="music" className="bg-[#fcfcfc] py-8 lg:py-[100px]">
       <div className="max-w-[1200px] mx-auto px-6 lg:px-12">
         
-        {/* Hidden Audio Element */}
-        <audio 
-          ref={audioRef} 
-          src={activeTrack?.audioUrl} 
-          onTimeUpdate={handleTimeUpdate}
-          onEnded={handleEnded}
-        />
+        {/* Hidden Audio Element replaced by ReactPlayer */}
+        {activeTrack?.audioUrl && (
+          // @ts-ignore
+          <ReactPlayer
+            ref={audioRef as any}
+            src={activeTrack.audioUrl}
+            onTimeUpdate={(e: any) => {
+              const current = e.currentTarget?.currentTime || 0;
+              const dur = e.currentTarget?.duration || 1;
+              if (dur > 0) setProgress((current / dur) * 100);
+              
+              const formatTime = (time: number) => {
+                if (isNaN(time)) return '00:00';
+                const m = Math.floor(time / 60);
+                const s = Math.floor(time % 60);
+                return `${m}:${s.toString().padStart(2, '0')}`;
+              };
+              setCurrentTimeStr(formatTime(current));
+            }}
+            onDurationChange={(e: any) => {
+              const formatTime = (time: number) => {
+                if (isNaN(time)) return '00:00';
+                const m = Math.floor(time / 60);
+                const s = Math.floor(time % 60);
+                return `${m}:${s.toString().padStart(2, '0')}`;
+              };
+              setDurationStr(formatTime(e.currentTarget?.duration || 0));
+            }}
+            onEnded={handleEnded}
+            width="200px"
+            height="200px"
+            style={{ position: 'absolute', top: '-9999px', left: '-9999px', opacity: 0, pointerEvents: 'none' }}
+          />
+        )}
 
         {/* Header */}
         <motion.div
@@ -199,10 +235,18 @@ export default function LatestMixes({content}: any) {
 
               {/* Progress Bar */}
               <div className="mb-[24px]">
-                <div className="w-full h-[4px] bg-[#e0e0e0] rounded-full overflow-hidden mb-[10px] relative">
+                <div className="w-full h-[4px] bg-[#e0e0e0] rounded-full relative mb-[10px]">
                   <div
-                    className="absolute top-0 left-0 h-full bg-[var(--primary)] rounded-full transition-all duration-300"
+                    className="absolute top-0 left-0 h-full bg-[var(--primary)] rounded-full pointer-events-none"
                     style={{width: `${progress}%`}}
+                  />
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    value={progress}
+                    onChange={handleSeek}
+                    className="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer m-0 p-0"
                   />
                 </div>
                 <div className="flex justify-between items-center text-[12px] font-medium text-[#888888]">
