@@ -155,6 +155,7 @@ export default function AddEventModal({isOpen, onClose, eventToEdit}: AddEventMo
                     <FormControl>
                       <Input
                         {...field}
+                        placeholder="e.g. Lagos Nights Vol 4"
                         className="bg-[#F5F5F5] border-transparent h-11 rounded-[10px] focus-visible:ring-1 focus-visible:ring-primary shadow-none text-[14px]"
                       />
                     </FormControl>
@@ -177,6 +178,7 @@ export default function AddEventModal({isOpen, onClose, eventToEdit}: AddEventMo
                         <Input
                           type="date"
                           {...field}
+                          placeholder="Select event date"
                           className="bg-[#F5F5F5] border-transparent h-11 rounded-[10px] focus-visible:ring-1 focus-visible:ring-primary shadow-none text-[14px]"
                         />
                       </FormControl>
@@ -195,6 +197,7 @@ export default function AddEventModal({isOpen, onClose, eventToEdit}: AddEventMo
                       <FormControl>
                         <Input
                           {...field}
+                          placeholder="e.g. O2 Arena"
                           className="bg-[#F5F5F5] border-transparent h-11 rounded-[10px] focus-visible:ring-1 focus-visible:ring-primary shadow-none text-[14px]"
                         />
                       </FormControl>
@@ -213,6 +216,7 @@ export default function AddEventModal({isOpen, onClose, eventToEdit}: AddEventMo
                       <FormControl>
                         <Input
                           {...field}
+                          placeholder="e.g. 123 Main St, London"
                           className="bg-[#F5F5F5] border-transparent h-11 rounded-[10px] focus-visible:ring-1 focus-visible:ring-primary shadow-none text-[14px]"
                         />
                       </FormControl>
@@ -236,6 +240,7 @@ export default function AddEventModal({isOpen, onClose, eventToEdit}: AddEventMo
                         <Input
                           type="number"
                           {...field}
+                          placeholder="e.g. 500"
                           className="bg-[#F5F5F5] border-transparent h-11 rounded-[10px] focus-visible:ring-1 focus-visible:ring-primary shadow-none text-[14px]"
                         />
                       </FormControl>
@@ -256,6 +261,7 @@ export default function AddEventModal({isOpen, onClose, eventToEdit}: AddEventMo
                           type="number"
                           step="0.01"
                           {...field}
+                          placeholder="0.00"
                           className="bg-[#F5F5F5] border-transparent h-11 rounded-[10px] focus-visible:ring-1 focus-visible:ring-primary shadow-none text-[14px]"
                         />
                       </FormControl>
@@ -277,6 +283,7 @@ export default function AddEventModal({isOpen, onClose, eventToEdit}: AddEventMo
                     <FormControl>
                       <Textarea
                         {...field}
+                        placeholder="Provide details about the event..."
                         className="bg-[#F5F5F5] border-transparent rounded-[10px] min-h-25 resize-none focus-visible:ring-1 focus-visible:ring-primary shadow-none text-[14px]"
                       />
                     </FormControl>

@@ -7,13 +7,16 @@ import { templates } from '@repo/templates';
 
 interface PublicProfileProps {
   username: string;
+  initialTenant?: any;
 }
 
-export default function PublicProfile({ username }: PublicProfileProps) {
-  const { data: response, isLoading, isError } = useGetPublicProfileQuery(username);
-  const tenant = response?.data;
+export default function PublicProfile({ username, initialTenant }: PublicProfileProps) {
+  const { data: response, isLoading, isError } = useGetPublicProfileQuery(username, {
+    skip: !!initialTenant,
+  });
+  const tenant = initialTenant || response?.data;
 
-  if (isLoading) {
+  if (!tenant && isLoading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-slate-50 text-slate-500 gap-4">
         <div className="w-8 h-8 border-4 border-slate-200 border-t-primary rounded-full animate-spin"></div>
@@ -66,7 +69,7 @@ export default function PublicProfile({ username }: PublicProfileProps) {
       logoText: tenant.stageName || content?.footer?.logoText || template.defaultContent.footer?.logoText || 'DJ AURA',
     },
     // Map dynamic entities (mixTapes, events) into template expected formats
-    mixes: tenant.mixTapes?.length ? tenant.mixTapes.map(m => ({
+    mixes: tenant.mixTapes?.length ? tenant.mixTapes.map((m: any) => ({
       img: m.coverUrl || template.defaultContent.heroImage || '/theme/aura/mixes-video-avator-1.png',
       title: m.title,
       genre: 'Various',
@@ -82,7 +85,7 @@ export default function PublicProfile({ username }: PublicProfileProps) {
     ],
     latestMixes: {
       ...template.defaultContent.latestMixes,
-      tracks: tenant.mixTapes?.length ? tenant.mixTapes.map((m, i) => ({
+      tracks: tenant.mixTapes?.length ? tenant.mixTapes.map((m: any, i: number) => ({
         id: m.id || i,
         title: m.title,
         genre: 'Various',
@@ -95,7 +98,7 @@ export default function PublicProfile({ username }: PublicProfileProps) {
     },
     events: {
       ...template.defaultContent.events,
-      list: tenant.events?.length ? tenant.events.map((e, i) => ({
+      list: tenant.events?.length ? tenant.events.map((e: any, i: number) => ({
         id: e.id || i,
         day: e.eventDate ? new Date(e.eventDate).toLocaleDateString('en-US', { day: '2-digit' }) : '',
         month: e.eventDate ? new Date(e.eventDate).toLocaleDateString('en-US', { month: 'short' }).toUpperCase() : '',
