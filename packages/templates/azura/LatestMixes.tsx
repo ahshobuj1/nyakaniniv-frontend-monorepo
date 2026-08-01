@@ -4,6 +4,9 @@ import {useState, useRef, useEffect} from 'react';
 import {motion} from 'framer-motion';
 import Image from 'next/image';
 import {Play, Pause, SkipBack, SkipForward, Volume2} from 'lucide-react';
+import _ReactPlayer from 'react-player';
+
+const ReactPlayer = _ReactPlayer as any;
 import {fadeUp} from './constants';
 
 function MixCard({img, title, genre, time, delay, onPlay, isPlaying}: any) {
@@ -141,6 +144,14 @@ export default function LatestMixes({content}: any) {
     }
   };
 
+  const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = parseFloat(e.target.value);
+    setProgress(val);
+    if (audioRef.current && audioRef.current.duration) {
+      audioRef.current.currentTime = (val / 100) * audioRef.current.duration;
+    }
+  };
+
   return (
     <motion.section
       id="music"
@@ -151,13 +162,40 @@ export default function LatestMixes({content}: any) {
       className="bg-[#f0f0f0] py-8 lg:py-[120px]">
       <div className="max-w-[1440px] mx-auto px-6 lg:px-[80px] flex flex-col gap-[48px] items-center">
         
-        {/* Hidden Audio Element */}
-        <audio 
-          ref={audioRef} 
-          src={activeTrack?.audioUrl} 
-          onTimeUpdate={handleTimeUpdate}
-          onEnded={handleEnded}
-        />
+        {/* Hidden Audio Element replaced by ReactPlayer */}
+        {activeTrack?.audioUrl && (
+          // @ts-ignore - React 19 type conflict
+          <ReactPlayer
+            ref={audioRef}
+            src={activeTrack.audioUrl}
+            onTimeUpdate={(e: any) => {
+              const current = e.currentTarget?.currentTime || 0;
+              const dur = e.currentTarget?.duration || 1;
+              if (dur > 0) setProgress((current / dur) * 100);
+              
+              const formatTime = (time: number) => {
+                if (isNaN(time)) return '00:00';
+                const m = Math.floor(time / 60);
+                const s = Math.floor(time % 60);
+                return `${m}:${s.toString().padStart(2, '0')}`;
+              };
+              setCurrentTimeStr(formatTime(current));
+            }}
+            onDurationChange={(e: any) => {
+              const formatTime = (time: number) => {
+                if (isNaN(time)) return '00:00';
+                const m = Math.floor(time / 60);
+                const s = Math.floor(time % 60);
+                return `${m}:${s.toString().padStart(2, '0')}`;
+              };
+              setDurationStr(formatTime(e.currentTarget?.duration || 0));
+            }}
+            onEnded={handleEnded}
+            width="200px"
+            height="200px"
+            style={{ position: 'absolute', top: '-9999px', left: '-9999px', opacity: 0, pointerEvents: 'none' }}
+          />
+        )}
 
         <motion.div
           variants={fadeUp}
@@ -215,13 +253,21 @@ export default function LatestMixes({content}: any) {
               <span className="text-[#787878] text-[16px] font-sans w-12 text-right">
                 {currentTimeStr}
               </span>
-              <div className="flex-1 h-[8px] bg-[#ddd] rounded-[12px] overflow-hidden relative">
+              <div className="flex-1 h-[8px] bg-[#ddd] rounded-[12px] relative">
                 <div
-                  className="absolute top-0 left-0 h-full bg-[var(--primary)] rounded-[16px] transition-all duration-300"
+                  className="absolute top-0 left-0 h-full bg-[var(--primary)] rounded-[16px] pointer-events-none"
                   style={{ width: `${progress}%` }}
                 />
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={progress}
+                  onChange={handleSeek}
+                  className="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer m-0 p-0"
+                />
               </div>
-              <span className="text-[#787878] text-[16px] font-sans w-12">
+              <span className="text-[#787878] text-[16px] font-sans w-12 text-left">
                 {durationStr}
               </span>
             </div>

@@ -398,7 +398,7 @@ function ManageThemeContent() {
                 <div className="flex-1 max-w-md mx-auto h-7 bg-white rounded-lg border border-slate-200 flex items-center px-3 gap-2">
                   <div className="w-2 h-2 rounded-full bg-[#10B981]" />
                   <span className="text-[10px] text-slate-400 font-mono truncate">
-                    https://{subdomain}.upbeat.africa
+                    https://{subdomain}.deejay.africa
                   </span>
                 </div>
                 <div className="w-16" />
