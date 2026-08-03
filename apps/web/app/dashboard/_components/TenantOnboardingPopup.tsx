@@ -123,7 +123,7 @@ export function TenantOnboardingPopup() {
                   className="flex-1"
                   required
                 />
-                <span className="text-gray-500 text-sm hidden sm:inline-block">.upbeatafrica.com</span>
+                <span className="text-gray-500 text-sm hidden sm:inline-block">.deejay.frica</span>
               </div>
               <p className="text-xs text-gray-400">This will be your permanent public booking link.</p>
             </div>

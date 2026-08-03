@@ -25,9 +25,11 @@ import {
   Button
 } from '@repo/ui';
 import { useGetMyNotificationsQuery, useGetUnreadCountQuery, useMarkAsReadMutation } from '@repo/store';
+import { useRouter } from 'next/navigation';
 
 export function NotificationDropdown() {
   const [isOpen, setIsOpen] = useState(false);
+  const router = useRouter();
 
   // Fetch only the latest 10 notifications for the dropdown
   const { data: notificationsData, isLoading } = useGetMyNotificationsQuery({ limit: 10 });
@@ -100,7 +102,11 @@ export function NotificationDropdown() {
               {notifications.map((notification) => (
                 <div
                   key={notification.id}
-                  onClick={() => handleMarkAsRead(notification.id, notification.isRead)}
+                  onClick={() => {
+                    handleMarkAsRead(notification.id, notification.isRead);
+                    setIsOpen(false);
+                    router.push(`/dashboard/notifications/${notification.id}`);
+                  }}
                   className={`flex gap-3 px-4 py-3 border-b border-gray-50 transition-colors cursor-pointer hover:bg-gray-50 ${
                     !notification.isRead ? 'bg-primary/[0.02]' : ''
                   }`}

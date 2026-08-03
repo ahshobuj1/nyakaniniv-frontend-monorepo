@@ -4,6 +4,7 @@ import React from 'react';
 import { useGetPublicProfileQuery } from '@repo/store';
 import TemplateRenderer from '@repo/builder';
 import { templates } from '@repo/templates';
+import LoadingSpinner from '@/components/LoadingSpinner';
 
 interface PublicProfileProps {
   username: string;
@@ -17,12 +18,7 @@ export default function PublicProfile({ username, initialTenant }: PublicProfile
   const tenant = initialTenant || response?.data;
 
   if (!tenant && isLoading) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-slate-50 text-slate-500 gap-4">
-        <div className="w-8 h-8 border-4 border-slate-200 border-t-primary rounded-full animate-spin"></div>
-        <p className="text-sm font-medium animate-pulse">Loading profile...</p>
-      </div>
-    );
+    return <LoadingSpinner fullScreen />;
   }
 
   if (isError || !tenant) {

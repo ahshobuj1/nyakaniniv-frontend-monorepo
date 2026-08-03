@@ -18,6 +18,13 @@ export const bookingApi = baseApi.injectEndpoints({
       }),
       providesTags: ['Booking'],
     }),
+    getBookingById: builder.query<BaseResponse<Booking>, string>({
+      query: (id) => ({
+        url: `/bookings/v1/${id}`,
+        method: 'GET',
+      }),
+      providesTags: (result, error, id) => [{ type: 'Booking', id }, 'Booking'],
+    }),
     updateBookingStatus: builder.mutation<BaseResponse<{ checkoutUrl?: string }>, UpdateBookingStatusRequest>({
       query: (body) => {
         const { id, ...rest } = body;
@@ -43,6 +50,7 @@ export const bookingApi = baseApi.injectEndpoints({
 export const {
   useCreateBookingMutation,
   useGetMyBookingsQuery,
+  useGetBookingByIdQuery,
   useUpdateBookingStatusMutation,
   useRequestCashPaymentMutation,
 } = bookingApi;
