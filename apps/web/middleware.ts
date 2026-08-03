@@ -31,12 +31,10 @@ export default function middleware(req: NextRequest) {
   // Define allowed root domains for the MAIN web app
   const rootDomains = [
     'upbeat.africa',
+    'app.upbeat.africa',
+    'admin.upbeat.africa',
     'www.upbeat.africa',
     // fallback domains
-    'upbeatafrica.com',
-    'www.upbeatafrica.com',
-    'app.upbeatafrica.com',
-    'admin.upbeatafrica.com',
     'upbeatafrica.vercel.app'
   ];
 

@@ -21,6 +21,7 @@ import {
   useUpdateTenantProfileMutation,
 } from '@repo/store';
 import { toast } from 'sonner';
+import LoadingSpinner from '@/components/LoadingSpinner';
 
 // ==========================================
 // 0. Custom Image Uploader Component
@@ -721,12 +722,7 @@ function ManageThemeContent() {
 
 export default function ManageThemePage() {
   return (
-    <Suspense
-      fallback={
-        <div className="flex items-center justify-center min-h-screen bg-slate-50 text-slate-400 font-medium">
-          Loading theme editor...
-        </div>
-      }>
+    <Suspense fallback={<LoadingSpinner fullScreen />}>
       <ManageThemeContent />
     </Suspense>
   );

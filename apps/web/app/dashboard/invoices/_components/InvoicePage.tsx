@@ -4,6 +4,7 @@ import React, {useState} from 'react';
 import {Calendar, CheckCircle2, Clock, Eye, Download, Receipt, Music} from 'lucide-react';
 import {Card, CardContent} from '@repo/ui';
 import {useGetMyInvoicesQuery, UnifiedInvoice} from '@repo/store';
+import LoadingSpinner from '@/components/LoadingSpinner';
 
 // ==========================================
 // 1. Types & Interfaces
@@ -117,19 +118,16 @@ export default function InvoicesPage() {
                     <th className="py-5 px-8 text-[12px] font-semibold text-[#A1A1AA] uppercase tracking-wider w-[15%]">
                       Status
                     </th>
-                    {/* <th className="py-5 px-8 text-[12px] font-semibold text-[#A1A1AA] uppercase tracking-wider w-[10%]">
+                    <th className="py-5 px-8 text-[12px] font-semibold text-[#A1A1AA] uppercase tracking-wider w-[10%]">
                       Action
-                    </th> */}
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
                   {isLoading ? (
                     <tr>
                       <td colSpan={6} className="py-12 text-center">
-                        <div className="flex flex-col items-center justify-center gap-3">
-                          <div className="w-8 h-8 border-4 border-gray-200 border-t-primary rounded-full animate-spin"></div>
-                          <p className="text-[14px] text-[#787878] font-medium animate-pulse">Loading invoices...</p>
-                        </div>
+                        <LoadingSpinner smallHeight />
                       </td>
                     </tr>
                   ) : filteredInvoices.length > 0 ? (
@@ -198,20 +196,16 @@ export default function InvoicesPage() {
                             </div>
                           )}
                         </td>
-                        {/* <td className="py-4 px-8">
+                        <td className="py-4 px-8">
                           <div className="flex items-center gap-2">
-                            <button
+                            <a
+                              href={`/dashboard/invoices/${invoice.id}`}
                               className="p-2 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 text-[#787878] transition-colors"
                               aria-label="View Invoice">
                               <Eye className="w-4 h-4" />
-                            </button>
-                            <button
-                              className="p-2 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 text-[#787878] transition-colors"
-                              aria-label="Download Invoice">
-                              <Download className="w-4 h-4" />
-                            </button>
+                            </a>
                           </div>
-                        </td> */}
+                        </td>
                       </tr>
                     ))
                   ) : (

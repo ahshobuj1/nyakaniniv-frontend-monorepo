@@ -5,6 +5,7 @@ import {templates} from '@repo/templates';
 import TemplateRenderer from '@repo/builder';
 import {useParams} from 'next/navigation';
 import {useGetPublicProfileQuery} from '@repo/store';
+import LoadingSpinner from '@/components/LoadingSpinner';
 
 export default function UserBookingPage() {
   const params = useParams();
@@ -18,12 +19,7 @@ export default function UserBookingPage() {
   const template = templates[themeId as keyof typeof templates] || templates['azura'];
 
   if (isLoading) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-slate-50 text-slate-500 gap-4">
-        <div className="w-8 h-8 border-4 border-slate-200 border-t-primary rounded-full animate-spin"></div>
-        <p className="text-sm font-medium animate-pulse">Loading booking form...</p>
-      </div>
-    );
+    return <LoadingSpinner fullScreen />;
   }
 
   if (isError || !tenant) {

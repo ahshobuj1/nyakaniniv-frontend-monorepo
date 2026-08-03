@@ -52,7 +52,7 @@ export function MixTapeCard({ mixtape, onEdit, onDelete }: MixTapeCardProps) {
           )}
 
           {/* Action Buttons overlay */}
-          <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+          <div className="absolute top-3 right-3 flex gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-200">
             <button
               onClick={onEdit}
               className="p-2 bg-white/90 backdrop-blur-sm hover:bg-white text-gray-700 rounded-lg shadow-sm transition-all hover:-translate-y-0.5"

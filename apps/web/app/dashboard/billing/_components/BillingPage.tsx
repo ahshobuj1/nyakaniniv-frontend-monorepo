@@ -158,34 +158,63 @@ export default function BillingSubscriptionPage() {
         <Card className="border-none shadow-[0_2px_20px_rgba(0,0,0,0.03)] overflow-hidden rounded-2xl bg-white mb-8">
           <CardContent className="p-0">
             <div className="p-6 md:p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border-b border-gray-100">
-              <div className="flex items-center gap-5">
-                <div className="w-14 h-14 rounded-xl bg-[#F5F5F5] flex items-center justify-center shrink-0">
-                  <CreditCard className="w-6 h-6 text-[#111620]" />
+              {isLoadingPaystack ? null : paystackStatus?.isConnected ? (
+                <div className="w-full relative overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-600 via-purple-600 to-indigo-900 p-6 text-white shadow-xl max-w-sm">
+                  {/* Decorative Elements */}
+                  <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white opacity-10 rounded-full blur-xl"></div>
+                  <div className="absolute bottom-0 left-0 -mb-4 -ml-4 w-32 h-32 bg-indigo-400 opacity-20 rounded-full blur-2xl"></div>
+                  
+                  <div className="relative z-10 flex justify-between items-start mb-8">
+                    <div>
+                      <p className="text-white/70 text-xs font-semibold uppercase tracking-wider mb-1">Connected Account</p>
+                      <h3 className="font-bold text-lg">{paystackStatus.bankName || 'Paystack Bank'}</h3>
+                    </div>
+                    <div className="flex items-center gap-1 bg-white/20 px-2 py-1 rounded backdrop-blur-sm">
+                      <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                      <span className="text-xs font-bold uppercase tracking-wider text-white">Active</span>
+                    </div>
+                  </div>
+                  
+                  <div className="relative z-10 mb-6">
+                    <p className="font-mono text-2xl tracking-widest text-white/90">
+                      **** **** **** {paystackStatus.accountNumber?.slice(-4) || '****'}
+                    </p>
+                  </div>
+                  
+                  <div className="relative z-10 flex justify-between items-end">
+                    <div>
+                      <p className="text-white/60 text-xs uppercase tracking-wider mb-1">Account Holder</p>
+                      <p className="font-medium">{profileResponse?.data?.tenant?.stageName || (profileResponse?.data as any)?.firstName || 'DJ Name'}</p>
+                    </div>
+                    <div className="flex items-center gap-2 text-white/80">
+                      <span className="text-xs font-bold uppercase">Paystack</span>
+                      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-6 h-6">
+                        <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" fill="currentColor" fillOpacity="0.2"/>
+                        <path d="M12 16L8 10H16L12 16Z" fill="currentColor"/>
+                      </svg>
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <div className="flex items-center gap-3 mb-1">
-                    <h2 className="text-[20px] font-bold text-[#111620]">
-                      Payouts via Paystack
-                    </h2>
-                    {isLoadingPaystack ? null : paystackStatus?.isConnected ? (
-                      <Badge className="bg-[#10B981] hover:bg-[#10B981] text-white text-[10px] font-bold px-2 py-0.5 rounded uppercase">
-                        CONNECTED
-                      </Badge>
-                    ) : (
+              ) : (
+                <div className="flex items-center gap-5">
+                  <div className="w-14 h-14 rounded-xl bg-[#F5F5F5] flex items-center justify-center shrink-0">
+                    <CreditCard className="w-6 h-6 text-[#111620]" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-3 mb-1">
+                      <h2 className="text-[20px] font-bold text-[#111620]">
+                        Payouts via Paystack
+                      </h2>
                       <Badge className="bg-[#F59E0B] hover:bg-[#F59E0B] text-white text-[10px] font-bold px-2 py-0.5 rounded uppercase">
                         NOT CONNECTED
                       </Badge>
-                    )}
+                    </div>
+                    <p className="text-[#787878] text-[14px]">
+                      Connect your bank account to receive payments from client bookings.
+                    </p>
                   </div>
-                  <p className="text-[#787878] text-[14px]">
-                    {paystackStatus?.isConnected ? (
-                      `Payouts are securely sent to your ${paystackStatus.bankName || 'bank'} account ending in •••• ${paystackStatus.accountNumber?.slice(-4) || '****'}.`
-                    ) : (
-                      "Connect your bank account to receive payments from client bookings."
-                    )}
-                  </p>
                 </div>
-              </div>
+              )}
               <div className="flex flex-col md:flex-row items-center gap-3 w-full md:w-auto">
                 {paystackStatus?.isConnected ? (
                   <Dialog open={paystackDisconnectDialogOpen} onOpenChange={setPaystackDisconnectDialogOpen}>

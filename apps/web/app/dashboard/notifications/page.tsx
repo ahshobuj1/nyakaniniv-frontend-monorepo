@@ -5,6 +5,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { Bell, Check, CheckCircle2, CircleDot, Info, CreditCard, Calendar, Filter } from 'lucide-react';
 import { useGetMyNotificationsQuery, useMarkAsReadMutation } from '@repo/store';
 import { Button } from '@repo/ui';
+import LoadingSpinner from '@/components/LoadingSpinner';
 
 function timeAgo(dateString: string) {
   const date = new Date(dateString);
@@ -21,7 +22,10 @@ function timeAgo(dateString: string) {
   return date.toLocaleDateString();
 }
 
+import { useRouter } from 'next/navigation';
+
 export default function NotificationsPage() {
+  const router = useRouter();
   const [page, setPage] = useState(1);
   const { data: notificationsData, isLoading } = useGetMyNotificationsQuery({ page, limit: 20 });
   const [markAsRead] = useMarkAsReadMutation();
@@ -62,9 +66,7 @@ export default function NotificationsPage() {
 
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
         {isLoading ? (
-          <div className="flex justify-center items-center py-20">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-          </div>
+          <LoadingSpinner smallHeight />
         ) : notifications.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center px-4">
             <div className="h-16 w-16 rounded-full bg-gray-50 flex items-center justify-center mb-4">
@@ -78,7 +80,8 @@ export default function NotificationsPage() {
             {notifications.map((notification) => (
               <div 
                 key={notification.id} 
-                className={`p-5 flex gap-4 transition-colors ${
+                onClick={() => router.push(`/dashboard/notifications/${notification.id}`)}
+                className={`p-5 flex gap-4 transition-colors cursor-pointer ${
                   !notification.isRead ? 'bg-primary/[0.02] hover:bg-primary/[0.04]' : 'hover:bg-gray-50'
                 }`}
               >
@@ -106,7 +109,7 @@ export default function NotificationsPage() {
                   {!notification.isRead && (
                     <div className="mt-3 flex items-center">
                       <button 
-                        onClick={() => handleMarkAsRead(notification.id, notification.isRead)}
+                        onClick={(e) => { e.stopPropagation(); handleMarkAsRead(notification.id, notification.isRead); }}
                         className="flex items-center text-xs font-medium text-primary hover:text-primary/80 transition-colors"
                       >
                         <CheckCircle2 className="h-4 w-4 mr-1.5" />

@@ -265,13 +265,13 @@ export default function BookingsPage() {
                             {booking.totalAmount ? `$${booking.totalAmount}` : '-'}
                           </td>
                           <td className="py-5 px-8 text-center">
-                            <button
-                              onClick={() => setDetailsModalContent(booking.eventDetails || 'No details provided.')}
+                            <a
+                              href={`/dashboard/bookings/${booking.id}`}
                               className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-50 text-blue-500 hover:bg-blue-100 transition-colors cursor-pointer"
                               title="View Event Details"
                             >
                               <Eye className="w-4 h-4 " />
-                            </button>
+                            </a>
                           </td>
                           <td className="py-5 px-8 flex flex-col items-start gap-2">
                             <button

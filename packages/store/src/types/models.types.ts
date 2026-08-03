@@ -221,6 +221,7 @@ export interface Notification {
   message?: string;
   type?: 'booking_request' | 'payment' | 'system';
   isRead?: boolean;
+  referenceId?: string;
   createdAt?: string;
 
   user?: User;

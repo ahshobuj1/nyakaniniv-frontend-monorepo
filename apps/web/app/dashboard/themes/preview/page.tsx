@@ -5,6 +5,7 @@ import {useSearchParams, useRouter} from 'next/navigation';
 import {ArrowLeft, Check, Laptop, Smartphone, Tablet} from 'lucide-react';
 import TemplateRenderer from '@repo/builder';
 import {templates} from '@repo/templates';
+import LoadingSpinner from '@/components/LoadingSpinner';
 
 function ThemePreviewContent() {
   const searchParams = useSearchParams();
@@ -86,12 +87,7 @@ function ThemePreviewContent() {
 
 export default function ThemePreviewPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="flex items-center justify-center min-h-screen bg-slate-50 text-slate-400">
-          Loading preview...
-        </div>
-      }>
+    <Suspense fallback={<LoadingSpinner fullScreen />}>
       <ThemePreviewContent />
     </Suspense>
   );

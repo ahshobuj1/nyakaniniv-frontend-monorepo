@@ -4,6 +4,7 @@ import {Check, ArrowRight, ChevronDown} from 'lucide-react';
 import {useRouter} from 'next/navigation';
 import {ThemeCard} from './_components/Themecard';
 import { useGetAllThemesQuery, useGetCurrentProfileQuery } from '@repo/store';
+import LoadingSpinner from '@/components/LoadingSpinner';
 
 export default function WebsiteThemesPage() {
   const router = useRouter();
@@ -83,9 +84,7 @@ export default function WebsiteThemesPage() {
 
         {/* Themes Grid */}
         {isLoading ? (
-          <div className="flex justify-center items-center py-20">
-            <div className="w-8 h-8 border-4 border-gray-200 border-t-primary rounded-full animate-spin"></div>
-          </div>
+          <LoadingSpinner smallHeight />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pt-2">
             {themes.map((theme) => (
