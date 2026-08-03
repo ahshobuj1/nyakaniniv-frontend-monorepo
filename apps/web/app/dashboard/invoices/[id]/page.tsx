@@ -114,7 +114,7 @@ export default function InvoiceDetailsPage() {
                 </div>
                 <div>
                   <p className="text-sm text-gray-500 mb-1 flex items-center gap-1"><CreditCard className="w-4 h-4" /> Method</p>
-                  <p className="font-semibold text-gray-900 uppercase">{(invoice as any).method || 'Not Specified'}</p>
+                  <p className="font-semibold text-gray-900 uppercase">{(invoice as any).method || 'Paystack'}</p>
                 </div>
               </div>
 
