@@ -138,7 +138,7 @@ export default function BookingDetailsPage() {
                     </div>
                     <div className="p-4 bg-gray-50 rounded-2xl">
                       <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">Method</p>
-                      <p className="font-bold text-gray-900 capitalize">{booking.payment.method || 'Not Specified'}</p>
+                      <p className="font-bold text-gray-900 capitalize">{booking.payment.method || 'Paystack'}</p>
                     </div>
                   </div>
 
