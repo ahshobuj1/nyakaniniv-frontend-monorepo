@@ -424,9 +424,6 @@ export default function BillingSubscriptionPage() {
                     : 'text-[#787878] hover:text-[#111620]'
                 }`}>
                 Annual
-                <span className="bg-white/20 text-inherit text-[10px] px-1.5 py-0.5 rounded-sm whitespace-nowrap">
-                  (Save 17%)
-                </span>
               </button>
             </div>
           </div>
@@ -501,6 +498,14 @@ export default function BillingSubscriptionPage() {
                         <span className="text-[#787878] text-[14px] ml-1 font-medium">
                           /{frequency === 'monthly' ? 'month' : 'year'}
                         </span>
+
+                        {plan.discountPercentage ? (
+                          <div className="ml-auto flex items-center">
+                            <span className="bg-rose-100 text-rose-600 border border-rose-200 px-2.5 py-1 text-[11px] font-extrabold capitalize tracking-widest rounded-full shadow-sm animate-pulse">
+                             Yearly Save {plan.discountPercentage}%
+                            </span>
+                          </div>
+                        ) : null}
                       </div>
 
                       <button
