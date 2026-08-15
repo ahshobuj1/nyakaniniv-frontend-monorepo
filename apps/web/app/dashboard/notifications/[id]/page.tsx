@@ -40,37 +40,45 @@ export default function NotificationDetailsPage() {
   }
 
   return (
-    <div className="container mx-auto p-6 max-w-4xl space-y-8">
-      {/* Header Area */}
-      <div className="flex items-center gap-4">
-        <Link href="/dashboard/notifications">
-          <Button variant="ghost" size="icon" className="rounded-full hover:bg-gray-100 transition-colors">
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-        </Link>
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900">Message Detail</h1>
-          <p className="text-sm text-gray-500 mt-1">Review your notification</p>
+    <div className="container mx-auto p-6 w-full space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-gray-200">
+        <div className="flex items-center gap-3">
+          <Link href="/dashboard/notifications">
+            <Button variant="ghost" size="icon" className="hover:bg-gray-100 rounded-lg">
+              <ArrowLeft className="h-5 w-5 text-gray-500" />
+            </Button>
+          </Link>
+          <div>
+            <div className="flex items-center gap-3">
+              <h1 className="text-2xl font-semibold text-[#111827]">Message Detail</h1>
+              <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium uppercase tracking-wide border ${
+                notification.isRead 
+                  ? 'bg-gray-50 text-gray-600 border-gray-200' 
+                  : 'bg-blue-50 text-blue-700 border-blue-200'
+              }`}>
+                {notification.isRead ? 'Read' : 'New'}
+              </span>
+            </div>
+            <p className="text-sm text-[#6B7280] mt-1 font-mono">Notification ID: {id}</p>
+          </div>
         </div>
       </div>
 
-      <Card className="border-0 shadow-[0_8px_30px_rgb(0,0,0,0.04)] bg-white/50 backdrop-blur-xl rounded-3xl overflow-hidden relative">
-        {/* Decorative Top Accent */}
-        <div className="h-2 w-full bg-gradient-to-r from-primary via-indigo-500 to-purple-500 absolute top-0 left-0" />
-        
-        <CardHeader className="border-b border-gray-100 pb-8 pt-10">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-            <div className="flex items-start sm:items-center gap-5">
-              <div className={`p-4 rounded-2xl shadow-sm ${notification.isRead ? 'bg-gray-50 text-gray-400' : 'bg-primary/10 text-primary'}`}>
-                <Bell className="w-8 h-8" />
+      <Card className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        <CardHeader className="border-b border-gray-100 bg-gray-50/50 pb-6 pt-6">
+          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-6">
+            <div className="flex items-start gap-4">
+              <div className={`p-3 rounded-xl border shrink-0 ${notification.isRead ? 'bg-white border-gray-200 text-gray-400' : 'bg-blue-50 border-blue-100 text-blue-600'}`}>
+                <Bell className="w-6 h-6" />
               </div>
-              <div className="space-y-1">
-                <CardTitle className="text-2xl font-bold text-gray-900 leading-tight">
+              <div className="space-y-2">
+                <CardTitle className="text-xl font-semibold text-[#111827] leading-tight">
                   {notification.title}
                 </CardTitle>
-                <div className="flex flex-wrap items-center gap-3 text-sm font-medium text-gray-500">
-                  <div className="flex items-center gap-1.5 bg-gray-50 px-2.5 py-1 rounded-md">
-                    <Calendar className="w-4 h-4" />
+                <div className="flex flex-wrap items-center gap-4 text-sm font-medium text-[#6B7280]">
+                  <div className="flex items-center gap-1.5">
+                    <Calendar className="w-4 h-4 text-gray-400" />
                     {notification.createdAt && new Date(notification.createdAt).toLocaleDateString('en-US', { 
                       month: 'short', 
                       day: 'numeric',
@@ -79,46 +87,40 @@ export default function NotificationDetailsPage() {
                       minute: '2-digit'
                     })}
                   </div>
-                  <div className="flex items-center gap-1.5 bg-gray-50 px-2.5 py-1 rounded-md capitalize">
-                    <Tag className="w-4 h-4" />
+                  <div className="flex items-center gap-1.5 capitalize">
+                    <Tag className="w-4 h-4 text-gray-400" />
                     {notification.type?.replace('_', ' ').toLowerCase() || 'general'}
                   </div>
                 </div>
               </div>
             </div>
-            
-            {/* Status Badge */}
-            <div className={`shrink-0 px-4 py-2 rounded-full flex items-center gap-2 self-start sm:self-center ${notification.isRead ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}`}>
-              <CheckCircle2 className="w-4 h-4" />
-              <span className="font-semibold text-sm">{notification.isRead ? 'Read' : 'New'}</span>
-            </div>
           </div>
         </CardHeader>
         
-        <CardContent className="p-8 md:p-10">
+        <CardContent className="p-6 sm:p-8">
           <div className="flex gap-4">
-            <MessageSquare className="w-6 h-6 text-gray-300 shrink-0 mt-1" />
-            <div className="prose max-w-none">
-              <p className="text-lg leading-relaxed text-gray-700 whitespace-pre-wrap font-medium">
-                {notification.message}
-              </p>
+            <div className="w-10 h-10 bg-gray-50 border border-gray-100 rounded-full flex items-center justify-center shrink-0">
+              <MessageSquare className="w-4 h-4 text-gray-400" />
+            </div>
+            <div className="flex-1 mt-2 text-[#374151] whitespace-pre-wrap leading-relaxed text-[15px]">
+              {notification.message}
             </div>
           </div>
           
-          <div className="mt-12 pt-6 border-t border-gray-100 flex flex-wrap justify-end gap-4">
+          <div className="mt-8 pt-6 border-t border-gray-100 flex flex-wrap gap-3">
             {notification.referenceId && (
               <Link 
                 href={notification.type === 'payment' 
                   ? `/dashboard/invoices/${notification.referenceId}` 
                   : `/dashboard/bookings/${notification.referenceId}`}
               >
-                <Button variant="outline" className="shadow-sm rounded-xl px-6 border-primary/20 text-primary hover:bg-primary/5">
-                  {notification.type === 'payment' ? 'View Invoice' : 'View Related Booking'}
+                <Button variant="outline" className="border-gray-200 hover:bg-gray-50 text-[#111827]">
+                  {notification.type === 'payment' ? 'View Invoice Details' : 'View Related Booking'}
                 </Button>
               </Link>
             )}
              <Link href="/dashboard/notifications">
-              <Button className="bg-primary hover:bg-primary/90 text-white shadow-md rounded-xl px-6">
+              <Button className="bg-[#111827] hover:bg-gray-800 text-white">
                 Back to Inbox
               </Button>
              </Link>

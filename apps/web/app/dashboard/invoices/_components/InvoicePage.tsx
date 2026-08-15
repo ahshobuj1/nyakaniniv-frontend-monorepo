@@ -103,14 +103,20 @@ export default function InvoicesPage() {
               <table className="w-full min-w-225 text-left border-collapse">
                 <thead>
                   <tr className="bg-white">
+                    <th className="py-5 px-8 text-[12px] font-semibold text-[#A1A1AA] uppercase tracking-wider w-[5%]">
+                      SN
+                    </th>
                     <th className="py-5 px-8 text-[12px] font-semibold text-[#A1A1AA] uppercase tracking-wider w-[15%]">
                       Type
                     </th>
                     <th className="py-5 px-8 text-[12px] font-semibold text-[#A1A1AA] uppercase tracking-wider w-[25%]">
-                      Details
+                      Client
                     </th>
                     <th className="py-5 px-8 text-[12px] font-semibold text-[#A1A1AA] uppercase tracking-wider w-[20%]">
                       Date
+                    </th>
+                    <th className="py-5 px-8 text-[12px] font-semibold text-[#A1A1AA] uppercase tracking-wider w-[19%]">
+                      Method
                     </th>
                     <th className="py-5 px-8 text-[12px] font-semibold text-[#A1A1AA] tracking-wider w-[15%]">
                       Amount (KES)
@@ -126,7 +132,7 @@ export default function InvoicesPage() {
                 <tbody>
                   {isLoading ? (
                     <tr>
-                      <td colSpan={6} className="py-12 text-center">
+                      <td colSpan={8} className="py-12 text-center">
                         <LoadingSpinner smallHeight />
                       </td>
                     </tr>
@@ -135,6 +141,9 @@ export default function InvoicesPage() {
                       <tr
                         key={invoice.id}
                         className={`${index % 2 === 0 ? 'bg-[#F9FAFB]' : 'bg-white'} hover:bg-gray-100/50 transition-colors`}>
+                        <td className="py-4 px-8 text-[14px] text-[#787878] w-8">
+                          {index + 1}
+                        </td>
                         <td className="py-4 px-8 text-[14px] font-semibold text-[#111620]">
                           {invoice.type === 'SUBSCRIPTION' ? (
                             <span className="flex items-center gap-1.5 text-primary">
@@ -165,20 +174,30 @@ export default function InvoicesPage() {
                                   Platform Subscription
                                 </span>
                                 <span className="text-[13px] text-[#787878]">
-                                  Plan renewal
+                                  {(invoice as any).user?.email || 'Plan renewal'}
                                 </span>
                               </>
                             )}
                           </div>
                         </td>
-                        <td className="py-4 px-8 text-[14px] text-[#787878]">
-                          <div className="flex items-center gap-2">
-                            <Calendar className="w-3.75 h-3.75 text-[#A1A1AA]" />
-                            {invoice.createdAt 
-                              ? new Date(invoice.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
-                              : 'N/A'
-                            }
+                        <td className="py-4 px-8">
+                          <div className="flex flex-col">
+                            <span className="text-[14px] text-[#111620] flex items-center gap-1.5">
+                              <Calendar className="w-3.5 h-3.5 text-[#A1A1AA]" />
+                              {invoice.createdAt 
+                                ? new Date(invoice.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+                                : 'N/A'
+                              }
+                            </span>
+                            <span className="text-[12px] text-[#787878] pl-5 mt-0.5">
+                              {invoice.createdAt ? new Date(invoice.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
+                            </span>
                           </div>
+                        </td>
+                        <td className="py-4 px-8 text-[14px]">
+                          <span className="inline-flex items-center px-2.5 py-1 rounded-md bg-gray-50 border border-gray-200 text-gray-700 text-[12px] font-medium capitalize">
+                            {(invoice as any).method?.replace('_', ' ') || (invoice as any).transactions?.[0]?.gateway?.replace('_', ' ') || 'Paystack'}
+                          </span>
                         </td>
                         <td className="py-4 px-8 text-[14px] font-semibold text-[#111620]">
                           {invoice.amount?.toString()}
@@ -211,7 +230,7 @@ export default function InvoicesPage() {
                   ) : (
                     <tr>
                       <td
-                        colSpan={6}
+                        colSpan={8}
                         className="py-12 text-center text-[#787878]">
                         No invoices found for the selected filter.
                       </td>

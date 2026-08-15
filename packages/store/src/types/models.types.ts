@@ -189,6 +189,7 @@ export interface Transaction {
   cardLast4?: string;
   bankName?: string;
   accountName?: string;
+  metadata?: any;
   createdAt?: string;
   updatedAt?: string;
 

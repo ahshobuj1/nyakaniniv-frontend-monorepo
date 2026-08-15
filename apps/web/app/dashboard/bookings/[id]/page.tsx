@@ -5,7 +5,13 @@ import { Button, Card, CardContent, CardHeader, CardTitle, CardDescription, Badg
 import { DownloadIcon, ArrowLeft, Calendar, Mail, MapPin, Phone, Music, CreditCard, Clock, FileText, CheckCircle2, User } from 'lucide-react';
 import Link from 'next/link';
 import LoadingSpinner from '@/components/LoadingSpinner';
-import { useGetBookingByIdQuery, useDownloadInvoicePdfMutation } from '@repo/store';
+import { 
+  useGetBookingByIdQuery, 
+  useDownloadInvoicePdfMutation, 
+  useUpdateBookingStatusMutation,
+  useHandleCashRequestDecisionMutation,
+  useMarkCashAsPaidMutation 
+} from '@repo/store';
 
 export default function BookingDetailsPage() {
   const params = useParams();
@@ -15,6 +21,11 @@ export default function BookingDetailsPage() {
   const error = fetchError ? (fetchError as any).data?.message || (fetchError as any).message || 'Failed to fetch booking' : null;
 
   const [downloadInvoicePdf, { isLoading: downloading }] = useDownloadInvoicePdfMutation();
+  const [updateStatus, { isLoading: updatingStatus }] = useUpdateBookingStatusMutation();
+  const [handleCash, { isLoading: handlingCash }] = useHandleCashRequestDecisionMutation();
+  const [markPaid, { isLoading: markingPaid }] = useMarkCashAsPaidMutation();
+
+  const isActionLoading = updatingStatus || handlingCash || markingPaid;
 
   const handleDownloadInvoice = async (paymentId: string) => {
     try {
@@ -52,113 +63,142 @@ export default function BookingDetailsPage() {
   }
 
   const isCompleted = booking.status === 'completed';
+  const cashTransaction = booking.invoice?.transactions?.find((tx: any) => tx.gateway === 'CASH');
+  const isPendingCashRequest = cashTransaction?.status === 'PENDING' && !cashTransaction?.metadata?.cashApproved;
+  const isApprovedCashRequest = cashTransaction?.status === 'PENDING' && cashTransaction?.metadata?.cashApproved;
   const amountFormatted = booking.totalAmount ? `KES ${Number(booking.totalAmount).toFixed(2)}` : 'Pending';
 
   return (
-    <div className="container mx-auto p-6 space-y-8">
-      {/* Header Area */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
+    <div className="container mx-auto p-6 w-full space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-gray-200">
+        <div className="flex items-center gap-3">
           <Link href="/dashboard/bookings">
-            <Button variant="ghost" size="icon" className="rounded-full hover:bg-gray-100 transition-colors">
-              <ArrowLeft className="h-5 w-5" />
+            <Button variant="ghost" size="icon" className="hover:bg-gray-100 rounded-lg">
+              <ArrowLeft className="h-5 w-5 text-gray-500" />
             </Button>
           </Link>
           <div>
-            <h1 className="text-3xl font-bold tracking-tight text-gray-900">Booking Overview</h1>
-            {/* <p className="text-sm text-gray-500 mt-1">ID: {id}</p> */}
+            <div className="flex items-center gap-3">
+              <h1 className="text-2xl font-semibold text-[#111827]">Booking Details</h1>
+              <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium uppercase tracking-wide border ${
+                isCompleted 
+                  ? 'bg-green-50 text-green-700 border-green-200' 
+                  : 'bg-blue-50 text-blue-700 border-blue-200'
+              }`}>
+                {booking.status}
+              </span>
+            </div>
+            <p className="text-sm text-[#6B7280] mt-1 font-mono">{id}</p>
           </div>
         </div>
-        <div className={`px-4 py-2 rounded-full flex items-center gap-2 ${isCompleted ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}`}>
-          {isCompleted ? <CheckCircle2 className="w-5 h-5" /> : <Clock className="w-5 h-5" />}
-          <span className="font-semibold uppercase text-sm tracking-wider">{booking.status}</span>
-        </div>
+        
+        {booking.invoice && (
+          <Button 
+            onClick={() => booking.invoice?.id && handleDownloadInvoice(booking.invoice.id)} 
+            disabled={downloading}
+            className="bg-[#111827] hover:bg-gray-800 text-white rounded-lg shadow-sm"
+          >
+            {downloading ? 'Downloading...' : (
+              <>
+                <DownloadIcon className="mr-2 h-4 w-4" /> 
+                Download PDF Receipt
+              </>
+            )}
+          </Button>
+        )}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         {/* Main Content Area */}
-        <div className="lg:col-span-2 space-y-8">
-          {/* Event Card */}
-          <Card className="border-0 shadow-[0_8px_30px_rgb(0,0,0,0.04)] bg-white/50 backdrop-blur-xl rounded-3xl overflow-hidden">
-            <div className="bg-gradient-to-r from-indigo-50 to-purple-50 p-6 border-b border-gray-100 flex items-center gap-3">
-              <div className="p-3 bg-white rounded-xl shadow-sm text-indigo-600">
-                <Music className="w-6 h-6" />
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-gray-900">Event Details</h3>
-                <p className="text-sm text-gray-500">{booking.eventType}</p>
-              </div>
-            </div>
-            <CardContent className="p-6 sm:p-8 space-y-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <div className="space-y-1">
-                  <p className="text-sm font-medium text-gray-500 flex items-center gap-1.5"><Calendar className="w-4 h-4" /> Date & Time</p>
-                  <p className="font-semibold text-gray-900">
-                    {booking.eventDate ? new Date(booking.eventDate).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A'}
+        <div className="lg:col-span-2 space-y-6">
+          
+          {/* Event Details Card */}
+          <Card className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <CardHeader className="border-b border-gray-100 bg-gray-50/50 pb-4">
+              <CardTitle className="text-lg font-semibold text-[#111827] flex items-center gap-2">
+                <Music className="w-5 h-5 text-gray-400" />
+                Event Information
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="grid grid-cols-1 sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x divide-gray-100">
+                <div className="p-5 space-y-1">
+                  <p className="text-sm font-medium text-[#6B7280] uppercase tracking-wider text-[11px]">Event Type</p>
+                  <p className="font-medium text-[#111827]">{booking.eventType || 'N/A'}</p>
+                </div>
+                <div className="p-5 space-y-1">
+                  <p className="text-sm font-medium text-[#6B7280] uppercase tracking-wider text-[11px]">Date & Time</p>
+                  <p className="font-medium text-[#111827]">
+                    {booking.eventDate ? new Date(booking.eventDate).toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' }) : 'N/A'}
                   </p>
                 </div>
-                <div className="space-y-1">
-                  <p className="text-sm font-medium text-gray-500 flex items-center gap-1.5"><MapPin className="w-4 h-4" /> Location</p>
-                  <p className="font-semibold text-gray-900">{booking.address || 'Location not specified'}</p>
-                </div>
               </div>
-              <div className="pt-4 border-t border-gray-100">
-                <p className="text-sm font-medium text-gray-500 flex items-center gap-1.5 mb-3"><FileText className="w-4 h-4" /> Additional Details</p>
-                <div className="p-4 bg-gray-50 rounded-2xl text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
-                  {booking.eventDetails || 'No additional details provided by the client.'}
-                </div>
+              <div className="p-5 border-t border-gray-100 space-y-1 bg-gray-50/30">
+                <p className="text-sm font-medium text-[#6B7280] uppercase tracking-wider text-[11px]">Location</p>
+                <p className="font-medium text-[#111827] flex items-start gap-2">
+                  <MapPin className="w-4 h-4 text-gray-400 shrink-0 mt-0.5" />
+                  {booking.address || 'Location not specified'}
+                </p>
               </div>
+              {booking.eventDetails && (
+                <div className="p-5 border-t border-gray-100 space-y-2">
+                  <p className="text-sm font-medium text-[#6B7280] uppercase tracking-wider text-[11px]">Additional Details</p>
+                  <div className="text-sm text-[#374151] whitespace-pre-wrap leading-relaxed">
+                    {booking.eventDetails}
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
 
           {/* Payment Card */}
-          <Card className="border-0 shadow-[0_8px_30px_rgb(0,0,0,0.04)] bg-white/50 backdrop-blur-xl rounded-3xl overflow-hidden">
-            <div className="bg-gradient-to-r from-emerald-50 to-teal-50 p-6 border-b border-gray-100 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="p-3 bg-white rounded-xl shadow-sm text-emerald-600">
-                  <CreditCard className="w-6 h-6" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-gray-900">Financial Summary</h3>
-                  <p className="text-sm text-gray-500">Total Amount: {amountFormatted}</p>
-                </div>
-              </div>
-              <h2 className="text-3xl font-extrabold text-gray-900">{amountFormatted}</h2>
-            </div>
-            <CardContent className="p-6 sm:p-8">
+          <Card className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+             <CardHeader className="border-b border-gray-100 bg-gray-50/50 pb-4">
+              <CardTitle className="text-lg font-semibold text-[#111827] flex items-center gap-2">
+                <CreditCard className="w-5 h-5 text-gray-400" />
+                Financial Summary
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-6">
               {booking.invoice ? (
                 <div className="space-y-6">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="p-4 bg-gray-50 rounded-2xl">
-                      <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">Payment Status</p>
-                      <p className={`font-bold uppercase ${booking.invoice.status === 'PAID' ? 'text-green-600' : 'text-amber-600'}`}>
+                  <div className="flex items-end justify-between pb-6 border-b border-gray-100">
+                    <div>
+                      <p className="text-sm font-medium text-[#6B7280] uppercase tracking-wider text-[11px] mb-1">Total Amount</p>
+                      <h2 className="text-3xl font-bold text-[#111827]">{amountFormatted}</h2>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-medium text-[#6B7280] uppercase tracking-wider text-[11px] mb-1">Status</p>
+                      <p className={`font-semibold ${booking.invoice.status === 'PAID' ? 'text-green-600' : 'text-amber-600'}`}>
                         {booking.invoice.status}
                       </p>
                     </div>
-                    <div className="p-4 bg-gray-50 rounded-2xl">
-                      <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">Method</p>
-                      <p className="font-bold text-gray-900 capitalize">{booking.invoice.transactions?.[0]?.gateway || 'Paystack'}</p>
-                    </div>
                   </div>
-
-                  <div className="flex flex-col sm:flex-row items-center justify-between p-5 bg-gradient-to-r from-gray-900 to-gray-800 rounded-2xl text-white shadow-xl shadow-gray-900/10 gap-4">
+                  
+                  <div className="grid grid-cols-2 gap-4 pt-2">
                     <div>
-                      <p className="font-semibold">Official Receipt</p>
-                      <p className="text-xs text-gray-300 mt-1">Download a detailed PDF copy for your records.</p>
+                      <p className="text-sm font-medium text-[#6B7280] text-[12px] mb-1">Invoice Number</p>
+                      <p className="text-sm font-medium text-[#111827] font-mono">
+                        INV-{booking.invoice.id.split('-')[0].toUpperCase()}
+                      </p>
                     </div>
-                    <Button 
-                      onClick={() => booking.invoice && handleDownloadInvoice(booking.invoice.id)} 
-                      disabled={downloading}
-                      className="bg-white text-gray-900 hover:bg-gray-100 whitespace-nowrap rounded-xl"
-                    >
-                      {downloading ? 'Downloading...' : <><DownloadIcon className="mr-2 h-4 w-4" /> Download PDF</>}
-                    </Button>
+                    <div>
+                      <p className="text-sm font-medium text-[#6B7280] text-[12px] mb-1">Payment Method</p>
+                      <p className="text-sm font-medium text-[#111827] capitalize">
+                        {booking.invoice.transactions?.[0]?.gateway?.replace('_', ' ') || 'Card / Paystack'}
+                      </p>
+                    </div>
                   </div>
                 </div>
               ) : (
-                <div className="text-center p-8 bg-gray-50 rounded-2xl">
-                  <p className="text-gray-500">No payment records have been generated for this booking yet.</p>
+                <div className="text-center py-6">
+                  <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <FileText className="w-5 h-5 text-gray-400" />
+                  </div>
+                  <p className="text-[#6B7280] font-medium">No invoice generated</p>
+                  <p className="text-sm text-[#9CA3AF] mt-1">Payment details are currently unavailable.</p>
                 </div>
               )}
             </CardContent>
@@ -166,28 +206,141 @@ export default function BookingDetailsPage() {
         </div>
 
         {/* Sidebar */}
-        <div className="space-y-8">
-          {/* Client Info Card */}
-          <Card className="border-0 shadow-[0_8px_30px_rgb(0,0,0,0.04)] bg-white/50 backdrop-blur-xl rounded-3xl">
-            <CardHeader className="border-b border-gray-100">
-              <CardTitle className="flex items-center gap-2 text-lg"><User className="w-5 h-5 text-primary" /> Client Profile</CardTitle>
+        <div className="space-y-6">
+          
+          {/* Action Center Card */}
+          <Card className="bg-white rounded-xl shadow-sm border border-gray-200">
+            <CardHeader className="border-b border-gray-100 bg-gray-50/50 pb-4">
+              <CardTitle className="text-lg font-semibold text-[#111827] flex items-center gap-2">
+                <CheckCircle2 className="w-5 h-5 text-gray-400" />
+                Action Center
+              </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex flex-col items-center text-center p-3">
-                <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mb-3">
-                  <span className="text-2xl font-bold text-primary">{booking.client?.name?.charAt(0) || 'C'}</span>
+            <CardContent className="p-5 space-y-4">
+              {booking.status === 'pending' && (
+                <div className="space-y-3">
+                  <p className="text-sm text-gray-600">Review the details and approve this booking request to generate a payment link.</p>
+                  <Button 
+                    className="w-full bg-[#111827] text-white hover:bg-gray-800"
+                    disabled={isActionLoading}
+                    onClick={() => {
+                      const amount = prompt('Enter the total amount (KES) for this booking:');
+                      if (amount && !isNaN(Number(amount))) {
+                        updateStatus({ id, status: 'accepted' as any, totalAmount: Number(amount) });
+                      }
+                    }}
+                  >
+                    Accept Booking Request
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    className="w-full text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700"
+                    disabled={isActionLoading}
+                    onClick={() => confirm('Are you sure you want to reject this booking?') && updateStatus({ id, status: 'rejected' as any })}
+                  >
+                    Reject Booking
+                  </Button>
                 </div>
-                <h3 className="font-bold text-lg text-gray-900">{booking.client?.name || 'Unknown Client'}</h3>
+              )}
+
+              {booking.status === 'accepted' && isPendingCashRequest && (
+                <div className="space-y-3">
+                  <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                    <p className="text-sm text-amber-800 font-medium">Cash Payment Requested</p>
+                    <p className="text-xs text-amber-700 mt-1">The client wants to pay by cash on site.</p>
+                  </div>
+                  <Button 
+                    className="w-full bg-amber-500 text-white hover:bg-amber-600"
+                    disabled={isActionLoading}
+                    onClick={() => handleCash({ id, decision: 'approve' })}
+                  >
+                    Approve Cash Request
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    className="w-full"
+                    disabled={isActionLoading}
+                    onClick={() => handleCash({ id, decision: 'reject' })}
+                  >
+                    Reject & Demand Online Pay
+                  </Button>
+                </div>
+              )}
+
+              {booking.status === 'accepted' && isApprovedCashRequest && (
+                <div className="space-y-3">
+                  <p className="text-sm text-gray-600">You approved the cash request. Once you receive the money, mark it as paid.</p>
+                  <Button 
+                    className="w-full bg-green-600 text-white hover:bg-green-700"
+                    disabled={isActionLoading}
+                    onClick={() => confirm('Confirm you received the cash?') && markPaid(id)}
+                  >
+                    Mark as Paid (Received Cash)
+                  </Button>
+                </div>
+              )}
+
+              {booking.status === 'accepted' && booking.invoice?.status === 'PAID' && (
+                <div className="space-y-3">
+                  <p className="text-sm text-gray-600">The invoice is fully paid. After the event, mark the booking as completed.</p>
+                  <Button 
+                    className="w-full bg-blue-600 text-white hover:bg-blue-700"
+                    disabled={isActionLoading}
+                    onClick={() => updateStatus({ id, status: 'completed' as any })}
+                  >
+                    Complete Event
+                  </Button>
+                </div>
+              )}
+
+              {booking.status === 'accepted' && !isPendingCashRequest && !isApprovedCashRequest && booking.invoice?.status !== 'PAID' && (
+                <div className="text-center py-4">
+                  <Clock className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+                  <p className="text-sm text-gray-500">Waiting for client payment...</p>
+                </div>
+              )}
+
+              {isCompleted && (
+                <div className="text-center py-4 bg-gray-50 rounded-lg border border-gray-100">
+                  <CheckCircle2 className="w-8 h-8 text-green-500 mx-auto mb-2" />
+                  <p className="text-sm font-medium text-gray-700">Booking Completed</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Client Info Card */}
+          <Card className="bg-white rounded-xl shadow-sm border border-gray-200">
+            <CardHeader className="border-b border-gray-100 bg-gray-50/50 pb-4">
+              <CardTitle className="text-lg font-semibold text-[#111827] flex items-center gap-2">
+                <User className="w-5 h-5 text-gray-400" /> 
+                Client Information
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-5 space-y-5">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-gray-100 border border-gray-200 rounded-full flex items-center justify-center shrink-0">
+                  <span className="text-lg font-bold text-gray-500 uppercase">{booking.client?.name?.charAt(0) || 'C'}</span>
+                </div>
+                <div className="overflow-hidden">
+                  <h3 className="font-semibold text-[#111827] truncate">{booking.client?.name || 'Unknown Client'}</h3>
+                  <p className="text-sm text-[#6B7280]">Customer</p>
+                </div>
               </div>
-              <div className="space-y-3 pt-4 border-t border-gray-100">
-                <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
-                  <Mail className="w-4 h-4 text-gray-500 shrink-0" />
-                  <p className="text-sm font-medium text-gray-700 truncate">{booking.client?.email || 'No email'}</p>
+              
+              <div className="space-y-3 pt-2">
+                <div className="flex items-center gap-3 text-sm">
+                  <Mail className="w-4 h-4 text-gray-400 shrink-0" />
+                  <a href={`mailto:${booking.client?.email}`} className="text-[#374151] hover:text-blue-600 truncate transition-colors">
+                    {booking.client?.email || 'No email provided'}
+                  </a>
                 </div>
                 {booking.client?.phone && (
-                  <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
-                    <Phone className="w-4 h-4 text-gray-500 shrink-0" />
-                    <p className="text-sm font-medium text-gray-700 truncate">{booking.client.phone}</p>
+                  <div className="flex items-center gap-3 text-sm">
+                    <Phone className="w-4 h-4 text-gray-400 shrink-0" />
+                    <a href={`tel:${booking.client.phone}`} className="text-[#374151] hover:text-blue-600 truncate transition-colors">
+                      {booking.client.phone}
+                    </a>
                   </div>
                 )}
               </div>

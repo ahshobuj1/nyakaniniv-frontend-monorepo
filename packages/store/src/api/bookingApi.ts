@@ -43,6 +43,21 @@ export const bookingApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: (result, error, id) => [{ type: 'Booking', id }, 'Booking'],
     }),
+    handleCashRequestDecision: builder.mutation<BaseResponse<Booking>, { id: string; decision: 'approve' | 'reject' }>({
+      query: ({ id, decision }) => ({
+        url: `/bookings/v1/${id}/cash-decision`,
+        method: 'POST',
+        body: { decision },
+      }),
+      invalidatesTags: (result, error, { id }) => [{ type: 'Booking', id }, 'Booking'],
+    }),
+    markCashAsPaid: builder.mutation<BaseResponse<Booking>, string>({
+      query: (id) => ({
+        url: `/bookings/v1/${id}/mark-cash-paid`,
+        method: 'POST',
+      }),
+      invalidatesTags: (result, error, id) => [{ type: 'Booking', id }, 'Booking'],
+    }),
   }),
   overrideExisting: false,
 });
@@ -53,4 +68,6 @@ export const {
   useGetBookingByIdQuery,
   useUpdateBookingStatusMutation,
   useRequestCashPaymentMutation,
+  useHandleCashRequestDecisionMutation,
+  useMarkCashAsPaidMutation,
 } = bookingApi;

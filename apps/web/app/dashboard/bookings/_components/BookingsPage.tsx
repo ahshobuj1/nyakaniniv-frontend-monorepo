@@ -3,7 +3,7 @@
 import React, {useState} from 'react';
 import {AlertCircle, Calendar, Mail, CheckCircle2, Clock, Phone, MapPin, Eye} from 'lucide-react';
 import {Card, CardContent, Dialog, DialogContent, DialogHeader, DialogTitle, Input, Button} from '@repo/ui';
-import { useGetMyBookingsQuery, useUpdateBookingStatusMutation, useMarkBookingPaidMutation } from '@repo/store';
+import { useGetMyBookingsQuery, useUpdateBookingStatusMutation, useHandleCashRequestDecisionMutation, useMarkCashAsPaidMutation } from '@repo/store';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { toast } from 'sonner';
 
@@ -15,14 +15,17 @@ export default function BookingsPage() {
   // APIs
   const { data: bookingsResponse, isLoading: isBookingsLoading } = useGetMyBookingsQuery();
   const [updateStatus, { isLoading: isUpdating }] = useUpdateBookingStatusMutation();
-  const [markPaid, { isLoading: isMarkingPaid }] = useMarkBookingPaidMutation();
+  const [handleCash, { isLoading: handlingCash }] = useHandleCashRequestDecisionMutation();
+  const [markPaid, { isLoading: isMarkingPaid }] = useMarkCashAsPaidMutation();
+  const isActionLoading = isUpdating || handlingCash || isMarkingPaid;
 
   // Dialog State
   const [bookingToUpdate, setBookingToUpdate] = useState<{ 
     id: string; 
     currentStatus: string;
-    isCashRequested?: boolean;
-    paymentId?: string;
+    isPendingCashRequest?: boolean;
+    isApprovedCashRequest?: boolean;
+    isInvoicePaid?: boolean;
   } | null>(null);
   const [priceInput, setPriceInput] = useState('');
   const [detailsModalContent, setDetailsModalContent] = useState<string | null>(null);
@@ -67,9 +70,34 @@ export default function BookingsPage() {
     }
   };
 
-  const handleMarkCashPaid = async (paymentId: string) => {
+  const handleRejectBooking = async () => {
+    if (!bookingToUpdate) return;
+    if (confirm('Are you sure you want to reject this booking?')) {
+      try {
+        await updateStatus({ id: bookingToUpdate.id, status: 'rejected' as any }).unwrap();
+        toast.success('Booking rejected');
+        setBookingToUpdate(null);
+      } catch (error: any) {
+        toast.error(error?.data?.error?.message || error?.data?.message || 'Failed to reject booking');
+      }
+    }
+  };
+
+  const handleCashDecision = async (decision: 'approve' | 'reject') => {
+    if (!bookingToUpdate) return;
     try {
-      await markPaid(paymentId).unwrap();
+      await handleCash({ id: bookingToUpdate.id, decision }).unwrap();
+      toast.success(`Cash request ${decision}d successfully!`);
+      setBookingToUpdate(null);
+    } catch (error: any) {
+      toast.error(error?.data?.error?.message || error?.data?.message || `Failed to ${decision} cash request`);
+    }
+  };
+
+  const handleMarkCashPaid = async (id: string) => {
+    if (!confirm('Confirm you received the cash?')) return;
+    try {
+      await markPaid(id).unwrap();
       toast.success('Payment marked as paid via Cash!');
       setBookingToUpdate(null);
     } catch (error: any) {
@@ -197,7 +225,10 @@ export default function BookingsPage() {
                         Event Type
                       </th>
                       <th className="py-4 px-8 text-[12px] font-semibold text-[#A1A1AA] uppercase tracking-wider w-[15%]">
-                        Date
+                       Event Date
+                      </th>
+                      <th className="py-4 px-8 text-[12px] font-semibold text-[#A1A1AA] uppercase tracking-wider w-[15%]">
+                       Requested Date
                       </th>
                       <th className="py-4 px-8 text-[12px] font-semibold text-[#A1A1AA] uppercase tracking-wider w-[15%]">
                         Amount
@@ -213,7 +244,10 @@ export default function BookingsPage() {
                   <tbody>
                     {filteredBookings.length > 0 ? (
                       filteredBookings.map((booking: any, index: number) => {
-                        const isCashRequested = booking.payment?.method === 'CASH' && booking.payment?.status === 'unpaid';
+                        const cashTransaction = booking.invoice?.transactions?.find((tx: any) => tx.gateway === 'CASH');
+                        const isPendingCashRequest = cashTransaction?.status === 'PENDING' && !cashTransaction?.metadata?.cashApproved;
+                        const isApprovedCashRequest = cashTransaction?.status === 'PENDING' && cashTransaction?.metadata?.cashApproved;
+                        const isInvoicePaid = booking.invoice?.status === 'PAID';
                         
                         return (
                         <tr
@@ -238,7 +272,7 @@ export default function BookingsPage() {
                           </td>
                           <td className="py-5 px-8 text-[14px] text-[#787878]">
                             <div className="flex flex-col gap-1">
-                              <span className="font-medium text-[#111620]">{booking.eventType}</span>
+                              <span className="font-medium text-[#111620] capitalize">{booking.eventType}</span>
                               {booking.address && (
                                 <span className="text-[12px] text-[#787878] font-normal flex items-center gap-1.5">
                                   <MapPin className="w-3 h-3 shrink-0" />
@@ -249,18 +283,23 @@ export default function BookingsPage() {
                           </td>
                           <td className="py-5 px-8 text-[14px] text-[#787878]">
                             <div className="flex flex-col gap-1">
-                              <div className="flex items-center gap-2 font-medium text-[#111620]">
-                                <Calendar className="w-3.75 h-3.75 text-[#A1A1AA]" />
-                                Event: {new Date(booking.eventDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+                              <div className="flex items-center gap-2 font-medium text-[#111620] w-max">                           
+                                {new Date(booking.eventDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
                               </div>
-                              {booking.createdAt && (
-                                <div className="flex items-center gap-2 text-[12px] text-[#787878]">
-                                  <Clock className="w-3.5 h-3.5 text-[#A1A1AA]" />
-                                  Req: {new Date(booking.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
-                                </div>
-                              )}
+                          
                             </div>
                           </td>
+
+                            
+
+                            <td className="py-5 px-8 text-[14px] text-[#787878]">
+                            {booking.createdAt && (
+                            <div className="flex items-center gap-2 font-medium text-[#111620] w-max">
+                              {new Date(booking.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+                            </div>
+                          )}
+                          </td>        
+
                           <td className="py-5 px-8 text-[14px] font-medium text-[#111620]">
                             {booking.totalAmount ? `$${booking.totalAmount}` : '-'}
                           </td>
@@ -279,8 +318,9 @@ export default function BookingsPage() {
                                 setBookingToUpdate({ 
                                   id: booking.id, 
                                   currentStatus: booking.status,
-                                  isCashRequested: isCashRequested,
-                                  paymentId: booking.payment?.id
+                                  isPendingCashRequest,
+                                  isApprovedCashRequest,
+                                  isInvoicePaid
                                 });
                                 setPriceInput('');
                               }}
@@ -304,7 +344,7 @@ export default function BookingsPage() {
                               )}
                             </button>
 
-                            {isCashRequested && (
+                            {isPendingCashRequest && (
                               <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-[#FFF8E6] border border-[#FDE68A] text-[#D97706] text-[11px] font-bold">
                                 Cash Requested
                               </span>
@@ -361,52 +401,89 @@ export default function BookingsPage() {
               </div>
             )}
             
-            {bookingToUpdate?.isCashRequested && (
+            {bookingToUpdate?.isPendingCashRequest && (
               <div className="bg-[#FFF8E6] border border-[#FDE68A] rounded-xl p-4 flex items-center gap-3 text-[#D97706]">
                 <AlertCircle className="w-5 h-5 shrink-0" />
                 <p className="text-[13px] font-medium">
-                  The client has requested to pay by cash. You can mark this booking as paid once you receive the cash.
+                  The client has requested to pay by cash.
                 </p>
               </div>
             )}
             
             <div className="flex flex-col gap-3 pt-4">
               {bookingToUpdate?.currentStatus?.toLowerCase() === 'pending' && (
+                <>
+                  <Button 
+                    onClick={() => handleStatusUpdate('ACCEPTED')}
+                    disabled={isActionLoading}
+                    className="bg-primary hover:bg-primary/90 text-white font-bold h-11 w-full rounded-[10px]"
+                  >
+                    {isActionLoading ? 'Processing...' : 'Accept Booking Request'}
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    onClick={handleRejectBooking}
+                    disabled={isActionLoading}
+                    className="h-11 w-full rounded-[10px] text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700"
+                  >
+                    Reject Booking
+                  </Button>
+                </>
+              )}
+
+              {bookingToUpdate?.currentStatus?.toLowerCase() === 'accepted' && bookingToUpdate.isPendingCashRequest && (
+                <>
+                  <Button 
+                    onClick={() => handleCashDecision('approve')}
+                    disabled={isActionLoading}
+                    className="bg-amber-500 hover:bg-amber-600 text-white font-bold h-11 w-full rounded-[10px]"
+                  >
+                    {isActionLoading ? 'Processing...' : 'Approve Cash Request'}
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => handleCashDecision('reject')}
+                    disabled={isActionLoading}
+                    className="h-11 w-full rounded-[10px]"
+                  >
+                    Reject & Demand Online Pay
+                  </Button>
+                </>
+              )}
+
+              {bookingToUpdate?.currentStatus?.toLowerCase() === 'accepted' && bookingToUpdate.isApprovedCashRequest && (
                 <Button 
-                  onClick={() => handleStatusUpdate('ACCEPTED')}
-                  disabled={isUpdating}
-                  className="bg-primary hover:bg-primary/90 text-white font-bold h-11 w-full rounded-[10px]"
+                  onClick={() => handleMarkCashPaid(bookingToUpdate.id)}
+                  disabled={isActionLoading}
+                  className="bg-green-600 hover:bg-green-700 text-white font-bold h-11 w-full rounded-[10px]"
                 >
-                  {isUpdating ? 'Updating...' : 'Accept Booking'}
+                  {isActionLoading ? 'Processing...' : 'Mark as Paid (Received Cash)'}
                 </Button>
               )}
 
-              {bookingToUpdate?.currentStatus?.toLowerCase() === 'accepted' && !bookingToUpdate.isCashRequested && (
+              {bookingToUpdate?.currentStatus?.toLowerCase() === 'accepted' && bookingToUpdate.isInvoicePaid && (
                 <Button 
                   onClick={() => handleStatusUpdate('COMPLETED')}
-                  disabled={isUpdating}
-                  className="bg-[#10B981] hover:bg-[#10B981]/90 text-white font-bold h-11 w-full rounded-[10px]"
+                  disabled={isActionLoading}
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-bold h-11 w-full rounded-[10px]"
                 >
-                  {isUpdating ? 'Updating...' : 'Mark as Completed'}
+                  {isActionLoading ? 'Processing...' : 'Complete Event'}
                 </Button>
               )}
 
-              {bookingToUpdate?.isCashRequested && bookingToUpdate.paymentId && (
-                <Button 
-                  onClick={() => handleMarkCashPaid(bookingToUpdate.paymentId!)}
-                  disabled={isMarkingPaid}
-                  className="bg-[#10B981] hover:bg-[#10B981]/90 text-white font-bold h-11 w-full rounded-[10px]"
-                >
-                  {isMarkingPaid ? 'Processing...' : 'Confirm Cash Received & Mark Paid'}
-                </Button>
+              {bookingToUpdate?.currentStatus?.toLowerCase() === 'accepted' && !bookingToUpdate.isPendingCashRequest && !bookingToUpdate.isApprovedCashRequest && !bookingToUpdate.isInvoicePaid && (
+                <div className="text-center py-4">
+                  <Clock className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+                  <p className="text-sm text-gray-500">Waiting for client payment...</p>
+                </div>
               )}
 
               <Button 
                 variant="outline" 
                 onClick={() => setBookingToUpdate(null)}
-                className="h-11 w-full rounded-[10px]"
+                className="h-11 w-full rounded-[10px] mt-2"
               >
-                Cancel
+                Close
               </Button>
             </div>
           </div>
