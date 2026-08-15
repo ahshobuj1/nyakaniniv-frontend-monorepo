@@ -1,13 +1,13 @@
 'use client';
 
 import React, {useState} from 'react';
-import {AlertCircle, Calendar, Mail, CheckCircle2, Clock, Phone, MapPin, Eye} from 'lucide-react';
+import {AlertCircle, Calendar, Mail, CheckCircle2, Clock, Phone, MapPin, Eye, XCircle} from 'lucide-react';
 import {Card, CardContent, Dialog, DialogContent, DialogHeader, DialogTitle, Input, Button} from '@repo/ui';
 import { useGetMyBookingsQuery, useUpdateBookingStatusMutation, useHandleCashRequestDecisionMutation, useMarkCashAsPaidMutation } from '@repo/store';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { toast } from 'sonner';
 
-type FilterType = 'All' | 'pending' | 'accepted' | 'completed';
+type FilterType = 'All' | 'pending' | 'accepted' | 'completed' | 'canceled';
 
 export default function BookingsPage() {
   const [filter, setFilter] = useState<FilterType>('All');
@@ -36,10 +36,12 @@ export default function BookingsPage() {
   const pendingCount = bookings.filter((b: any) => b.status?.toLowerCase() === 'pending').length;
   const acceptedCount = bookings.filter((b: any) => b.status?.toLowerCase() === 'accepted').length;
   const completedCount = bookings.filter((b: any) => b.status?.toLowerCase() === 'completed').length;
+  const canceledCount = bookings.filter((b: any) => b.status?.toLowerCase() === 'canceled' || b.status?.toLowerCase() === 'rejected').length;
   const totalCount = bookings.length;
 
   const filteredBookings = bookings.filter((booking: any) => {
     if (filter === 'All') return true;
+    if (filter === 'canceled') return booking.status?.toLowerCase() === 'canceled' || booking.status?.toLowerCase() === 'rejected';
     return booking.status?.toLowerCase() === filter.toLowerCase();
   });
 
@@ -199,6 +201,22 @@ export default function BookingsPage() {
               {completedCount}
             </span>
           </button>
+
+          <button
+            onClick={() => setFilter('canceled')}
+            className={`flex items-center gap-2 px-2 md:px-5 py-1 md:py-2.5 rounded-md md:rounded-full text-[14px] font-semibold transition-all border ${
+              filter === 'canceled'
+                ? 'border-primary text-primary bg-white'
+                : 'border-transparent bg-white text-[#787878] hover:bg-gray-50'
+            }`}>
+            Canceled
+            <span
+              className={`flex items-center justify-center md:min-w-5 md:h-5 px-1.5 text-[11px] rounded-full text-white ${
+                filter === 'canceled' ? 'bg-primary' : 'bg-[#D1D5DB]'
+              }`}>
+              {canceledCount}
+            </span>
+          </button>
         </div>
 
         {/* Table Card */}
@@ -335,6 +353,11 @@ export default function BookingsPage() {
                                 <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-blue-500 text-white text-[13px] font-medium">
                                   <CheckCircle2 className="w-3.5 h-3.5" />
                                   Accepted
+                                </div>
+                              ) : booking.status?.toLowerCase() === 'canceled' || booking.status?.toLowerCase() === 'rejected' ? (
+                                <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-red-500 text-white text-[13px] font-medium">
+                                  <XCircle className="w-3.5 h-3.5" />
+                                  {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
                                 </div>
                               ) : (
                                 <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-[#F59E0B] text-white text-[13px] font-medium">
@@ -475,6 +498,13 @@ export default function BookingsPage() {
                 <div className="text-center py-4">
                   <Clock className="w-8 h-8 text-gray-300 mx-auto mb-2" />
                   <p className="text-sm text-gray-500">Waiting for client payment...</p>
+                </div>
+              )}
+
+              {(bookingToUpdate?.currentStatus?.toLowerCase() === 'canceled' || bookingToUpdate?.currentStatus?.toLowerCase() === 'rejected') && (
+                <div className="text-center py-4">
+                  <XCircle className="w-8 h-8 text-red-400 mx-auto mb-2" />
+                  <p className="text-sm font-medium text-gray-700">This booking was {bookingToUpdate.currentStatus.toLowerCase()}.</p>
                 </div>
               )}
 
