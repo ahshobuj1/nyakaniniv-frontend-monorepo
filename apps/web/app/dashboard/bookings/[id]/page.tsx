@@ -127,18 +127,18 @@ export default function BookingDetailsPage() {
               <h2 className="text-3xl font-extrabold text-gray-900">{amountFormatted}</h2>
             </div>
             <CardContent className="p-6 sm:p-8">
-              {booking.payment ? (
+              {booking.invoice ? (
                 <div className="space-y-6">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="p-4 bg-gray-50 rounded-2xl">
                       <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">Payment Status</p>
-                      <p className={`font-bold uppercase ${booking.payment.status === 'paid' ? 'text-green-600' : 'text-amber-600'}`}>
-                        {booking.payment.status}
+                      <p className={`font-bold uppercase ${booking.invoice.status === 'PAID' ? 'text-green-600' : 'text-amber-600'}`}>
+                        {booking.invoice.status}
                       </p>
                     </div>
                     <div className="p-4 bg-gray-50 rounded-2xl">
                       <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">Method</p>
-                      <p className="font-bold text-gray-900 capitalize">{booking.payment.method || 'Paystack'}</p>
+                      <p className="font-bold text-gray-900 capitalize">{booking.invoice.transactions?.[0]?.gateway || 'Paystack'}</p>
                     </div>
                   </div>
 
@@ -148,7 +148,7 @@ export default function BookingDetailsPage() {
                       <p className="text-xs text-gray-300 mt-1">Download a detailed PDF copy for your records.</p>
                     </div>
                     <Button 
-                      onClick={() => booking.payment && handleDownloadInvoice(booking.payment.id)} 
+                      onClick={() => booking.invoice && handleDownloadInvoice(booking.invoice.id)} 
                       disabled={downloading}
                       className="bg-white text-gray-900 hover:bg-gray-100 whitespace-nowrap rounded-xl"
                     >

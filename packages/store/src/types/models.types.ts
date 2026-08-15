@@ -13,7 +13,8 @@ export interface User {
 
   tenant?: Tenant;
   subscriptions?: Subscription[];
-  subscriptionInvoices?: SubscriptionInvoice[];
+  invoices?: Invoice[];
+  transactions?: Transaction[];
   auditLogs?: AuditLog[];
   supportTickets?: SupportTicket[];
   notifications?: Notification[];
@@ -58,7 +59,7 @@ export interface Tenant {
   events?: Event[];
   bookings?: Booking[];
   clients?: Client[];
-  bookingPayments?: BookingPayment[];
+  invoices?: Invoice[];
 }
 
 export interface SubscriptionPlan {
@@ -139,7 +140,7 @@ export interface Booking {
 
   tenant?: Tenant;
   client?: Client;
-  payment?: BookingPayment;
+  invoice?: Invoice;
 }
 
 export interface Client {
@@ -155,36 +156,50 @@ export interface Client {
   bookings?: Booking[];
 }
 
-export interface SubscriptionInvoice {
+export interface Invoice {
   id: string;
   userId?: string;
+  tenantId?: string;
+  bookingId?: string;
   planId?: number;
   amount?: number | string;
-  status?: 'paid' | 'unpaid';
-  stripeInvoiceId?: string;
+  status: 'UNPAID' | 'PAID' | 'OVERDUE' | 'CANCELLED';
+  type: 'SUBSCRIPTION' | 'BOOKING';
   createdAt?: string;
   updatedAt?: string;
 
   user?: User;
+  tenant?: Tenant;
+  booking?: Booking;
+  plan?: SubscriptionPlan;
+  transactions?: Transaction[];
 }
 
-export interface BookingPayment {
+export interface Transaction {
   id: string;
+  invoiceId: string;
   tenantId?: string;
-  bookingId?: string;
-  amount?: number | string;
-  method?: 'STRIPE' | 'CASH';
-  status?: 'paid' | 'unpaid';
+  userId?: string;
+  amount: number | string;
+  gateway: 'PAYSTACK' | 'STRIPE' | 'MANUAL';
+  channel: 'CARD' | 'BANK_TRANSFER' | 'USSD' | 'MOBILE_MONEY' | 'CASH';
+  status: 'PENDING' | 'SUCCESS' | 'FAILED' | 'REFUNDED';
+  gatewayReference?: string;
+  cardBrand?: string;
+  cardLast4?: string;
+  bankName?: string;
+  accountName?: string;
   createdAt?: string;
   updatedAt?: string;
 
+  invoice?: Invoice;
   tenant?: Tenant;
-  booking?: Booking;
+  user?: User;
 }
 
 export interface WebhookEvent {
   id: string;
-  stripeEventId: string;
+  gatewayEventId: string;
   type?: string;
   status?: string;
   createdAt?: string;
