@@ -74,7 +74,7 @@ export function UserDropdown() {
               className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-50 hover:text-primary transition-colors"
             >
               <Settings size={16} />
-              Profile Setting
+              Profile Dashboard
             </Link>
             
             <button
