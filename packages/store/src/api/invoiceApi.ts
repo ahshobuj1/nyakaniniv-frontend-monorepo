@@ -1,9 +1,7 @@
 import { baseApi } from './baseApi';
-import { BaseResponse, BookingPayment, SubscriptionInvoice, PaginatedResponse } from '../types';
+import { BaseResponse, Invoice, PaginatedResponse } from '../types';
 
-export type UnifiedInvoice = (BookingPayment | SubscriptionInvoice) & {
-  type: 'BOOKING' | 'SUBSCRIPTION';
-};
+export type UnifiedInvoice = Invoice;
 
 export const invoiceApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({

@@ -50,7 +50,7 @@ export default function InvoiceDetailsPage() {
     );
   }
 
-  const isPaid = invoice.status === 'paid';
+  const isPaid = invoice.status === 'PAID';
   const amount = Number(invoice.amount).toFixed(2);
   const dateFormatted = invoice.createdAt ? new Date(invoice.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : 'N/A';
   const isBooking = invoice.type === 'BOOKING';

@@ -18,8 +18,8 @@ export default function InvoicesPage() {
   const invoices = invoicesData?.data || [];
 
   // Derived state for counts
-  const paidCount = invoices.filter((inv) => inv.status === 'paid').length;
-  const unpaidCount = invoices.filter((inv) => inv.status === 'unpaid').length;
+  const paidCount = invoices.filter((inv) => inv.status === 'PAID').length;
+  const unpaidCount = invoices.filter((inv) => inv.status === 'UNPAID').length;
   const totalCount = invoices.length;
 
   const filteredInvoices = invoices.filter((invoice) => {
@@ -184,7 +184,7 @@ export default function InvoicesPage() {
                           {invoice.amount?.toString()}
                         </td>
                         <td className="py-4 px-8">
-                          {invoice.status === 'paid' ? (
+                          {invoice.status === 'PAID' ? (
                             <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-[#10B981] text-white text-[13px] font-medium">
                               <CheckCircle2 className="w-3.5 h-3.5" />
                               Paid
