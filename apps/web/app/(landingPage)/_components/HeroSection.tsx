@@ -16,20 +16,52 @@ export default function Hero({ hero }: HeroProps) {
   const slides = [
     {
       id: 1,
-      image: hero?.imageUrl || '/home/Hero.png',
+      image: hero?.imageUrl1 || '/home/Hero.png',
     },
     {
       id: 2,
-      image: hero?.imageUrl || '/home/Hero.png',
+      image: hero?.imageUrl2 || '/home/Hero.png',
     },
     {
       id: 3,
-      image: hero?.imageUrl || '/home/Hero.png',
+      image: hero?.imageUrl3 || '/home/Hero.png',
     },
   ];
 
   const nextSlide = () => {
     setCurrentSlide((prev) => (prev + 1) % slides.length);
+  };
+
+  const renderTitle = (title: string | null | undefined) => {
+    if (!title) {
+      return (
+        <>
+          Power Your DJ Brand{' '}
+          <span className="text-primary">
+            Across
+            <br />
+            Africa...
+          </span>
+        </>
+      );
+    }
+    
+    const words = title.trim().split(/\s+/);
+    if (words.length < 2) return title;
+
+    const mainPart = words.slice(0, -2).join(' ');
+    const lastTwo = words.slice(-2);
+
+    return (
+      <>
+        {mainPart ? mainPart + ' ' : ''}
+        <span className="text-primary">
+          {lastTwo[0]}
+          <br />
+          {lastTwo[1]}
+        </span>
+      </>
+    );
   };
 
   useEffect(() => {
@@ -43,18 +75,7 @@ export default function Hero({ hero }: HeroProps) {
     <section className="bg-[#f0f0f0]! pt-20 pb-10 px-6 overflow-hidden">
       <div className="max-w-7xl mx-auto">
         <h1 className="text-3xl md:text-3xl lg:text-[5rem] leading-[1.1] font-bold text-[#111620] mb-12 tracking-tight whitespace-pre-wrap">
-          {hero?.title ? (
-            hero.title
-          ) : (
-            <>
-              Power Your DJ Brand{' '}
-              <span className="text-primary">
-                Across
-                <br />
-                Africa...
-              </span>
-            </>
-          )}
+          {renderTitle(hero?.title)}
         </h1>
 
         <div className="relative w-full aspect-[21/9] md:h-[500px] bg-white/50 overflow-hidden shadow-sm group rounded-2xl">
@@ -66,12 +87,14 @@ export default function Hero({ hero }: HeroProps) {
                 key={`${slide.id}-${index}`}
                 className="w-full h-full shrink-0 relative overflow-hidden">
                 <Image
-                  src={slide.image}
+                  src={slide?.image || '/home/Hero.png'}
                   alt={hero?.title || "UpBeat Africa DJ Platform"}
                   fill
                   priority={index === 0}
+                  quality={100}
+                  unoptimized
                   className="object-cover transform group-hover:scale-[1.02] transition-transform duration-1000 ease-out"
-                  sizes="(max-width: 768px) 100vw, 1200px"
+                  sizes="100vw"
                 />
               </div>
             ))}

@@ -1,27 +1,37 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import {ArrowRight} from 'lucide-react';
-import {Instagram, Facebook, Linkedin} from 'lucide-react';
+import {ArrowRight, Instagram, Facebook, Linkedin} from 'lucide-react';
 
-const socialLinks = [
+export interface SocialLink {
+  platform: string;
+  url: string;
+}
+
+interface FooterProps {
+  socials?: SocialLink[];
+}
+
+const STATIC_SOCIALS = [
   {
     name: 'Instagram',
-    href: '#',
     icon: Instagram,
   },
   {
     name: 'Facebook',
-    href: '#',
     icon: Facebook,
   },
   {
     name: 'Linkedin',
-    href: '#',
     icon: Linkedin,
   },
 ];
 
-export function Footer() {
+export function Footer({ socials = [] }: FooterProps) {
+  const getSocialUrl = (platformName: string) => {
+    const found = socials.find(s => s.platform.toLowerCase() === platformName.toLowerCase());
+    return found?.url || '#';
+  };
+
   return (
     <footer className="bg-[#111620] pt-16 pb-8 px-6 border-t border-slate-800">
       <div className="container mx-auto max-w-7xl">
@@ -60,12 +70,14 @@ export function Footer() {
           <div className="flex flex-col gap-6">
             <h3 className="text-2xl font-semibold text-white">Connect</h3>
             <ul className="flex flex-col gap-4">
-              {socialLinks.map((social) => {
+              {STATIC_SOCIALS.map((social) => {
                 const Icon = social.icon;
                 return (
                   <li key={social.name}>
                     <Link
-                      href={social.href}
+                      href={getSocialUrl(social.name)}
+                      target="_blank"
+                      rel="noreferrer"
                       className="flex items-center gap-4 group">
                       <div className="bg-primary rounded-full w-10 h-10 flex items-center justify-center group-hover:bg-primary/80 transition-colors shrink-0 overflow-hidden text-white">
                         <Icon className="w-5 h-5" />

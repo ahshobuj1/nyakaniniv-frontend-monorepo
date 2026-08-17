@@ -245,10 +245,14 @@ export interface Notification {
 
 export interface LandingPageHero {
   id: number;
-  title?: string;
-  description?: string;
-  imageUrl?: string;
-  isActive?: boolean;
+  title: string | null;
+  description: string | null;
+  imageUrl1: string | null;
+  imageUrl2: string | null;
+  imageUrl3: string | null;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface LandingPageStep {
@@ -274,9 +278,12 @@ export interface LandingPageFaq {
   order?: number;
 }
 
-export interface LandingPageMarquee {
+export interface LandingPageSocial {
   id: number;
-  imageUrl?: string;
+  platform: string;
+  url: string;
+  icon?: string;
+  isActive: boolean;
   order?: number;
 }
 
@@ -285,5 +292,5 @@ export interface LandingPageContent {
   steps: LandingPageStep[];
   services: LandingPageService[];
   faqs: LandingPageFaq[];
-  marquees: LandingPageMarquee[];
+  socials: LandingPageSocial[];
 }

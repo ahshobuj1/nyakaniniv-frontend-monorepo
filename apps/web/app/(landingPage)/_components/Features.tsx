@@ -81,7 +81,11 @@ export default function Features({ services }: FeaturesProps) {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {hasDynamicServices ? (
-            services.map((service, index) => (
+            services.map((service, index) => {
+              const ICONS = [Globe, Calendar, FileText, Music, LineChart, Smartphone];
+              const Icon = ICONS[index % ICONS.length];
+              
+              return (
               <div
                 key={service.id || index}
                 className="bg-white p-10 group cursor-pointer shadow-sm hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] transition-all duration-500 ease-out transform hover:-translate-y-2">
@@ -89,7 +93,7 @@ export default function Features({ services }: FeaturesProps) {
                   {service.imageUrl ? (
                     <Image src={service.imageUrl} alt={service.title || "Feature"} fill className="object-cover p-2" />
                   ) : (
-                    <Globe className="w-11 h-11 text-gray-400 group-hover:text-primary group-hover:scale-110 transition-all duration-300" strokeWidth={1.5} />
+                    <Icon className="w-11 h-11 text-gray-400 group-hover:text-primary group-hover:scale-110 transition-all duration-300" strokeWidth={1.5} />
                   )}
                 </div>
 
@@ -101,7 +105,8 @@ export default function Features({ services }: FeaturesProps) {
                   {service.description}
                 </p>
               </div>
-            ))
+              );
+            })
           ) : (
             defaultFeaturesData.map((feature, index) => {
               const Icon = feature.icon;
