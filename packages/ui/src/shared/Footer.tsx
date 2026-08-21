@@ -50,17 +50,18 @@ export function Footer({ socials = [] }: FooterProps) {
             <h3 className="text-2xl font-semibold text-white">Quick Links</h3>
             <ul className="flex flex-col gap-4">
               {[
-                'Home',
-                'Features',
-                'How it Works',
-                'Our Themes',
-                'Pricing',
+                { label: 'Home', href: '/' },
+                { label: 'Features', href: '/#features' },
+                { label: 'How it Works', href: '/#howitworks' },
+                { label: 'Our Themes', href: '/#themes' },
+                { label: 'Pricing', href: '/pricing' },
+                { label: 'Support', href: '/support' },
               ].map((link) => (
-                <li key={link}>
+                <li key={link.label}>
                   <Link
-                    href={`/${link.toLowerCase().replace(/\s+/g, '-')}`}
+                    href={link.href}
                     className="text-gray-300 hover:text-primary transition-colors text-base">
-                    {link}
+                    {link.label}
                   </Link>
                 </li>
               ))}
