@@ -39,7 +39,7 @@ export function Footer({ socials = [] }: FooterProps) {
           <div className="flex flex-col items-start justify-center">
             <Image
               src="/home/footer-logo.png"
-              alt="UpBeat Africa"
+              alt="UpBeat Entertainment Africa"
               width={2000}
               height={2000}
               className=" w-30 h-30 object-contain"
@@ -50,17 +50,18 @@ export function Footer({ socials = [] }: FooterProps) {
             <h3 className="text-2xl font-semibold text-white">Quick Links</h3>
             <ul className="flex flex-col gap-4">
               {[
-                'Home',
-                'Features',
-                'How it Works',
-                'Our Themes',
-                'Pricing',
+                { label: 'Home', href: '/' },
+                { label: 'Features', href: '/#features' },
+                { label: 'How it Works', href: '/#howitworks' },
+                { label: 'Our Themes', href: '/#themes' },
+                { label: 'Pricing', href: '/pricing' },
+                { label: 'Support', href: '/support' },
               ].map((link) => (
-                <li key={link}>
+                <li key={link.label}>
                   <Link
-                    href={`/${link.toLowerCase().replace(/\s+/g, '-')}`}
+                    href={link.href}
                     className="text-gray-300 hover:text-primary transition-colors text-base">
-                    {link}
+                    {link.label}
                   </Link>
                 </li>
               ))}
@@ -113,7 +114,7 @@ export function Footer({ socials = [] }: FooterProps) {
 
         <div className="border-t border-slate-700/60 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="flex flex-col md:flex-row items-center gap-2 md:gap-4 text-sm text-gray-400">
-            <span>© 2026 UpBeat Africa. All rights reserved</span>
+            <span>© 2026 UpBeat Entertainment Africa. All rights reserved</span>
             <span className="hidden md:inline text-slate-600">|</span>
             <Link
               href="mailto:hello@upbeat.com"

@@ -66,7 +66,7 @@ export default function SignupPage() {
             Create your account
           </h2>
           <p className="text-gray-500 text-[15px]">
-            Start your DJ journey on UpBeat Africa
+            Start your DJ journey on UpBeat Entertainment Africa
           </p>
         </div>
 

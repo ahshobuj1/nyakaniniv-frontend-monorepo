@@ -186,7 +186,7 @@ export const kenzoTemplate: Template = {
     footer: {
       logoText: 'DJ AURA',
       description:
-        'Powered by UpBeat Africa - the platform where African Djs build their brand and grow their bookings.',
+        'Powered by UpBeat Entertainment Africa - the platform where African Djs build their brand and grow their bookings.',
       instagram: '#',
       facebook: '#',
       linkedin: '#',
@@ -201,7 +201,7 @@ export const kenzoTemplate: Template = {
       contactPhone: '+254 712 345678.',
       contactLocation: 'Lagos, Nigeria',
       copyright: '© 2026 Dj Aura. All rights reserved',
-      poweredBy: 'UpBeat Africa',
+      poweredBy: 'UpBeat Entertainment Africa',
     },
 
     booking: {
