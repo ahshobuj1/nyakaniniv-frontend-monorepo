@@ -10,7 +10,7 @@ export default function Footer({content}: FooterProps) {
   const footerData = content?.footer || {
     logoText: 'DJ AURA',
     description:
-      'Powered by UpBeat Africa - the platform where African Djs build their brand and grow their bookings.',
+      'Powered by UpBeat Entertainment Africa - the platform where African Djs build their brand and grow their bookings.',
     instagram: '#',
     facebook: '#',
     linkedin: '#',
@@ -25,7 +25,7 @@ export default function Footer({content}: FooterProps) {
     contactPhone: '+254 712 345678.',
     contactLocation: 'Lagos, Nigeria',
     copyright: '© 2026 Dj Aura. All rights reserved',
-    poweredBy: 'UpBeat Africa',
+    poweredBy: 'UpBeat Entertainment Africa',
   };
 
   return (

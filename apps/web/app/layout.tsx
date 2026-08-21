@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'Upbeat Africa',
+  title: 'UpBeat Entertainment Africa',
   description: 'Manage your brand and events with ease.',
 };
 

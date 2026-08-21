@@ -186,7 +186,7 @@ export function Sidebar() {
                 Powered By
               </p>
               <p className="text-[11px] text-gray-500 font-medium">
-                UpBeat Africa
+                UpBeat Entertainment Africa
               </p>
             </div>
           </div>

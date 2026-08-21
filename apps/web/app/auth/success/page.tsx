@@ -28,7 +28,7 @@ export default function SuccessPage() {
         </h2>
 
         <p className="text-gray-500 text-[15px] text-center mb-8 leading-relaxed">
-          Welcome to UpBeat Africa,{' '}
+          Welcome to UpBeat Entertainment Africa,{' '}
           <span className="font-bold text-gray-900">DJ!</span> Your website
           <br />
           are ready to go.

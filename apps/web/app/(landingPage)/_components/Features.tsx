@@ -21,7 +21,7 @@ const defaultFeaturesData: FeatureItem[] = [
   {
     title: 'Personal DJ Website',
     description:
-      'Stop juggling tools. UpBeat Africa brings everything together — your website, bookings, music, and payments.',
+      'Stop juggling tools. UpBeat Entertainment Africa brings everything together — your website, bookings, music, and payments.',
     icon: Globe,
   },
   {
@@ -73,7 +73,7 @@ export default function Features({ services }: FeaturesProps) {
             <span className="text-primary">DJ business</span>
           </h2>
           <p className="text-gray-500 text-lg max-w-2xl mx-auto mt-6">
-            Stop juggling tools. UpBeat Africa brings everything together{' '}
+            Stop juggling tools. UpBeat Entertainment Africa brings everything together{' '}
             <br className="hidden md:block" />— your website, bookings, music,
             and payments.
           </p>

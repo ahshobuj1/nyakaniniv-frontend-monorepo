@@ -39,7 +39,7 @@ export function Footer({ socials = [] }: FooterProps) {
           <div className="flex flex-col items-start justify-center">
             <Image
               src="/home/footer-logo.png"
-              alt="UpBeat Africa"
+              alt="UpBeat Entertainment Africa"
               width={2000}
               height={2000}
               className=" w-30 h-30 object-contain"
@@ -113,7 +113,7 @@ export function Footer({ socials = [] }: FooterProps) {
 
         <div className="border-t border-slate-700/60 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="flex flex-col md:flex-row items-center gap-2 md:gap-4 text-sm text-gray-400">
-            <span>© 2026 UpBeat Africa. All rights reserved</span>
+            <span>© 2026 UpBeat Entertainment Africa. All rights reserved</span>
             <span className="hidden md:inline text-slate-600">|</span>
             <Link
               href="mailto:hello@upbeat.com"

@@ -6,9 +6,9 @@ import { LandingPageFaq } from '@repo/store';
 
 const defaultFaqsData: FAQ[] = [
   {
-    question: '1. What is UpBeat Africa and how does it work?',
+    question: '1. What is UpBeat Entertainment Africa and how does it work?',
     answer:
-      'UpBeat Africa is a platform that helps DJs create their own professional website and manage their business in one place. After signing up, a DJ can choose a subscription plan and instantly get access to a personal dashboard.',
+      'UpBeat Entertainment Africa is a platform that helps DJs create their own professional website and manage their business in one place. After signing up, a DJ can choose a subscription plan and instantly get access to a personal dashboard.',
   },
   {
     question: '2. Do I need coding skills to create my DJ website?',

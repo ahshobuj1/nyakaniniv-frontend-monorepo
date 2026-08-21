@@ -88,7 +88,7 @@ export default function Hero({ hero }: HeroProps) {
                 className="w-full h-full shrink-0 relative overflow-hidden">
                 <Image
                   src={slide?.image || '/home/Hero.png'}
-                  alt={hero?.title || "UpBeat Africa DJ Platform"}
+                  alt={hero?.title || "UpBeat Entertainment Africa DJ Platform"}
                   fill
                   priority={index === 0}
                   quality={100}
