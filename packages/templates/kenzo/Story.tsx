@@ -36,6 +36,7 @@ export default function Story({content}: any) {
                 src={bgImage}
                 alt="Story Background Shape"
                 fill
+                unoptimized
                 className="object-contain"
                 sizes="(max-width: 768px) 100vw, 50vw"
               />
@@ -46,6 +47,7 @@ export default function Story({content}: any) {
                 src={mainImage}
                 alt="DJ Performance Story"
                 fill
+                unoptimized
                 className="object-cover"
                 sizes="(max-width: 768px) 100vw, 50vw"
               />

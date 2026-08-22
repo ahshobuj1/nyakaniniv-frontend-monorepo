@@ -12,7 +12,15 @@ export default function BehindDecks({content}: any) {
     'Gqom',
     'Afro-Tech',
   ];
-  const image = content?.behindDecksImage || '/theme/aura/decks.png';
+  const title = content?.behindDecksTitle || content?.story?.title || 'Behind the Decks';
+  const bio =
+    content?.behindDecksBio ||
+    content?.story?.description1 ||
+    'With over 8 years of experience rocking crowds from Nairobi to Lagos, DJ Aura blends traditional African rhythms with modern electronic beats. Known for high-energy sets and seamless transitions, she transforms any event into an immersive sonic journey.';
+  const image =
+    content?.behindDecksImage ||
+    content?.story?.mainImage ||
+    '/theme/aura/decks.png';
 
   return (
     <motion.section
@@ -36,6 +44,7 @@ export default function BehindDecks({content}: any) {
                 src={image}
                 alt="Behind the decks"
                 fill
+                unoptimized
                 className="object-cover rounded-[16px] shadow-xl"
                 sizes="(max-width: 768px) 100vw, 50vw"
               />
@@ -45,14 +54,10 @@ export default function BehindDecks({content}: any) {
 
         <motion.div variants={fadeUp} className="flex flex-col gap-[30px]">
           <h2 className="text-[#0f0f0f] font-bold text-[40px] leading-[48px]">
-            Behind the Decks
+            {title}
           </h2>
           <p className="text-[#787878] text-[18px] leading-relaxed font-sans">
-            With over 8 years of experience rocking crowds from Nairobi to
-            Lagos, DJ Aura blends traditional African rhythms with modern
-            electronic beats. Known for high-energy sets and seamless
-            transitions, she transforms any event into an immersive sonic
-            journey.
+            {bio}
           </p>
 
           <div className="flex flex-col gap-[16px]">

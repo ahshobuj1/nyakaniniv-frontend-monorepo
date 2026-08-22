@@ -17,6 +17,7 @@ export type EditorField = {
   label: string;
   key: string;
   type: 'text' | 'textarea' | 'list' | 'image' | 'gallery';
+  recommendation?: string;
 };
 
 export type EditorSection = {

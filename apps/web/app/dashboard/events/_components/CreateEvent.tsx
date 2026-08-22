@@ -20,10 +20,9 @@ import {
 } from '@repo/ui';
 import {Input} from '@repo/ui';
 import {Textarea} from '@repo/ui';
-import {Button, DatePicker} from '@repo/ui';
+import {Button, DatePicker, AddressAutocomplete} from '@repo/ui';
 import { useCreateEventMutation, useUpdateEventMutation, useGetCurrentProfileQuery } from '@repo/store';
 import { AFRICAN_TIMEZONES, getCountryTimezone } from '@/lib/timezone';
-import { AddressAutocomplete } from '@/components/AddressAutocomplete';
 
 // ==========================================
 // 1. Validation Schema

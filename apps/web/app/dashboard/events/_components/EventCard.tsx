@@ -74,8 +74,16 @@ export function EventCard({event, onEdit, onDelete}: EventCardProps) {
             )}
           </div>
           <div className="flex items-center text-[#787878] text-[13px]">
-            <MapPin className="w-4 h-4 mr-2 text-gray-400 stroke-[1.5]" />
-            <span className="line-clamp-1">{location}</span>
+            <MapPin className="w-4 h-4 mr-2 text-primary stroke-[1.5] shrink-0" />
+            <a
+              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="line-clamp-1 hover:text-primary hover:underline transition-colors"
+              title={`Open in Google Maps: ${location}`}
+            >
+              {location}
+            </a>
           </div>
           <div className="flex items-center text-[#787878] text-[13px] gap-4">
             <div className="flex items-center">

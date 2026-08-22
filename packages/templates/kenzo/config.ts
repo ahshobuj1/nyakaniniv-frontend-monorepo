@@ -31,6 +31,7 @@ export const kenzoTemplate: Template = {
     // Navbar Section Content
     navbar: {
       djName: 'KENZO',
+      logo: '',
     },
 
     // Hero Section Content
@@ -222,9 +223,19 @@ export const kenzoTemplate: Template = {
   },
   editorConfig: {
     navbar: {
-      label: 'Navbar',
+      label: 'Navbar & Logo',
       fields: [
-        {label: 'DJ Name', key: 'navbar.djName', type: 'text'},
+        {
+          label: 'Brand / DJ Logo (Image)',
+          key: 'navbar.logo',
+          type: 'image',
+          recommendation: 'Recommended: Transparent PNG or SVG (approx. 200x60px, max 2MB)',
+        },
+        {
+          label: 'DJ Stage Name (Fallback text)',
+          key: 'navbar.djName',
+          type: 'text',
+        },
       ],
     },
     hero: {

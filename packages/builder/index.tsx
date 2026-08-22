@@ -30,17 +30,42 @@ export default function TemplateRenderer({
 
   if (!template) return <div>Template not found</div>;
 
+  const selectedFont = theme.fontFamily || 'Inter';
+  const fallbackCategory = selectedFont === 'Playfair Display' ? 'serif' : ['Patrick Hand', 'Kalam', 'Caveat', 'Dancing Script', 'Permanent Marker'].includes(selectedFont) ? 'cursive' : 'sans-serif';
+  const fontFamilyValue = `"${selectedFont}", ${fallbackCategory}`;
+
   const style = {
     '--primary': theme.primaryColor,
     '--primary-rgb': hexToRgb(theme.primaryColor),
-    fontFamily: theme.fontFamily,
+    '--theme-font': fontFamilyValue,
+    fontFamily: fontFamilyValue,
   } as React.CSSProperties;
 
   const Navbar = template.Navbar;
   const Footer = template.Footer;
 
   return (
-    <div style={style} className="relative flex flex-col min-h-screen w-full">
+    <div data-theme-root style={style} className="relative flex flex-col min-h-screen w-full">
+      <style>{`
+        [data-theme-root],
+        [data-theme-root] h1,
+        [data-theme-root] h2,
+        [data-theme-root] h3,
+        [data-theme-root] h4,
+        [data-theme-root] h5,
+        [data-theme-root] h6,
+        [data-theme-root] p,
+        [data-theme-root] span,
+        [data-theme-root] a,
+        [data-theme-root] button,
+        [data-theme-root] input,
+        [data-theme-root] textarea,
+        [data-theme-root] select,
+        [data-theme-root] label {
+          font-family: var(--theme-font) !important;
+          font-style: normal !important;
+        }
+      `}</style>
       <Navbar 
         content={content} 
         theme={theme} 

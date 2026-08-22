@@ -31,7 +31,7 @@ export default function PublicProfile({ username, initialTenant }: PublicProfile
     );
   }
 
-  const themeSlug = tenant.config?.themeSlug || 'azura';
+  const themeSlug = tenant?.theme?.slug || tenant?.config?.themeSlug || 'azura';
   const template = templates[themeSlug as keyof typeof templates] || templates.azura;
 
   const mergedContent = {

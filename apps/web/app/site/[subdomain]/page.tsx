@@ -17,7 +17,7 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
   
   try {
     const res = await fetch(`${API_URL}/tenant/v1/${subdomain}`, { 
-      next: { revalidate: 60 } // Cache for 60 seconds
+      cache: 'no-store'
     });
     
     if (res.ok) {

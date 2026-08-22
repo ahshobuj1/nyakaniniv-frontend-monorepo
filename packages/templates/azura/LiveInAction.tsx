@@ -55,6 +55,7 @@ export default function LiveInAction({content}: LiveInActionProps) {
               src={images[0] || '/theme/aura/default/live-action-1.png'}
               alt="Live Performance Main"
               fill
+              unoptimized
               className="object-cover"
               sizes="(max-width: 768px) 100vw, 50vw"
             />
@@ -71,6 +72,7 @@ export default function LiveInAction({content}: LiveInActionProps) {
                 src={images[1] || '/theme/aura/default/live-action-2.png'}
                 alt="Live Performance Secondary"
                 fill
+                unoptimized
                 className="object-cover"
                 sizes="(max-width: 768px) 100vw, 50vw"
               />
@@ -87,6 +89,7 @@ export default function LiveInAction({content}: LiveInActionProps) {
                   src={images[2] || '/theme/aura/default/live-action-3.png'}
                   alt="DJ Equipment"
                   fill
+                  unoptimized
                   className="object-cover"
                   sizes="(max-width: 768px) 50vw, 25vw"
                 />
@@ -101,6 +104,7 @@ export default function LiveInAction({content}: LiveInActionProps) {
                   src={images[3] || '/theme/aura/default/live-action-4.png'}
                   alt="Live Performance Detail"
                   fill
+                  unoptimized
                   className="object-cover"
                   sizes="(max-width: 768px) 50vw, 25vw"
                 />
