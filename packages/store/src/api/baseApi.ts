@@ -1,7 +1,15 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import type { RootState } from '../store';
 
-const BASE_URL = (typeof globalThis !== 'undefined' && (globalThis as any).process?.env?.NEXT_PUBLIC_API_URL) || 'http://localhost:3030';
+declare const process: {
+  env: {
+    NEXT_PUBLIC_API_URL?: string;
+    NODE_ENV?: string;
+    [key: string]: any;
+  };
+};
+
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'production' ? 'https://api.upbeat.africa' : 'http://localhost:3030');
 
 // console.log(process.env.NEXT_PUBLIC_API_URL)
 
