@@ -14,5 +14,8 @@ export * from './components/ui/textarea';
 export * from './components/ui/label';
 export * from './components/ui/command';
 export * from './components/ui/popover';
+export * from './components/ui/calendar';
+export * from './components/ui/date-picker';
+export * from './components/ui/address-autocomplete';
 export * from './lib/utils';
 export {default as NumberFlow} from '@number-flow/react';

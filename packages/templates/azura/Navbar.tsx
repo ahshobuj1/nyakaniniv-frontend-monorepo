@@ -59,8 +59,16 @@ export default function Nav({content, view, onViewChange, baseUrl}: any) {
       className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-[#f0f0f0] relative">
       <div className="max-w-[1440px] mx-auto h-[80px] md:h-[100px] px-6 lg:px-[80px] flex items-center justify-between relative z-50 bg-white/95 backdrop-blur-sm">
         {/* Logo */}
-        <Link href={homeLink} onClick={handleHomeClick}>
-          <Logo name={content?.djName} />
+        <Link href={homeLink} onClick={handleHomeClick} className="flex items-center">
+          {content?.logo || content?.navbar?.logo ? (
+            <img
+              src={content?.logo || content?.navbar?.logo}
+              alt={content?.djName || content?.navbar?.djName || 'DJ Logo'}
+              className="h-14 sm:h-16 md:h-20 w-auto max-w-[260px] md:max-w-[320px] object-contain transition-all"
+            />
+          ) : (
+            <Logo name={content?.djName || content?.navbar?.djName} />
+          )}
         </Link>
 
         {/* Desktop Navigation */}

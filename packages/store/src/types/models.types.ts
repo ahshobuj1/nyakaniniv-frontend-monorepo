@@ -1,9 +1,15 @@
+export enum UserRole {
+  SUPER_ADMIN = 'SUPER_ADMIN',
+  ADMIN = 'ADMIN',
+  DJ = 'DJ',
+}
+
 export interface User {
   id: string;
   firstName?: string;
   lastName?: string;
   email: string;
-  role: 'SUPER_ADMIN' | 'DJ';
+  role: UserRole;
   profileImg?: string;
   isVerified?: boolean;
   otp?: string;
@@ -111,6 +117,7 @@ export interface Event {
   title?: string;
   description?: string;
   eventDate?: string;
+  eventTime?: string;
   venueName?: string;
   venueAddress?: string;
   capacity?: number;

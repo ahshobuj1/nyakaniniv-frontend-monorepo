@@ -4,7 +4,7 @@ import {Sidebar} from '@/components/dashbaordLayout/Sidebar';
 import {TopNav} from '@/components/dashbaordLayout/TopNav';
 import {SidebarProvider} from '@/components/dashbaordLayout/SidebarContext';
 import {ProtectedRoute} from '@/components/ProtectedRoute';
-
+import {UserRole} from '@repo/store';
 
 import {TenantOnboardingPopup} from './_components/TenantOnboardingPopup';
 import {PaystackConnectPopup} from './_components/PaystackConnectPopup';
@@ -15,7 +15,7 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <ProtectedRoute allowedRoles={['DJ', 'SUPER_ADMIN']}>
+    <ProtectedRoute allowedRoles={[UserRole.DJ, UserRole.ADMIN, UserRole.SUPER_ADMIN]}>
       <SidebarProvider>
         <div className="flex h-screen bg-[#f4f5f7] overflow-hidden font-sans relative">
           <Sidebar />

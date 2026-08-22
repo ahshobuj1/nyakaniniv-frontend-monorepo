@@ -10,6 +10,8 @@ import {
   Eye,
   Settings2,
   LayoutTemplate,
+  Globe,
+  ExternalLink,
 } from 'lucide-react';
 import TemplateRenderer from '@repo/builder';
 import {templates} from '@repo/templates';
@@ -22,6 +24,7 @@ import {
 } from '@repo/store';
 import { toast } from 'sonner';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import { getCountryTimezone } from '@/lib/timezone';
 
 // ==========================================
 // 0. Custom Image Uploader Component
@@ -30,10 +33,12 @@ function ImageUploader({
   value,
   onChange,
   label,
+  recommendation,
 }: {
   value: string;
   onChange: (url: string) => void;
   label: string;
+  recommendation?: string;
 }) {
   const [uploadMedia, { isLoading }] = useUploadTenantMediaMutation();
 
@@ -55,8 +60,15 @@ function ImageUploader({
   return (
     <div className="space-y-2">
       {value && (
-        <div className="relative w-full h-32 rounded-lg overflow-hidden border border-slate-200">
-          <img src={value} alt="Preview" className="w-full h-full object-cover" />
+        <div className="relative w-full h-24 rounded-lg overflow-hidden border border-slate-200 bg-slate-950/10 flex items-center justify-center p-3">
+          <img src={value} alt="Preview" className="max-h-full max-w-full object-contain" />
+          <button
+            type="button"
+            onClick={() => onChange('')}
+            className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white text-[10px] font-bold px-2 py-0.5 rounded shadow transition-colors cursor-pointer"
+          >
+            Remove
+          </button>
         </div>
       )}
       <div className="relative w-full">
@@ -65,13 +77,18 @@ function ImageUploader({
           accept="image/*"
           onChange={handleFileChange}
           disabled={isLoading}
-          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
+          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed z-10"
         />
         <div className="w-full p-2.5 bg-white border border-slate-200 border-dashed hover:border-[#F63131] rounded-lg text-[13px] text-slate-500 flex items-center justify-center gap-2 transition-colors">
           <Upload className="w-4 h-4" />
-          {isLoading ? 'Uploading...' : `Upload ${label}`}
+          {isLoading ? 'Uploading...' : value ? `Replace ${label}` : `Upload ${label}`}
         </div>
       </div>
+      {recommendation && (
+        <p className="text-[11px] text-slate-400 leading-snug px-0.5">
+          {recommendation}
+        </p>
+      )}
     </div>
   );
 }
@@ -226,16 +243,44 @@ function ManageThemeContent() {
         },
         events: {
           ...template.defaultContent.events,
-          list: currentTenant?.events?.length ? currentTenant.events.map((e, i) => ({
-            id: e.id || i,
-            day: e.eventDate ? new Date(e.eventDate).toLocaleDateString('en-US', { day: '2-digit' }) : '',
-            month: e.eventDate ? new Date(e.eventDate).toLocaleDateString('en-US', { month: 'short' }).toUpperCase() : '',
-            date: e.eventDate ? new Date(e.eventDate).toLocaleDateString() : '',
-            title: e.title,
-            venue: e.venueName,
-            location: e.venueAddress,
-            ticketUrl: '#',
-          })) : template.defaultContent.events?.list || [],
+          list: currentTenant?.events?.length ? currentTenant.events.map((e: any, i: number) => {
+            const tzInfo = getCountryTimezone(e.venueAddress || currentTenant.country || currentTenant.city);
+            const eventDateObj = e.eventDate ? new Date(e.eventDate) : null;
+            const now = new Date();
+            const isPast = e.status?.toLowerCase() === 'completed' || (eventDateObj && eventDateObj < new Date(now.getFullYear(), now.getMonth(), now.getDate()));
+
+            const day = eventDateObj ? eventDateObj.toLocaleDateString('en-US', { timeZone: tzInfo.iana, day: '2-digit' }) : '';
+            const month = eventDateObj ? eventDateObj.toLocaleDateString('en-US', { timeZone: tzInfo.iana, month: 'short' }).toUpperCase() : '';
+            const year = eventDateObj ? eventDateObj.toLocaleDateString('en-US', { timeZone: tzInfo.iana, year: 'numeric' }) : '';
+            const fullDate = eventDateObj ? eventDateObj.toLocaleDateString('en-US', { timeZone: tzInfo.iana, month: 'short', day: 'numeric', year: 'numeric' }) : '';
+
+            let time = e.eventTime || '';
+            if (!time && eventDateObj && typeof e.eventDate === 'string' && e.eventDate.includes('T') && !e.eventDate.endsWith('T00:00:00.000Z')) {
+              time = eventDateObj.toLocaleTimeString('en-US', { timeZone: tzInfo.iana, hour: '2-digit', minute: '2-digit' });
+            }
+            if (time && !time.includes('EAT') && !time.includes('WAT') && !time.includes('GMT') && !time.includes('SAST') && !time.includes('UTC')) {
+              time = `${time} ${tzInfo.code}`;
+            }
+
+            return {
+              id: e.id || i,
+              day,
+              month,
+              year,
+              date: fullDate,
+              rawDate: e.eventDate,
+              time,
+              title: e.title,
+              description: e.description,
+              venue: e.venueName,
+              location: e.venueAddress,
+              price: e.price,
+              capacity: e.capacity,
+              status: e.status || (isPast ? 'completed' : 'upcoming'),
+              isPast: !!isPast,
+              ticketUrl: '#',
+            };
+          }) : template.defaultContent.events?.list || [],
         }
       };
 
@@ -264,39 +309,10 @@ function ManageThemeContent() {
 
   const handlePublish = async () => {
     try {
-      // Extract Stage Name and Social Links to save globally
-      const stageName = content.djName || content.navbar?.djName || tenant?.stageName;
-      const socialLinks = {
-        instagram: content.instagram || content.social?.instagram || tenant?.socialLinks?.instagram || '',
-        facebook: content.facebook || content.social?.facebook || tenant?.socialLinks?.facebook || '',
-        linkedin: content.linkedin || content.social?.linkedin || tenant?.socialLinks?.linkedin || '',
-      };
-
-      // Clean up local content so it doesn't override globally managed fields
-      const configContentToSave = JSON.parse(JSON.stringify(content));
-      delete configContentToSave.djName;
-      if (configContentToSave.navbar) delete configContentToSave.navbar.djName;
-      delete configContentToSave.instagram;
-      delete configContentToSave.facebook;
-      delete configContentToSave.linkedin;
-      if (configContentToSave.social) {
-        delete configContentToSave.social.instagram;
-        delete configContentToSave.social.facebook;
-        delete configContentToSave.social.linkedin;
-      }
-
       await assignTheme({ 
         themeSlug: themeId, 
-        config: { content: configContentToSave, theme: themeSettings } 
+        config: { content, theme: themeSettings } 
       }).unwrap();
-
-      // Save globally
-      if (stageName || socialLinks.instagram || socialLinks.facebook || socialLinks.linkedin) {
-        await updateTenantProfile({
-          stageName,
-          socialLinks,
-        }).unwrap();
-      }
 
       toast.success('Theme published successfully!');
     } catch (error: any) {
@@ -364,14 +380,10 @@ function ManageThemeContent() {
           </div>
 
           <div className="flex items-center gap-3">
-            {/* <a href={`http://localhost:3000/${subdomain}`} target="_blank" rel="noreferrer" className="hidden md:flex items-center gap-2 px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">
-              <Eye className="w-4 h-4" /> Preview Site
-            </a> */}
-            {/* <div className="h-6 w-px bg-slate-200 mx-1 hidden md:block" /> */}
             <button 
               onClick={handlePublish}
               disabled={isAssigning}
-              className="bg-[#111620] hover:bg-slate-800 text-white px-6 py-2 rounded-xl text-sm font-bold shadow-lg shadow-slate-200 transition-all active:scale-95 disabled:opacity-70"
+              className="bg-[#111620] hover:bg-slate-800 text-white px-6 py-2.5 rounded-xl text-sm font-bold transition-all active:scale-95 disabled:opacity-70 flex items-center gap-2 cursor-pointer shadow-sm"
             >
               {isAssigning ? 'Saving...' : 'Save Changes'}
             </button>
@@ -531,6 +543,7 @@ function ManageThemeContent() {
                                     value={getNestedValue(content, field.key) || ''}
                                     onChange={(url) => handleContentChange(field.key, url)}
                                     label={field.label}
+                                    recommendation={field.recommendation}
                                   />
                                 ) : field.type === 'gallery' ? (
                                   <GalleryUploader
@@ -649,36 +662,40 @@ function ManageThemeContent() {
                     </div>
 
                     <div className="grid grid-cols-2 gap-3">
-                      {['Inter', 'Mona Sans', 'Outfit', 'Poppins'].map(
-                        (font) => {
-                          const isActive = themeSettings.fontFamily === font;
-                          return (
-                            <button
-                              key={font}
-                              type="button"
-                              onClick={() =>
-                                handleThemeChange('fontFamily', font)
-                              }
-                              className={`p-4 text-left rounded-xl transition-all duration-200 border group
-                              ${
-                                isActive
-                                  ? 'border-[#F63131] bg-[#F63131]/5 shadow-sm ring-1 ring-[#F63131]'
-                                  : 'border-slate-200 bg-slate-50 hover:bg-white hover:border-slate-300'
-                              }
-                            `}>
-                              <div
-                                className={`text-[20px] mb-2 transition-colors ${isActive ? 'text-[#F63131]' : 'text-slate-700 group-hover:text-slate-900'}`}
-                                style={{fontFamily: font, fontWeight: 600}}>
-                                Aa
-                              </div>
-                              <div
-                                className={`text-[12px] font-bold ${isActive ? 'text-slate-900' : 'text-slate-500'}`}>
-                                {font}
-                              </div>
-                            </button>
-                          );
-                        },
-                      )}
+                      {[
+                        { name: 'Inter', category: 'Modern Sans', style: 'Inter, sans-serif' },
+                        { name: 'Playfair Display', category: 'Luxury Serif', style: '"Playfair Display", serif' },
+                        { name: 'Quicksand', category: 'Soft Geometric', style: '"Quicksand", sans-serif' },
+                        { name: 'Orbitron', category: 'Electronic / EDM', style: '"Orbitron", sans-serif' },
+                      ].map((item) => {
+                        const isActive = themeSettings.fontFamily === item.name;
+                        return (
+                          <button
+                            key={item.name}
+                            type="button"
+                            onClick={() => handleThemeChange('fontFamily', item.name)}
+                            className={`p-3.5 text-left rounded-xl transition-all duration-200 border group cursor-pointer
+                            ${
+                              isActive
+                                ? 'border-[#F63131] bg-[#F63131]/5 shadow-sm ring-1 ring-[#F63131]'
+                                : 'border-slate-200 bg-slate-50 hover:bg-white hover:border-slate-300'
+                            }
+                          `}>
+                            <div
+                              className={`text-[22px] mb-1 transition-colors ${isActive ? 'text-[#F63131]' : 'text-slate-800'}`}
+                              style={{fontFamily: item.style, fontWeight: 700}}>
+                              Aa
+                            </div>
+                            <div
+                              className={`text-[12px] font-bold truncate ${isActive ? 'text-slate-900' : 'text-slate-700'}`}>
+                              {item.name}
+                            </div>
+                            <div className="text-[10px] text-slate-400 font-medium mt-0.5">
+                              {item.category}
+                            </div>
+                          </button>
+                        );
+                      })}
                     </div>
                   </section>
 
@@ -691,7 +708,7 @@ function ManageThemeContent() {
               <button 
                 onClick={handlePublish}
                 disabled={isAssigning}
-                className="w-full bg-[#F63131] hover:bg-[#F63131]/90 text-white py-3 rounded-xl text-[13px] font-bold shadow-lg shadow-[#F63131]/20 transition-all active:scale-[0.98] disabled:opacity-70"
+                className="w-full bg-[#F63131] hover:bg-[#F63131]/90 text-white py-3 rounded-xl text-[13px] font-bold shadow-lg shadow-[#F63131]/20 transition-all active:scale-[0.98] disabled:opacity-70 flex items-center justify-center gap-2 cursor-pointer"
               >
                 {isAssigning ? 'Publishing...' : 'Publish Changes'}
               </button>

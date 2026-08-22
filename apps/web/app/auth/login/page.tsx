@@ -103,11 +103,11 @@ export default function LoginPage() {
                 className="block text-lg font-semibold text-[#0F0F0F]">
                 Password
               </label>
-              <a
-                href="#"
+              <Link
+                href="/auth/forgot-password"
                 className="text-lg font-semibold text-primary hover:underline">
                 Forgot password?
-              </a>
+              </Link>
             </div>
             <div className="relative">
               <input

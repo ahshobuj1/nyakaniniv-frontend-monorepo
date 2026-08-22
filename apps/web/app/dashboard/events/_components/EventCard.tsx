@@ -1,6 +1,6 @@
 import {Event} from '@repo/store';
 import {Button, Card, CardContent} from '@repo/ui';
-import {Calendar, MapPin, Ticket, Trash2, Users} from 'lucide-react';
+import {Calendar, Clock, MapPin, Ticket, Trash2, Users} from 'lucide-react';
 import Image from 'next/image';
 
 interface EventCardProps {
@@ -10,24 +10,38 @@ interface EventCardProps {
 }
 
 export function EventCard({event, onEdit, onDelete}: EventCardProps) {
-  const statusLower = event.status?.toLowerCase() || 'n/a';
-  let statusColor = 'border-gray-400 text-gray-400';
-  
-  if (statusLower === 'upcoming') {
-    statusColor = 'border-[#10B981] text-[#10B981]'; // Green
-  } else if (statusLower === 'completed') {
-    statusColor = 'border-blue-500 text-blue-500'; // Blue
-  } else if (statusLower === 'canceled') {
+  const eventDateObj = event.eventDate ? new Date(event.eventDate) : null;
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const isPast = event.status?.toLowerCase() === 'completed' || (eventDateObj && eventDateObj < today);
+
+  let statusText = 'Upcoming';
+  let statusColor = 'border-[#10B981] text-[#10B981]'; // Green
+
+  if (event.status?.toLowerCase() === 'canceled') {
+    statusText = 'Canceled';
     statusColor = 'border-red-500 text-red-500'; // Red
+  } else if (isPast) {
+    statusText = 'Completed';
+    statusColor = 'border-blue-500 text-blue-500'; // Blue
   }
 
-  const dateFormatted = event.eventDate 
-    ? new Date(event.eventDate).toLocaleDateString() 
+  const dateFormatted = eventDateObj 
+    ? eventDateObj.toLocaleDateString('en-US', {
+        timeZone: 'Africa/Nairobi',
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      }) 
     : 'N/A';
+
+  const timeFormatted = event.eventTime || (eventDateObj && typeof event.eventDate === 'string' && event.eventDate.includes('T') && !event.eventDate.endsWith('T00:00:00.000Z')
+    ? eventDateObj.toLocaleTimeString('en-US', { timeZone: 'Africa/Nairobi', hour: '2-digit', minute: '2-digit' })
+    : null);
+
   const location = [event.venueName, event.venueAddress].filter(Boolean).join(', ') || 'No location';
 
   return (
-    // FIX: Added 'p-0' here to remove any default paddingz from the Card component
     <Card className="p-0 border border-gray-200 shadow-sm overflow-hidden flex flex-col rounded-2xl bg-white transition-all hover:shadow-md relative">
       {/* Status Badge */}
       <div className="absolute top-4 right-4 z-10">
@@ -36,39 +50,54 @@ export function EventCard({event, onEdit, onDelete}: EventCardProps) {
             px-2.5 py-1 text-[11px] font-semibold rounded-[6px] border bg-white capitalize shadow-sm
             ${statusColor}
           `}>
-          {event.status || 'N/A'}
+          {statusText}
         </span>
       </div>
 
       {/* Content Container */}
-      {/* Shadcn er CardContent a onek somoy default pb-6 thake, tai pt-5 px-5 pb-5 use korlam exact spacing er jonno */}
       <CardContent className="pt-5 px-5 pb-5 flex flex-col grow">
         <h3 className="text-[17px] font-bold text-[#111620] mb-3 line-clamp-1 pr-20">
           {event.title || 'Untitled Event'}
         </h3>
 
         <div className="space-y-2 mb-4">
-          <div className="flex items-center text-[#787878] text-[13px]">
-            <Calendar className="w-4 h-4 mr-2.5 text-gray-400 stroke-[1.5]" />
-            {dateFormatted}
+          <div className="flex items-center text-[#787878] text-[13px] gap-4">
+            <div className="flex items-center">
+              <Calendar className="w-4 h-4 mr-2 text-gray-400 stroke-[1.5]" />
+              {dateFormatted}
+            </div>
+            {timeFormatted && (
+              <div className="flex items-center">
+                <Clock className="w-4 h-4 mr-1.5 text-gray-400 stroke-[1.5]" />
+                {timeFormatted.includes('EAT') ? timeFormatted : `${timeFormatted} EAT`}
+              </div>
+            )}
           </div>
           <div className="flex items-center text-[#787878] text-[13px]">
-            <MapPin className="w-4 h-4 mr-2.5 text-gray-400 stroke-[1.5]" />
-            <span className="line-clamp-1">{location}</span>
+            <MapPin className="w-4 h-4 mr-2 text-primary stroke-[1.5] shrink-0" />
+            <a
+              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="line-clamp-1 hover:text-primary hover:underline transition-colors"
+              title={`Open in Google Maps: ${location}`}
+            >
+              {location}
+            </a>
           </div>
           <div className="flex items-center text-[#787878] text-[13px] gap-4">
             <div className="flex items-center">
-              <Users className="w-4 h-4 mr-2.5 text-gray-400 stroke-[1.5]" />
+              <Users className="w-4 h-4 mr-2 text-gray-400 stroke-[1.5]" />
               {event.capacity || 0} cap.
             </div>
             <div className="flex items-center">
-              <Ticket className="w-4 h-4 mr-2.5 text-gray-400 stroke-[1.5]" />
-              ${event.price || 0}
+              <Ticket className="w-4 h-4 mr-2 text-gray-400 stroke-[1.5]" />
+              {Number(event.price) > 0 ? `KES ${Number(event.price).toLocaleString()}` : 'Free'}
             </div>
           </div>
         </div>
 
-        <p className="text-[13px] text-[#111620] font-medium mb-5 line-clamp-1">
+        <p className="text-[13px] text-[#111620] font-medium mb-5 line-clamp-2">
           {event.description || 'No description provided.'}
         </p>
 

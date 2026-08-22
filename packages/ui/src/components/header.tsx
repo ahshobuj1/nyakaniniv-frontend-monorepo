@@ -99,6 +99,7 @@ export function Header({ userDropdown }: HeaderProps = {}) {
             src={'/home/upbeat.png'}
             width={500}
             height={500}
+            unoptimized
             alt="logo"
             className="max-w-15 bg-contain"
           />

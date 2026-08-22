@@ -54,8 +54,18 @@ export default function Navbar({content, view, onViewChange}: any) {
           <Link
             href={homeLink}
             onClick={handleHomeClick}
-            className="text-3xl md:text-4xl font-black tracking-wider uppercase text-[var(--primary)]">
-            {content?.djName || 'KENZO'}
+            className="flex items-center">
+            {content?.navbar?.logo || content?.logo ? (
+              <img
+                src={content?.navbar?.logo || content?.logo}
+                alt={content?.navbar?.djName || content?.djName || 'DJ Logo'}
+                className="h-14 sm:h-16 md:h-20 w-auto max-w-[260px] md:max-w-[320px] object-contain transition-all"
+              />
+            ) : (
+              <span className="text-3xl md:text-4xl font-black tracking-wider uppercase text-[var(--primary)]">
+                {content?.navbar?.djName || content?.djName || 'KENZO'}
+              </span>
+            )}
           </Link>
         </div>
 

@@ -69,9 +69,19 @@ export const azuraTemplate: Template = {
   },
   editorConfig: {
     navbar: {
-      label: 'Navbar',
+      label: 'Navbar & Logo',
       fields: [
-        {label: 'DJ Name', key: 'djName', type: 'text'},
+        {
+          label: 'Brand / DJ Logo (Image)',
+          key: 'logo',
+          type: 'image',
+          recommendation: 'Recommended: Transparent PNG or SVG (approx. 200x60px, max 2MB)',
+        },
+        {
+          label: 'DJ Stage Name (Fallback text)',
+          key: 'djName',
+          type: 'text',
+        },
       ],
     },
     hero: {

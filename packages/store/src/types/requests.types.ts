@@ -79,6 +79,7 @@ export interface CreateEventRequest {
   title: string;
   description?: string;
   eventDate: string;
+  eventTime?: string;
   venueName?: string;
   venueAddress?: string;
   capacity?: number;

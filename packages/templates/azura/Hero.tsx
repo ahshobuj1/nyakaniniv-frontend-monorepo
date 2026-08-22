@@ -10,6 +10,12 @@ interface HeroProps {
     heroTitle?: string;
     heroDescription?: string;
     heroImage?: string;
+    hero?: {
+      heroTitle?: string;
+      heroDescription?: string;
+      heroImage?: string;
+    };
+    [key: string]: any;
   };
   onViewChange?: (view: string) => void;
   view?: string;
@@ -42,19 +48,19 @@ export default function Hero({content, onViewChange, view}: HeroProps) {
   const description =
     content?.heroDescription ||
     'Afrobeat, Amapiano, and Deep House specialist. Creating unforgettable rhythmic experiences across Africa and beyond.';
-  const image = content?.heroImage || '/theme/aura/default/aura-hero-1.png';
+  const image = content?.heroImage || content?.hero?.heroImage || '/theme/aura/default/aura-hero-1.png';
 
   const stairMaskUrl =
     "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 800' preserveAspectRatio='none'%3E%3Cdefs%3E%3Cfilter id='r' x='-20%25' y='-20%25' width='140%25' height='140%25'%3E%3CfeGaussianBlur in='SourceGraphic' stdDeviation='8' result='blur' /%3E%3CfeColorMatrix in='blur' mode='matrix' values='1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 25 -10' result='goo' /%3E%3C/filter%3E%3C/defs%3E%3Cpolygon points='-50,-50 500,-50 500,80 630,80 630,160 730,160 730,240 850,240 850,850 300,850 300,720 170,720 170,640 80,640 80,560 -50,560' fill='black' filter='url(%23r)' /%3E%3C/svg%3E";
 
   return (
-    <section id="home" className="bg-[#f0f0f0] py-[80px]">
-      <div className="max-w-[1440px] mx-auto px-6 lg:px-[80px] grid grid-cols-1 md:grid-cols-2 gap-[65px] items-center">
+    <section id="home" className="bg-[#f0f0f0] py-12 lg:py-[90px] overflow-hidden">
+      <div className="max-w-[1440px] mx-auto px-6 lg:px-[80px] grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-[65px] items-center">
         <motion.div
           initial={{opacity: 0, x: -40}}
           animate={{opacity: 1, x: 0}}
           transition={{duration: 0.7, ease: [0.22, 1, 0.36, 1]}}
-          className="flex flex-col gap-[30px]">
+          className="flex flex-col gap-[24px] lg:gap-[30px]">
           <div className="bg-white rounded-[12px] px-[16px] py-[8px] flex items-center gap-[8px] w-fit">
             <motion.span
               animate={{scale: [1, 1.3, 1], opacity: [1, 0.6, 1]}}
@@ -66,11 +72,11 @@ export default function Hero({content, onViewChange, view}: HeroProps) {
             </span>
           </div>
 
-          <h1 className="text-[#0f0f0f] font-bold text-4xl capitalize lg:text-5xl  leading-tight tracking-tight">
+          <h1 className="text-[#0f0f0f] font-bold text-4xl capitalize lg:text-5xl leading-tight tracking-tight">
             {title}
           </h1>
 
-          <p className="text-[#787878] text-[18px] max-w-[523px] font-sans leading-relaxed">
+          <p className="text-[#787878] text-[17px] md:text-[18px] max-w-[523px] font-sans leading-relaxed">
             {description}
           </p>
 
@@ -102,7 +108,7 @@ export default function Hero({content, onViewChange, view}: HeroProps) {
           initial={{opacity: 0, scale: 0.9, x: 40}}
           animate={{opacity: 1, scale: 1, x: 0}}
           transition={{duration: 0.8, ease: [0.22, 1, 0.36, 1]}}
-          className="relative h-[400px] lg:h-[630px] w-full">
+          className="relative h-[340px] sm:h-[440px] lg:h-[560px] max-h-[600px] w-full max-w-[480px] lg:max-w-none mx-auto">
           <div
             className="absolute inset-0"
             style={{
@@ -121,6 +127,7 @@ export default function Hero({content, onViewChange, view}: HeroProps) {
                 alt="DJ Hero"
                 fill
                 priority
+                unoptimized
                 className="object-cover"
                 sizes="(max-width: 768px) 100vw, 50vw"
               />

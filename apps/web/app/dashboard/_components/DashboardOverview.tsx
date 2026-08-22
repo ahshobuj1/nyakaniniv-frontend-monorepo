@@ -436,29 +436,43 @@ export default function DashboardOverview() {
                           <div className="flex flex-col gap-1">
                             <span className="font-medium text-[#111620]">{booking.eventType}</span>
                             {booking.address && (
-                              <span className="text-[12px] text-[#787878] font-normal flex items-center gap-1.5">
-                                <MapPin className="w-3 h-3 shrink-0" />
-                                <span className="truncate max-w-[150px]" title={booking.address}>{booking.address}</span>
-                              </span>
+                              <a
+                                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(booking.address)}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-[12px] text-[#787878] hover:text-primary font-normal flex items-center gap-1.5 transition-colors group cursor-pointer"
+                                title={`Open in Google Maps: ${booking.address}`}
+                              >
+                                <MapPin className="w-3.5 h-3.5 shrink-0 text-primary group-hover:scale-110 transition-transform" />
+                                <span className="truncate max-w-[150px] group-hover:underline">{booking.address}</span>
+                              </a>
                             )}
                           </div>
                         </td>
                         <td className="py-5 px-8 text-[14px] text-[#787878]">
-                          <div className="flex flex-col gap-1">
-                            <div className="flex items-center gap-2 font-medium text-[#111620]">
-                              <Calendar className="w-3.75 h-3.75 text-[#A1A1AA]" />
-                              Event: {new Date(booking.eventDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
-                            </div>
-                            {booking.createdAt && (
-                              <div className="flex items-center gap-2 text-[12px] text-[#787878]">
-                                <Clock className="w-3.5 h-3.5 text-[#A1A1AA]" />
-                                Req: {new Date(booking.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+                          {(() => {
+                            let timeTag = '';
+                            if (booking.eventDetails && booking.eventDetails.includes('Start Time:')) {
+                              const match = booking.eventDetails.match(/Start Time:\s*([^\n]+)/);
+                              if (match) timeTag = match[1].trim();
+                            }
+                            return (
+                              <div className="flex flex-col gap-1">
+                                <div className="flex items-center gap-1.5 font-medium text-[#111620]">
+                                  <Calendar className="w-3.5 h-3.5 text-gray-400" />
+                                  {new Date(booking.eventDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+                                </div>
+                                {timeTag && (
+                                  <span className="text-[11px] font-bold text-amber-800 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200/60 w-max">
+                                    {timeTag}
+                                  </span>
+                                )}
                               </div>
-                            )}
-                          </div>
+                            );
+                          })()}
                         </td>
                         <td className="py-5 px-8 text-[14px] font-medium text-[#111620]">
-                          {booking.totalAmount ? `$${booking.totalAmount}` : '-'}
+                          {booking.totalAmount ? `KES ${Number(booking.totalAmount).toLocaleString()}` : '-'}
                         </td>
                         <td className="py-5 px-8 flex flex-col items-start gap-2">
                           <button
