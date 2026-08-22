@@ -3,12 +3,12 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSelector } from 'react-redux';
-import { RootState } from '@repo/store';
+import { RootState, UserRole } from '@repo/store';
 import LoadingSpinner from './LoadingSpinner';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  allowedRoles?: ('SUPER_ADMIN' | 'DJ')[];
+  allowedRoles?: UserRole[];
 }
 
 export const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) => {
@@ -24,7 +24,7 @@ export const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) 
     }
     
     // Check if user has the required role
-    if (allowedRoles && !allowedRoles.includes(user.role as 'SUPER_ADMIN' | 'DJ')) {
+    if (allowedRoles && !allowedRoles.includes(user.role as UserRole)) {
       router.replace('/auth/login');
       return;
     }

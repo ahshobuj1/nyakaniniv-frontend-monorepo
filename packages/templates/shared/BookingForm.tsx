@@ -1,9 +1,10 @@
-'use client';
-
-import React from 'react';
+import React, { useState } from 'react';
 import {Calendar, Clock, User, Mail, MessageSquare} from 'lucide-react';
+import { DatePicker } from '@repo/ui';
 
 export default function BookingForm({themeColor}: {themeColor: string}) {
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>();
+
   return (
     <div className="max-w-4xl mx-auto bg-white rounded-[32px] shadow-xl shadow-slate-200/50 overflow-hidden border border-slate-100">
       <div className="flex flex-col md:flex-row">
@@ -62,9 +63,12 @@ export default function BookingForm({themeColor}: {themeColor: string}) {
             <div className="space-y-2">
               <label className="text-[11px] font-bold text-slate-400 uppercase ml-1">Event Date & Type</label>
               <div className="grid grid-cols-2 gap-4">
-                <input 
-                  type="date" 
-                  className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-sm focus:bg-white focus:ring-4 focus:ring-primary/5 focus:border-primary/20 outline-none transition-all"
+                <DatePicker
+                  date={selectedDate}
+                  onSelect={setSelectedDate}
+                  minDate={new Date()}
+                  placeholder="Select Date"
+                  buttonClassName="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-sm h-[48px]"
                 />
                 <select className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-sm focus:bg-white focus:ring-4 focus:ring-primary/5 focus:border-primary/20 outline-none transition-all appearance-none">
                   <option>Wedding</option>

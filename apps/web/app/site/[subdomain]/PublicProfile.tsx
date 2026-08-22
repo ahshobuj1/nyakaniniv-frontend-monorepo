@@ -5,6 +5,7 @@ import { useGetPublicProfileQuery } from '@repo/store';
 import TemplateRenderer from '@repo/builder';
 import { templates } from '@repo/templates';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import { getCountryTimezone } from '@/lib/timezone';
 
 interface PublicProfileProps {
   username: string;
@@ -23,62 +24,47 @@ export default function PublicProfile({ username, initialTenant }: PublicProfile
 
   if (isError || !tenant) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-slate-50 text-slate-500 font-sans">
-        <div className="p-8 bg-white rounded-2xl shadow-sm border border-slate-100 text-center">
-          <p className="text-xl font-semibold text-slate-800 mb-2">DJ Not Found</p>
-          <p className="text-sm text-slate-500">The profile you are looking for does not exist or has been removed.</p>
-        </div>
+      <div className="flex flex-col items-center justify-center min-h-screen">
+        <h1 className="text-2xl font-bold">Profile not found</h1>
+        <p className="text-gray-500">The DJ profile you are looking for does not exist.</p>
       </div>
     );
   }
 
-  const themeId = tenant.theme?.slug || 'azura';
-  const template = templates[themeId as keyof typeof templates] || templates['azura'];
+  const themeSlug = tenant.config?.themeSlug || 'azura';
+  const template = templates[themeSlug as keyof typeof templates] || templates.azura;
 
-  // Map tenant config to the template content
-  // Assuming tenant.config contains the overrides for the template
-  const content = tenant.config?.content;
   const mergedContent = {
     ...template.defaultContent,
-    ...content,
-    djName: tenant.stageName || content?.djName || template.defaultContent.djName || 'DJ AURA',
+    ...tenant.config?.content,
+    djName: tenant.stageName || tenant.config?.content?.djName || template.defaultContent.djName || 'DJ AURA',
     navbar: {
       ...template.defaultContent.navbar,
-      ...content?.navbar,
-      djName: tenant.stageName || content?.navbar?.djName || template.defaultContent.navbar?.djName || 'KENZO',
+      ...tenant.config?.content?.navbar,
+      djName: tenant.stageName || tenant.config?.content?.navbar?.djName || template.defaultContent.navbar?.djName || 'KENZO',
     },
-    // Map Azura root level socials
-    instagram: tenant.socialLinks?.instagram || content?.instagram || template.defaultContent.instagram || '#',
-    facebook: tenant.socialLinks?.facebook || content?.facebook || template.defaultContent.facebook || '#',
-    linkedin: tenant.socialLinks?.linkedin || content?.linkedin || template.defaultContent.linkedin || '#',
-    // Map Kenzo nested socials
+    instagram: tenant.socialLinks?.instagram || tenant.config?.content?.instagram || template.defaultContent.instagram || '#',
+    facebook: tenant.socialLinks?.facebook || tenant.config?.content?.facebook || template.defaultContent.facebook || '#',
+    linkedin: tenant.socialLinks?.linkedin || tenant.config?.content?.linkedin || template.defaultContent.linkedin || '#',
     social: {
       ...template.defaultContent.social,
-      ...content?.social,
-      instagram: tenant.socialLinks?.instagram || content?.social?.instagram || template.defaultContent.social?.instagram || '#',
-      facebook: tenant.socialLinks?.facebook || content?.social?.facebook || template.defaultContent.social?.facebook || '#',
-      linkedin: tenant.socialLinks?.linkedin || content?.social?.linkedin || template.defaultContent.social?.linkedin || '#',
+      ...tenant.config?.content?.social,
+      instagram: tenant.socialLinks?.instagram || tenant.config?.content?.social?.instagram || template.defaultContent.social?.instagram || '#',
+      facebook: tenant.socialLinks?.facebook || tenant.config?.content?.social?.facebook || template.defaultContent.social?.facebook || '#',
+      linkedin: tenant.socialLinks?.linkedin || tenant.config?.content?.social?.linkedin || template.defaultContent.social?.linkedin || '#',
     },
     footer: {
       ...template.defaultContent.footer,
-      ...content?.footer,
-      logoText: tenant.stageName || content?.footer?.logoText || template.defaultContent.footer?.logoText || 'DJ AURA',
+      ...tenant.config?.content?.footer,
+      logoText: tenant.stageName || tenant.config?.content?.footer?.logoText || template.defaultContent.footer?.logoText || 'DJ AURA',
     },
-    // Map dynamic entities (mixTapes, events) into template expected formats
     mixes: tenant.mixTapes?.length ? tenant.mixTapes.map((m: any) => ({
       img: m.coverUrl || template.defaultContent.heroImage || '/theme/aura/mixes-video-avator-1.png',
       title: m.title,
       genre: 'Various',
       time: '00:00',
       audioUrl: m.audioUrl,
-    })) : template.defaultContent.mixes || [
-      {
-        img: '/theme/aura/mixes-video-avator-1.png',
-        title: 'Lagos Nights Vol.3',
-        genre: 'Amapiano',
-        time: '58:20',
-      }
-    ],
+    })) : template.defaultContent.mixes || [],
     latestMixes: {
       ...template.defaultContent.latestMixes,
       tracks: tenant.mixTapes?.length ? tenant.mixTapes.map((m: any, i: number) => ({
@@ -94,16 +80,44 @@ export default function PublicProfile({ username, initialTenant }: PublicProfile
     },
     events: {
       ...template.defaultContent.events,
-      list: tenant.events?.length ? tenant.events.map((e: any, i: number) => ({
-        id: e.id || i,
-        day: e.eventDate ? new Date(e.eventDate).toLocaleDateString('en-US', { day: '2-digit' }) : '',
-        month: e.eventDate ? new Date(e.eventDate).toLocaleDateString('en-US', { month: 'short' }).toUpperCase() : '',
-        date: e.eventDate ? new Date(e.eventDate).toLocaleDateString() : '',
-        title: e.title,
-        venue: e.venueName,
-        location: e.venueAddress,
-        ticketUrl: '#',
-      })) : template.defaultContent.events?.list || [],
+      list: tenant.events?.length ? tenant.events.map((e: any, i: number) => {
+        const tzInfo = getCountryTimezone(e.venueAddress || tenant.country || tenant.city);
+        const eventDateObj = e.eventDate ? new Date(e.eventDate) : null;
+        const now = new Date();
+        const isPast = e.status?.toLowerCase() === 'completed' || (eventDateObj && eventDateObj < new Date(now.getFullYear(), now.getMonth(), now.getDate()));
+
+        const day = eventDateObj ? eventDateObj.toLocaleDateString('en-US', { timeZone: tzInfo.iana, day: '2-digit' }) : '';
+        const month = eventDateObj ? eventDateObj.toLocaleDateString('en-US', { timeZone: tzInfo.iana, month: 'short' }).toUpperCase() : '';
+        const year = eventDateObj ? eventDateObj.toLocaleDateString('en-US', { timeZone: tzInfo.iana, year: 'numeric' }) : '';
+        const fullDate = eventDateObj ? eventDateObj.toLocaleDateString('en-US', { timeZone: tzInfo.iana, month: 'short', day: 'numeric', year: 'numeric' }) : '';
+
+        let time = e.eventTime || '';
+        if (!time && eventDateObj && typeof e.eventDate === 'string' && e.eventDate.includes('T') && !e.eventDate.endsWith('T00:00:00.000Z')) {
+          time = eventDateObj.toLocaleTimeString('en-US', { timeZone: tzInfo.iana, hour: '2-digit', minute: '2-digit' });
+        }
+        if (time && !time.includes('EAT') && !time.includes('WAT') && !time.includes('GMT') && !time.includes('SAST') && !time.includes('UTC')) {
+          time = `${time} ${tzInfo.code}`;
+        }
+
+        return {
+          id: e.id || i,
+          day,
+          month,
+          year,
+          date: fullDate,
+          rawDate: e.eventDate,
+          time,
+          title: e.title,
+          description: e.description,
+          venue: e.venueName,
+          location: e.venueAddress,
+          price: e.price,
+          capacity: e.capacity,
+          status: e.status || (isPast ? 'completed' : 'upcoming'),
+          isPast: !!isPast,
+          ticketUrl: '#',
+        };
+      }) : template.defaultContent.events?.list || [],
     }
   };
 
@@ -115,7 +129,7 @@ export default function PublicProfile({ username, initialTenant }: PublicProfile
   return (
     <div className="min-h-screen bg-white">
       <TemplateRenderer
-        templateId={themeId}
+        templateId={themeSlug}
         content={mergedContent}
         theme={mergedTheme}
         view="landing"

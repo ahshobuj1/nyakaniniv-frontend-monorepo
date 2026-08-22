@@ -35,13 +35,25 @@ export default function EventsPage() {
 
   const events = eventsResponse?.data || [];
 
+  const isPastEvent = (event: any) => {
+    if (event.status?.toLowerCase() === 'completed') return true;
+    if (event.status?.toLowerCase() === 'canceled') return false;
+    if (!event.eventDate) return false;
+    const eventDateObj = new Date(event.eventDate);
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    return eventDateObj < today;
+  };
+
   // Derived state
-  const upcomingCount = events.filter((e) => e.status?.toLowerCase() === 'upcoming').length;
-  const completedCount = events.filter((e) => e.status?.toLowerCase() === 'completed').length;
+  const upcomingCount = events.filter((e) => !isPastEvent(e) && e.status?.toLowerCase() !== 'canceled').length;
+  const completedCount = events.filter((e) => isPastEvent(e)).length;
 
   const filteredEvents = events.filter((event) => {
     if (filter === 'All') return true;
-    return event.status?.toLowerCase() === filter.toLowerCase();
+    if (filter === 'Upcoming') return !isPastEvent(event) && event.status?.toLowerCase() !== 'canceled';
+    if (filter === 'Completed') return isPastEvent(event);
+    return true;
   });
 
   // Handlers

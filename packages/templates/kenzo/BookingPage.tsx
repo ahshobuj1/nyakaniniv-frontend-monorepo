@@ -7,6 +7,7 @@ import {zodResolver} from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import {toast} from 'sonner';
 import {useCreateBookingMutation} from '@repo/store';
+import {DatePicker} from '@repo/ui';
 
 const bookingSchema = z.object({
   fullName: z.string().min(2, 'Full name is required'),
@@ -42,14 +43,19 @@ export default function BookingPage({content}: any) {
   const {
     register,
     handleSubmit,
+    setValue,
+    watch,
     reset,
     formState: {errors, isSubmitting},
   } = useForm<BookingFormValues>({
     resolver: zodResolver(bookingSchema),
     defaultValues: {
       eventType: "",
+      eventDate: "",
     }
   });
+
+  const selectedDateValue = watch('eventDate');
 
   const onSubmit = async (data: BookingFormValues) => {
     setSubmitStatus(null);
@@ -257,15 +263,24 @@ export default function BookingPage({content}: any) {
                   <label className="text-[13px] font-bold text-[#111111]">
                     Event Date
                   </label>
-                  <div className="relative">
-                    <input
-                      type="date"
-                      {...register('eventDate')}
-                      className={`w-full bg-white border ${
-                        errors.eventDate ? 'border-red-500' : 'border-[#e5e5e5]'
-                      } rounded-[8px] px-[16px] py-[12px] text-[14px] text-[#111111] outline-none focus:border-[var(--primary)] transition-colors appearance-none`}
-                    />
-                  </div>
+                  <DatePicker
+                    date={selectedDateValue}
+                    onSelect={(d?: Date) => {
+                      if (d) {
+                        const y = d.getFullYear();
+                        const m = String(d.getMonth() + 1).padStart(2, '0');
+                        const day = String(d.getDate()).padStart(2, '0');
+                        setValue('eventDate', `${y}-${m}-${day}`, { shouldValidate: true });
+                      } else {
+                        setValue('eventDate', '', { shouldValidate: true });
+                      }
+                    }}
+                    placeholder="Select event date"
+                    minDate={new Date()}
+                    buttonClassName={`w-full bg-white border ${
+                      errors.eventDate ? '!border-red-500' : 'border-[#e5e5e5]'
+                    } rounded-[8px] px-[16px] py-[12px] h-[46px] text-[14px]`}
+                  />
                   {errors.eventDate && (
                     <span className="text-red-500 text-[12px]">
                       {errors.eventDate.message}

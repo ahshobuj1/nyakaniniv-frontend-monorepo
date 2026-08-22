@@ -22,6 +22,7 @@ import {
 } from '@repo/store';
 import { toast } from 'sonner';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import { getCountryTimezone } from '@/lib/timezone';
 
 // ==========================================
 // 0. Custom Image Uploader Component
@@ -226,16 +227,44 @@ function ManageThemeContent() {
         },
         events: {
           ...template.defaultContent.events,
-          list: currentTenant?.events?.length ? currentTenant.events.map((e, i) => ({
-            id: e.id || i,
-            day: e.eventDate ? new Date(e.eventDate).toLocaleDateString('en-US', { day: '2-digit' }) : '',
-            month: e.eventDate ? new Date(e.eventDate).toLocaleDateString('en-US', { month: 'short' }).toUpperCase() : '',
-            date: e.eventDate ? new Date(e.eventDate).toLocaleDateString() : '',
-            title: e.title,
-            venue: e.venueName,
-            location: e.venueAddress,
-            ticketUrl: '#',
-          })) : template.defaultContent.events?.list || [],
+          list: currentTenant?.events?.length ? currentTenant.events.map((e: any, i: number) => {
+            const tzInfo = getCountryTimezone(e.venueAddress || currentTenant.country || currentTenant.city);
+            const eventDateObj = e.eventDate ? new Date(e.eventDate) : null;
+            const now = new Date();
+            const isPast = e.status?.toLowerCase() === 'completed' || (eventDateObj && eventDateObj < new Date(now.getFullYear(), now.getMonth(), now.getDate()));
+
+            const day = eventDateObj ? eventDateObj.toLocaleDateString('en-US', { timeZone: tzInfo.iana, day: '2-digit' }) : '';
+            const month = eventDateObj ? eventDateObj.toLocaleDateString('en-US', { timeZone: tzInfo.iana, month: 'short' }).toUpperCase() : '';
+            const year = eventDateObj ? eventDateObj.toLocaleDateString('en-US', { timeZone: tzInfo.iana, year: 'numeric' }) : '';
+            const fullDate = eventDateObj ? eventDateObj.toLocaleDateString('en-US', { timeZone: tzInfo.iana, month: 'short', day: 'numeric', year: 'numeric' }) : '';
+
+            let time = e.eventTime || '';
+            if (!time && eventDateObj && typeof e.eventDate === 'string' && e.eventDate.includes('T') && !e.eventDate.endsWith('T00:00:00.000Z')) {
+              time = eventDateObj.toLocaleTimeString('en-US', { timeZone: tzInfo.iana, hour: '2-digit', minute: '2-digit' });
+            }
+            if (time && !time.includes('EAT') && !time.includes('WAT') && !time.includes('GMT') && !time.includes('SAST') && !time.includes('UTC')) {
+              time = `${time} ${tzInfo.code}`;
+            }
+
+            return {
+              id: e.id || i,
+              day,
+              month,
+              year,
+              date: fullDate,
+              rawDate: e.eventDate,
+              time,
+              title: e.title,
+              description: e.description,
+              venue: e.venueName,
+              location: e.venueAddress,
+              price: e.price,
+              capacity: e.capacity,
+              status: e.status || (isPast ? 'completed' : 'upcoming'),
+              isPast: !!isPast,
+              ticketUrl: '#',
+            };
+          }) : template.defaultContent.events?.list || [],
         }
       };
 
