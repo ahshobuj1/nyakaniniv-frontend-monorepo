@@ -29,6 +29,7 @@ import {
 import {Card, CardContent, Button, Dialog, DialogContent, DialogHeader, DialogTitle, Input} from '@repo/ui';
 import Link from 'next/link';
 import { toast } from 'sonner';
+import { ConfirmationDialog } from '@/components/ConfirmationDialog';
 
 // ==========================================
 // 1. Dummy Data
@@ -67,6 +68,7 @@ export default function DashboardOverview() {
     paymentId?: string;
   } | null>(null);
   const [priceInput, setPriceInput] = React.useState('');
+  const [rejectBookingId, setRejectBookingId] = React.useState<string | null>(null);
 
   const [updateStatus, { isLoading: isUpdating }] = useUpdateBookingStatusMutation();
   const [markPaid, { isLoading: isMarkingPaid }] = useMarkBookingPaidMutation();
@@ -95,6 +97,17 @@ export default function DashboardOverview() {
       setPriceInput('');
     } catch (error: any) {
       toast.error(error?.data?.error?.message || error?.data?.message || 'Failed to update status');
+    }
+  };
+
+  const handleConfirmReject = async () => {
+    if (!rejectBookingId) return;
+    try {
+      await updateStatus({ id: rejectBookingId, status: 'rejected' as any }).unwrap();
+      toast.success('Booking rejected successfully');
+      setRejectBookingId(null);
+    } catch (error: any) {
+      toast.error(error?.data?.error?.message || error?.data?.message || 'Failed to reject booking');
     }
   };
 
@@ -409,7 +422,8 @@ export default function DashboardOverview() {
                 <tbody>
                   {recentBookings.length > 0 ? (
                     recentBookings.map((booking: any, index: number) => {
-                      const isCashRequested = booking.payment?.method === 'CASH' && booking.payment?.status === 'unpaid';
+                      const cashTx = booking.invoice?.transactions?.find((tx: any) => tx.gateway === 'CASH');
+                      const isCashRequested = cashTx && cashTx.status === 'PENDING';
                       
                       return (
                       <tr
@@ -572,13 +586,31 @@ export default function DashboardOverview() {
             
             <div className="flex flex-col gap-3 pt-4">
               {bookingToUpdate?.currentStatus?.toLowerCase() === 'pending' && (
-                <Button 
-                  onClick={() => handleStatusUpdate('ACCEPTED')}
-                  disabled={isUpdating}
-                  className="bg-primary hover:bg-primary/90 text-white font-bold h-11 w-full rounded-[10px]"
-                >
-                  {isUpdating ? 'Updating...' : 'Accept Booking'}
-                </Button>
+                <>
+                  <Button 
+                    onClick={() => handleStatusUpdate('ACCEPTED')}
+                    disabled={isUpdating}
+                    className="bg-primary hover:bg-primary/90 text-white font-bold h-11 w-full rounded-[10px]"
+                  >
+                    {isUpdating ? 'Updating...' : 'Accept Booking'}
+                  </Button>
+                  <Button 
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      if (bookingToUpdate) {
+                        const id = bookingToUpdate.id;
+                        setBookingToUpdate(null);
+                        setPriceInput('');
+                        setRejectBookingId(id);
+                      }
+                    }}
+                    disabled={isUpdating}
+                    className="h-11 w-full rounded-[10px] text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700"
+                  >
+                    Reject Booking
+                  </Button>
+                </>
               )}
 
               {bookingToUpdate?.currentStatus?.toLowerCase() === 'accepted' && !bookingToUpdate.isCashRequested && (
@@ -612,6 +644,19 @@ export default function DashboardOverview() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Reject Booking Confirmation Dialog */}
+      <ConfirmationDialog
+        isOpen={!!rejectBookingId}
+        title="Reject Booking Request"
+        description="Are you sure you want to reject this booking request? The client will be notified and this action cannot be undone."
+        confirmText="Reject Booking"
+        cancelText="Cancel"
+        isDestructive={true}
+        isLoading={isUpdating}
+        onConfirm={handleConfirmReject}
+        onCancel={() => setRejectBookingId(null)}
+      />
     </div>
   );
 }

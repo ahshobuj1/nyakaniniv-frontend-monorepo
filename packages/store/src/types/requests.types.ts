@@ -120,6 +120,21 @@ export interface CreateBookingRequest {
   address?: string;
 }
 
+export interface InitiateBookingResponse {
+  verificationToken: string;
+  clientEmail: string;
+  expiresIn: number;
+}
+
+export interface VerifyBookingOtpRequest {
+  verificationToken: string;
+  otp: string;
+}
+
+export interface ResendBookingOtpRequest {
+  verificationToken: string;
+}
+
 export interface UpdateBookingStatusRequest {
   id: string;
   status: string;
@@ -166,7 +181,8 @@ export interface PaystackBank {
 
 // --- Ticket Requests ---
 export interface CreateTicketRequest {
+  fullName: string;
+  email: string;
   subject: string;
-  message: string;
-  contactEmail: string;
+  issue: string;
 }

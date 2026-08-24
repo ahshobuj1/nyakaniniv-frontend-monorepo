@@ -28,13 +28,18 @@ export default function Footer({content}: FooterProps) {
     poweredBy: 'UpBeat Entertainment Africa',
   };
 
+  const djStageName = content?.djName || content?.footer?.logoText || footerData.logoText || 'DJ';
+  const currentYear = new Date().getFullYear();
+  const dynamicCopyright = `© ${currentYear} ${djStageName}. All rights reserved`;
+  const dynamicPoweredBy = footerData.poweredBy || 'UpBeat Entertainment Africa';
+
   return (
     <footer className="bg-[#151515] pt-[80px] pb-[30px] px-6">
       <div className="max-w-[1200px] mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-[60px] md:gap-[100px] mb-[60px]">
           <div className="flex flex-col gap-[20px]">
             <h2 className="text-[48px] font-bold text-[var(--primary)] uppercase tracking-tight leading-none">
-              {footerData.logoText}
+              {djStageName}
             </h2>
             <p className="text-[#a3a3a3] text-[15px] leading-relaxed max-w-[320px]">
               {footerData.description}
@@ -168,12 +173,16 @@ export default function Footer({content}: FooterProps) {
         </div>
 
         <div className="border-t border-[#333333] pt-[30px] flex flex-col md:flex-row justify-between items-center gap-[16px] text-[#a3a3a3] text-[14px]">
-          <p>{footerData.copyright}</p>
+          <p>{content?.footer?.copyright || dynamicCopyright}</p>
           <p>
-            Powerd by{' '}
-            <span className="text-[var(--primary)] font-medium">
-              {footerData.poweredBy}
-            </span>
+            Powered by{' '}
+            <Link
+              href="https://upbeat.africa"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[var(--primary)] font-medium hover:underline">
+              {dynamicPoweredBy}
+            </Link>
           </p>
         </div>
       </div>

@@ -6,6 +6,7 @@ import { DownloadIcon, ArrowLeft, Receipt, Calendar, CreditCard, User, Music, Bu
 import Link from 'next/link';
 import { useDownloadInvoicePdfMutation, useGetInvoiceByIdQuery } from '@repo/store';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import { toast } from 'sonner';
 
 export default function InvoiceDetailsPage() {
   const params = useParams();
@@ -27,9 +28,10 @@ export default function InvoiceDetailsPage() {
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
+      toast.success('Invoice downloaded successfully');
     } catch (error) {
       console.error(error);
-      alert('Could not download invoice. Please try again.');
+      toast.error('Could not download invoice. Please try again.');
     }
   };
 

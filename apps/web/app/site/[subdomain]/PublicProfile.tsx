@@ -56,7 +56,8 @@ export default function PublicProfile({ username, initialTenant }: PublicProfile
     footer: {
       ...template.defaultContent.footer,
       ...tenant.config?.content?.footer,
-      logoText: tenant.stageName || tenant.config?.content?.footer?.logoText || template.defaultContent.footer?.logoText || 'DJ AURA',
+      logoText: tenant.stageName || tenant.config?.content?.footer?.logoText || template.defaultContent.footer?.logoText || 'DJ',
+      copyright: `© ${new Date().getFullYear()} ${tenant.stageName || 'DJ'}. All rights reserved`,
     },
     mixes: tenant.mixTapes?.length ? tenant.mixTapes.map((m: any) => ({
       img: m.coverUrl || template.defaultContent.heroImage || '/theme/aura/mixes-video-avator-1.png',
