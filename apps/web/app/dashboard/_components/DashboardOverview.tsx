@@ -13,6 +13,8 @@ import {
   AlertCircle,
   Phone,
   MapPin,
+  Eye,
+  XCircle,
 } from 'lucide-react';
 import {
   AreaChart,
@@ -56,22 +58,30 @@ import {
   useGetCurrentProfileQuery,
   useGetTenantAnalyticsQuery,
   useGetTenantChartsQuery,
+  useGetMyBookingsQuery,
   useUpdateBookingStatusMutation,
-  useMarkBookingPaidMutation
+  useHandleCashRequestDecisionMutation,
+  useMarkCashAsPaidMutation,
 } from '@repo/store';
 
 export default function DashboardOverview() {
   const [bookingToUpdate, setBookingToUpdate] = React.useState<{ 
     id: string; 
     currentStatus: string;
-    isCashRequested?: boolean;
-    paymentId?: string;
+    isPendingCashRequest?: boolean;
+    isApprovedCashRequest?: boolean;
+    isInvoicePaid?: boolean;
   } | null>(null);
   const [priceInput, setPriceInput] = React.useState('');
   const [rejectBookingId, setRejectBookingId] = React.useState<string | null>(null);
+  const [cashPaidBookingId, setCashPaidBookingId] = React.useState<string | null>(null);
+  const [cashConfirmationText, setCashConfirmationText] = React.useState('');
 
+  const { data: myBookingsResponse } = useGetMyBookingsQuery();
   const [updateStatus, { isLoading: isUpdating }] = useUpdateBookingStatusMutation();
-  const [markPaid, { isLoading: isMarkingPaid }] = useMarkBookingPaidMutation();
+  const [handleCash, { isLoading: handlingCash }] = useHandleCashRequestDecisionMutation();
+  const [markPaid, { isLoading: isMarkingPaid }] = useMarkCashAsPaidMutation();
+  const isActionLoading = isUpdating || handlingCash || isMarkingPaid;
 
   const handleStatusUpdate = async (newStatus: 'ACCEPTED' | 'COMPLETED') => {
     if (!bookingToUpdate) return;
@@ -106,20 +116,40 @@ export default function DashboardOverview() {
       await updateStatus({ id: rejectBookingId, status: 'rejected' as any }).unwrap();
       toast.success('Booking rejected successfully');
       setRejectBookingId(null);
+      setBookingToUpdate(null);
     } catch (error: any) {
       toast.error(error?.data?.error?.message || error?.data?.message || 'Failed to reject booking');
     }
   };
 
-  const handleMarkCashPaid = async (paymentId: string) => {
+  const handleCashDecision = async (decision: 'approve' | 'reject') => {
+    if (!bookingToUpdate) return;
     try {
-      await markPaid(paymentId).unwrap();
-      toast.success('Payment marked as paid via Cash!');
+      await handleCash({ id: bookingToUpdate.id, decision }).unwrap();
+      toast.success(`Cash request ${decision}d successfully!`);
+      setBookingToUpdate(null);
+    } catch (error: any) {
+      toast.error(error?.data?.error?.message || error?.data?.message || `Failed to ${decision} cash request`);
+    }
+  };
+
+  const handleConfirmMarkCashPaid = async () => {
+    if (!cashPaidBookingId) return;
+    if (cashConfirmationText.trim().toUpperCase() !== 'PAID') {
+      toast.error('Please type PAID to confirm');
+      return;
+    }
+    try {
+      await markPaid(cashPaidBookingId).unwrap();
+      toast.success('Payment marked as paid via Cash and booking completed!');
+      setCashPaidBookingId(null);
+      setCashConfirmationText('');
       setBookingToUpdate(null);
     } catch (error: any) {
       toast.error(error?.data?.error?.message || error?.data?.message || 'Failed to mark as paid');
     }
   };
+
 
   const { data: profileResponse } = useGetCurrentProfileQuery();
   const subdomain = profileResponse?.data?.tenant?.subdomain || 'demo';
@@ -172,7 +202,10 @@ export default function DashboardOverview() {
     value: item.count,
   })) || [];
 
-  const recentBookings = analytics?.recentRequests || [];
+  const allBookings = myBookingsResponse?.data || analytics?.recentRequests || [];
+  const recentBookings = allBookings.slice(0, 7);
+
+
 
   const getLiveWebsiteUrl = () => {
     if (typeof window === 'undefined') return '#';
@@ -398,21 +431,24 @@ export default function DashboardOverview() {
             <div className="overflow-x-auto">
               <table className="w-full min-w-225 text-left border-collapse">
                 <thead>
-                  <tr>
-                    <th className="py-4 px-8 text-[12px] font-semibold text-[#A1A1AA] uppercase tracking-wider w-[25%]">
+                  <tr className="border-b border-gray-100 bg-gray-50/50">
+                    <th className="py-4 px-8 text-[12px] font-semibold text-[#A1A1AA] uppercase tracking-wider w-[20%]">
                       Client
                     </th>
-                    <th className="py-4 px-8 text-[12px] font-semibold text-[#A1A1AA] uppercase tracking-wider w-[15%]">
+                    <th className="py-4 px-8 text-[12px] font-semibold text-[#A1A1AA] uppercase tracking-wider w-[14%]">
                       Phone
                     </th>
-                    <th className="py-4 px-8 text-[12px] font-semibold text-[#A1A1AA] uppercase tracking-wider w-[25%]">
+                    <th className="py-4 px-8 text-[12px] font-semibold text-[#A1A1AA] uppercase tracking-wider w-[20%]">
                       Event Type
                     </th>
                     <th className="py-4 px-8 text-[12px] font-semibold text-[#A1A1AA] uppercase tracking-wider w-[15%]">
-                      Date
+                      Event Date
                     </th>
-                    <th className="py-4 px-8 text-[12px] font-semibold text-[#A1A1AA] uppercase tracking-wider w-[15%]">
-                      Amount
+                    <th className="py-4 px-8 text-[12px] font-semibold text-[#A1A1AA] uppercase tracking-wider w-[16%]">
+                      Payment & Amount
+                    </th>
+                    <th className="py-4 px-8 text-[12px] font-semibold text-[#A1A1AA] uppercase tracking-wider w-[5%] text-center">
+                      Details
                     </th>
                     <th className="py-4 px-8 text-[12px] font-semibold text-[#A1A1AA] uppercase tracking-wider w-[1%] whitespace-nowrap">
                       Status & Action
@@ -422,8 +458,10 @@ export default function DashboardOverview() {
                 <tbody>
                   {recentBookings.length > 0 ? (
                     recentBookings.map((booking: any, index: number) => {
-                      const cashTx = booking.invoice?.transactions?.find((tx: any) => tx.gateway === 'CASH');
-                      const isCashRequested = cashTx && cashTx.status === 'PENDING';
+                      const cashTransaction = booking.invoice?.transactions?.find((tx: any) => tx.gateway === 'CASH');
+                      const isPendingCashRequest = cashTransaction?.status === 'PENDING' && !cashTransaction?.metadata?.cashApproved;
+                      const isApprovedCashRequest = cashTransaction?.status === 'PENDING' && cashTransaction?.metadata?.cashApproved;
+                      const isInvoicePaid = booking.invoice?.status === 'PAID';
                       
                       return (
                       <tr
@@ -431,7 +469,12 @@ export default function DashboardOverview() {
                         className={`${index % 2 === 0 ? 'bg-[#F9FAFB]' : 'bg-white'} hover:bg-gray-100/50 transition-colors`}>
                         <td className="py-5 px-8 text-[14px] font-semibold text-[#111620]">
                           <div className="flex flex-col gap-1">
-                            <span>{booking.client?.name || 'Unknown Client'}</span>
+                            <a 
+                              href={`/dashboard/bookings/${booking.id}`}
+                              className="hover:text-primary transition-colors cursor-pointer"
+                            >
+                              {booking.client?.name || 'Unknown Client'}
+                            </a>
                             <span className="text-[12px] text-[#787878] font-normal flex items-center gap-1.5">
                               <Mail className="w-3.5 h-3.5 shrink-0" />
                               <span className="truncate">{booking.client?.email || 'N/A'}</span>
@@ -448,7 +491,7 @@ export default function DashboardOverview() {
                         </td>
                         <td className="py-5 px-8 text-[14px] text-[#787878]">
                           <div className="flex flex-col gap-1">
-                            <span className="font-medium text-[#111620]">{booking.eventType}</span>
+                            <span className="font-medium text-[#111620] capitalize">{booking.eventType}</span>
                             {booking.address && (
                               <a
                                 href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(booking.address)}`}
@@ -458,7 +501,7 @@ export default function DashboardOverview() {
                                 title={`Open in Google Maps: ${booking.address}`}
                               >
                                 <MapPin className="w-3.5 h-3.5 shrink-0 text-primary group-hover:scale-110 transition-transform" />
-                                <span className="truncate max-w-[150px] group-hover:underline">{booking.address}</span>
+                                <span className="truncate max-w-[180px] group-hover:underline">{booking.address}</span>
                               </a>
                             )}
                           </div>
@@ -472,30 +515,77 @@ export default function DashboardOverview() {
                             }
                             return (
                               <div className="flex flex-col gap-1">
-                                <div className="flex items-center gap-1.5 font-medium text-[#111620]">
+                                <div className="flex items-center gap-1.5 font-medium text-[#111620] w-max">                           
                                   <Calendar className="w-3.5 h-3.5 text-gray-400" />
                                   {new Date(booking.eventDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
                                 </div>
                                 {timeTag && (
-                                  <span className="text-[11px] font-bold text-amber-800 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200/60 w-max">
+                                  <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-200/60 w-max">
+                                    <Clock className="w-3 h-3" />
                                     {timeTag}
-                                  </span>
+                                  </div>
                                 )}
                               </div>
                             );
                           })()}
                         </td>
-                        <td className="py-5 px-8 text-[14px] font-medium text-[#111620]">
-                          {booking.totalAmount ? `KES ${Number(booking.totalAmount).toLocaleString()}` : '-'}
+
+                        {/* Combined Payment & Amount Column */}
+                        <td className="py-5 px-8 text-[14px]">
+                          <div className="flex flex-col items-start gap-1.5">
+                            <span className="font-semibold text-[#111620]">
+                              {booking.totalAmount ? `KES ${Number(booking.totalAmount).toLocaleString()}` : '-'}
+                            </span>
+                            {booking.invoice ? (
+                              isInvoicePaid ? (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-green-50 border border-green-200 text-green-700 text-[11px] font-bold">
+                                  <CheckCircle2 className="w-3.5 h-3.5" />
+                                  Paid
+                                </span>
+                              ) : isApprovedCashRequest ? (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-50 border border-amber-200 text-amber-700 text-[11px] font-bold">
+                                  <Clock className="w-3.5 h-3.5" />
+                                  Cash Approved
+                                </span>
+                              ) : isPendingCashRequest ? (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-50 border border-amber-200 text-amber-700 text-[11px] font-bold">
+                                  <Clock className="w-3.5 h-3.5" />
+                                  Cash Pending
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-gray-100 border border-gray-200 text-gray-600 text-[11px] font-medium">
+                                  <Clock className="w-3.5 h-3.5" />
+                                  Unpaid
+                                </span>
+                              )
+                            ) : (
+                              <span className="text-[11px] text-gray-400 italic">
+                                Not Invoiced
+                              </span>
+                            )}
+                          </div>
                         </td>
+
+                        {/* View Details Eye Icon Button */}
+                        <td className="py-5 px-8 text-center">
+                          <a
+                            href={`/dashboard/bookings/${booking.id}`}
+                            className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-50 text-blue-500 hover:bg-blue-100 transition-colors cursor-pointer"
+                            title="View Event Details"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </a>
+                        </td>
+
                         <td className="py-5 px-8 flex flex-col items-start gap-2">
                           <button
                             onClick={() => {
                               setBookingToUpdate({ 
                                 id: booking.id, 
                                 currentStatus: booking.status,
-                                isCashRequested: isCashRequested,
-                                paymentId: booking.payment?.id
+                                isPendingCashRequest,
+                                isApprovedCashRequest,
+                                isInvoicePaid
                               });
                               setPriceInput('');
                             }}
@@ -511,6 +601,11 @@ export default function DashboardOverview() {
                                 <CheckCircle2 className="w-3.5 h-3.5" />
                                 Accepted
                               </div>
+                            ) : booking.status?.toLowerCase() === 'canceled' || booking.status?.toLowerCase() === 'rejected' ? (
+                              <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-red-500 text-white text-[13px] font-medium">
+                                <XCircle className="w-3.5 h-3.5" />
+                                {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
+                              </div>
                             ) : (
                               <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-[#F59E0B] text-white text-[13px] font-medium">
                                 <Clock className="w-3.5 h-3.5" />
@@ -519,7 +614,7 @@ export default function DashboardOverview() {
                             )}
                           </button>
 
-                          {isCashRequested && (
+                          {isPendingCashRequest && (
                             <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-[#FFF8E6] border border-[#FDE68A] text-[#D97706] text-[11px] font-bold">
                               Cash Requested
                             </span>
@@ -531,7 +626,7 @@ export default function DashboardOverview() {
                   ) : (
                     <tr>
                       <td
-                        colSpan={6}
+                        colSpan={7}
                         className="py-12 text-center text-[#787878]">
                         No recent bookings found.
                       </td>
@@ -575,11 +670,11 @@ export default function DashboardOverview() {
               </div>
             )}
             
-            {bookingToUpdate?.isCashRequested && (
+            {bookingToUpdate?.isPendingCashRequest && (
               <div className="bg-[#FFF8E6] border border-[#FDE68A] rounded-xl p-4 flex items-center gap-3 text-[#D97706]">
                 <AlertCircle className="w-5 h-5 shrink-0" />
                 <p className="text-[13px] font-medium">
-                  The client has requested to pay by cash. You can mark this booking as paid once you receive the cash.
+                  The client has requested to pay by cash.
                 </p>
               </div>
             )}
@@ -589,14 +684,14 @@ export default function DashboardOverview() {
                 <>
                   <Button 
                     onClick={() => handleStatusUpdate('ACCEPTED')}
-                    disabled={isUpdating}
+                    disabled={isActionLoading}
                     className="bg-primary hover:bg-primary/90 text-white font-bold h-11 w-full rounded-[10px]"
                   >
-                    {isUpdating ? 'Updating...' : 'Accept Booking'}
+                    {isActionLoading ? 'Processing...' : 'Accept Booking Request'}
                   </Button>
                   <Button 
                     type="button"
-                    variant="outline"
+                    variant="outline" 
                     onClick={() => {
                       if (bookingToUpdate) {
                         const id = bookingToUpdate.id;
@@ -605,7 +700,7 @@ export default function DashboardOverview() {
                         setRejectBookingId(id);
                       }
                     }}
-                    disabled={isUpdating}
+                    disabled={isActionLoading}
                     className="h-11 w-full rounded-[10px] text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700"
                   >
                     Reject Booking
@@ -613,32 +708,72 @@ export default function DashboardOverview() {
                 </>
               )}
 
-              {bookingToUpdate?.currentStatus?.toLowerCase() === 'accepted' && !bookingToUpdate.isCashRequested && (
+              {bookingToUpdate?.currentStatus?.toLowerCase() === 'accepted' && bookingToUpdate.isPendingCashRequest && (
+                <>
+                  <Button 
+                    onClick={() => handleCashDecision('approve')}
+                    disabled={isActionLoading}
+                    className="bg-amber-500 hover:bg-amber-600 text-white font-bold h-11 w-full rounded-[10px]"
+                  >
+                    {isActionLoading ? 'Processing...' : 'Approve Cash Request'}
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => handleCashDecision('reject')}
+                    disabled={isActionLoading}
+                    className="h-11 w-full rounded-[10px]"
+                  >
+                    Reject & Demand Online Pay
+                  </Button>
+                </>
+              )}
+
+              {bookingToUpdate?.currentStatus?.toLowerCase() === 'accepted' && bookingToUpdate.isApprovedCashRequest && (
                 <Button 
-                  onClick={() => handleStatusUpdate('COMPLETED')}
-                  disabled={isUpdating}
-                  className="bg-[#10B981] hover:bg-[#10B981]/90 text-white font-bold h-11 w-full rounded-[10px]"
+                  onClick={() => {
+                    if (bookingToUpdate) {
+                      const id = bookingToUpdate.id;
+                      setBookingToUpdate(null);
+                      setCashPaidBookingId(id);
+                    }
+                  }}
+                  disabled={isActionLoading}
+                  className="bg-green-600 hover:bg-green-700 text-white font-bold h-11 w-full rounded-[10px]"
                 >
-                  {isUpdating ? 'Updating...' : 'Mark as Completed'}
+                  {isActionLoading ? 'Processing...' : 'Mark as Paid (Received Cash)'}
                 </Button>
               )}
 
-              {bookingToUpdate?.isCashRequested && bookingToUpdate.paymentId && (
+              {bookingToUpdate?.currentStatus?.toLowerCase() === 'accepted' && bookingToUpdate.isInvoicePaid && (
                 <Button 
-                  onClick={() => handleMarkCashPaid(bookingToUpdate.paymentId!)}
-                  disabled={isMarkingPaid}
-                  className="bg-[#10B981] hover:bg-[#10B981]/90 text-white font-bold h-11 w-full rounded-[10px]"
+                  onClick={() => handleStatusUpdate('COMPLETED')}
+                  disabled={isActionLoading}
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-bold h-11 w-full rounded-[10px]"
                 >
-                  {isMarkingPaid ? 'Processing...' : 'Confirm Cash Received & Mark Paid'}
+                  {isActionLoading ? 'Processing...' : 'Complete Event'}
                 </Button>
+              )}
+
+              {bookingToUpdate?.currentStatus?.toLowerCase() === 'accepted' && !bookingToUpdate.isPendingCashRequest && !bookingToUpdate.isApprovedCashRequest && !bookingToUpdate.isInvoicePaid && (
+                <div className="text-center py-4">
+                  <Clock className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+                  <p className="text-sm text-gray-500">Waiting for client payment...</p>
+                </div>
+              )}
+
+              {(bookingToUpdate?.currentStatus?.toLowerCase() === 'canceled' || bookingToUpdate?.currentStatus?.toLowerCase() === 'rejected') && (
+                <div className="text-center py-4">
+                  <XCircle className="w-8 h-8 text-red-400 mx-auto mb-2" />
+                  <p className="text-sm font-medium text-gray-700">This booking was {bookingToUpdate.currentStatus.toLowerCase()}.</p>
+                </div>
               )}
 
               <Button 
                 variant="outline" 
                 onClick={() => setBookingToUpdate(null)}
-                className="h-11 w-full rounded-[10px]"
+                className="h-11 w-full rounded-[10px] mt-2"
               >
-                Cancel
+                Close
               </Button>
             </div>
           </div>
@@ -657,6 +792,65 @@ export default function DashboardOverview() {
         onConfirm={handleConfirmReject}
         onCancel={() => setRejectBookingId(null)}
       />
+
+      {/* Confirm Cash Received Dialog with 'PAID' verification */}
+      <Dialog 
+        open={!!cashPaidBookingId} 
+        onOpenChange={(open) => {
+          if (!open) {
+            setCashPaidBookingId(null);
+            setCashConfirmationText('');
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-[460px] bg-white rounded-2xl p-6 border-none shadow-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-gray-900 flex items-center gap-2">
+              <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+              Confirm Cash Payment Received
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-2">
+            <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-900 text-sm leading-relaxed">
+              <strong>Important:</strong> Marking this payment as received will immediately mark the invoice as <strong>PAID</strong> and transition this booking to <strong>COMPLETED</strong> status.
+            </div>
+            <p className="text-sm text-gray-600">
+              To prevent accidental completion, please confirm by typing <span className="font-bold text-gray-900 bg-gray-100 px-1.5 py-0.5 rounded border">PAID</span> below:
+            </p>
+            <Input
+              type="text"
+              placeholder="Type PAID to confirm"
+              value={cashConfirmationText}
+              onChange={(e) => setCashConfirmationText(e.target.value)}
+              className="h-11 rounded-xl text-center font-bold tracking-wider uppercase text-base"
+              autoFocus
+            />
+            <div className="flex justify-end gap-3 pt-3 border-t border-gray-100">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setCashPaidBookingId(null);
+                  setCashConfirmationText('');
+                }}
+                disabled={isMarkingPaid}
+                className="rounded-xl h-10 px-4"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                onClick={handleConfirmMarkCashPaid}
+                disabled={isMarkingPaid || cashConfirmationText.trim().toUpperCase() !== 'PAID'}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl h-10 px-5 font-bold shadow-md shadow-emerald-500/20 disabled:opacity-50"
+              >
+                {isMarkingPaid ? 'Completing Booking...' : 'Confirm Cash Received'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
+
