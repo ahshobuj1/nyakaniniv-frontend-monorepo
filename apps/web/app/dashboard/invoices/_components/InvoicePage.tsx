@@ -18,13 +18,13 @@ export default function InvoicesPage() {
   const invoices = invoicesData?.data || [];
 
   // Derived state for counts
-  const paidCount = invoices.filter((inv) => inv.status === 'PAID').length;
-  const unpaidCount = invoices.filter((inv) => inv.status === 'UNPAID').length;
+  const paidCount = invoices.filter((inv) => String(inv.status).toUpperCase() === 'PAID').length;
+  const unpaidCount = invoices.filter((inv) => String(inv.status).toUpperCase() === 'UNPAID').length;
   const totalCount = invoices.length;
 
   const filteredInvoices = invoices.filter((invoice) => {
     if (filter === 'All') return true;
-    return invoice.status === filter.toLowerCase();
+    return String(invoice.status).toUpperCase() === filter.toUpperCase();
   });
 
   return (

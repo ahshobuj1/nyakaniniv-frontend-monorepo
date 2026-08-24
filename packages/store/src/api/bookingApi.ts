@@ -1,8 +1,38 @@
 import { baseApi } from './baseApi';
-import { Booking, BaseResponse, CreateBookingRequest, UpdateBookingStatusRequest } from '../types';
+import {
+  Booking,
+  BaseResponse,
+  CreateBookingRequest,
+  InitiateBookingResponse,
+  VerifyBookingOtpRequest,
+  ResendBookingOtpRequest,
+  UpdateBookingStatusRequest,
+} from '../types';
 
 export const bookingApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
+    initiateBooking: builder.mutation<BaseResponse<InitiateBookingResponse>, CreateBookingRequest>({
+      query: (body) => ({
+        url: '/bookings/v1/initiate',
+        method: 'POST',
+        body,
+      }),
+    }),
+    verifyBookingOtp: builder.mutation<BaseResponse<Booking>, VerifyBookingOtpRequest>({
+      query: (body) => ({
+        url: '/bookings/v1/verify-otp',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['Booking'],
+    }),
+    resendBookingOtp: builder.mutation<BaseResponse<InitiateBookingResponse>, ResendBookingOtpRequest>({
+      query: (body) => ({
+        url: '/bookings/v1/resend-otp',
+        method: 'POST',
+        body,
+      }),
+    }),
     createBooking: builder.mutation<BaseResponse<Booking>, CreateBookingRequest>({
       query: (body) => ({
         url: '/bookings/v1/',
@@ -63,6 +93,9 @@ export const bookingApi = baseApi.injectEndpoints({
 });
 
 export const {
+  useInitiateBookingMutation,
+  useVerifyBookingOtpMutation,
+  useResendBookingOtpMutation,
   useCreateBookingMutation,
   useGetMyBookingsQuery,
   useGetBookingByIdQuery,

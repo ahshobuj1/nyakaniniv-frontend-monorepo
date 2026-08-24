@@ -5,6 +5,7 @@ import {AlertCircle, Calendar, Mail, CheckCircle2, Clock, Phone, MapPin, Eye, XC
 import {Card, CardContent, Dialog, DialogContent, DialogHeader, DialogTitle, Input, Button} from '@repo/ui';
 import { useGetMyBookingsQuery, useUpdateBookingStatusMutation, useHandleCashRequestDecisionMutation, useMarkCashAsPaidMutation } from '@repo/store';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import { ConfirmationDialog } from '@/components/ConfirmationDialog';
 import { toast } from 'sonner';
 
 type FilterType = 'All' | 'pending' | 'accepted' | 'completed' | 'canceled';
@@ -29,6 +30,11 @@ export default function BookingsPage() {
   } | null>(null);
   const [priceInput, setPriceInput] = useState('');
   const [detailsModalContent, setDetailsModalContent] = useState<string | null>(null);
+
+  // Confirmation Dialog states
+  const [rejectBookingId, setRejectBookingId] = useState<string | null>(null);
+  const [cashPaidBookingId, setCashPaidBookingId] = useState<string | null>(null);
+  const [cashConfirmationText, setCashConfirmationText] = useState('');
 
   const bookings = bookingsResponse?.data || [];
 
@@ -72,16 +78,15 @@ export default function BookingsPage() {
     }
   };
 
-  const handleRejectBooking = async () => {
-    if (!bookingToUpdate) return;
-    if (confirm('Are you sure you want to reject this booking?')) {
-      try {
-        await updateStatus({ id: bookingToUpdate.id, status: 'rejected' as any }).unwrap();
-        toast.success('Booking rejected');
-        setBookingToUpdate(null);
-      } catch (error: any) {
-        toast.error(error?.data?.error?.message || error?.data?.message || 'Failed to reject booking');
-      }
+  const handleConfirmReject = async () => {
+    if (!rejectBookingId) return;
+    try {
+      await updateStatus({ id: rejectBookingId, status: 'rejected' as any }).unwrap();
+      toast.success('Booking rejected successfully');
+      setRejectBookingId(null);
+      setBookingToUpdate(null);
+    } catch (error: any) {
+      toast.error(error?.data?.error?.message || error?.data?.message || 'Failed to reject booking');
     }
   };
 
@@ -96,11 +101,17 @@ export default function BookingsPage() {
     }
   };
 
-  const handleMarkCashPaid = async (id: string) => {
-    if (!confirm('Confirm you received the cash?')) return;
+  const handleConfirmMarkCashPaid = async () => {
+    if (!cashPaidBookingId) return;
+    if (cashConfirmationText.trim().toUpperCase() !== 'PAID') {
+      toast.error('Please type PAID to confirm');
+      return;
+    }
     try {
-      await markPaid(id).unwrap();
-      toast.success('Payment marked as paid via Cash!');
+      await markPaid(cashPaidBookingId).unwrap();
+      toast.success('Payment marked as paid via Cash and booking completed!');
+      setCashPaidBookingId(null);
+      setCashConfirmationText('');
       setBookingToUpdate(null);
     } catch (error: any) {
       toast.error(error?.data?.error?.message || error?.data?.message || 'Failed to mark as paid');
@@ -233,25 +244,22 @@ export default function BookingsPage() {
                 <table className="w-full min-w-225 text-left border-collapse">
                   <thead>
                     <tr>
-                      <th className="py-4 px-8 text-[12px] font-semibold text-[#A1A1AA] uppercase tracking-wider w-[25%]">
+                      <th className="py-4 px-8 text-[12px] font-semibold text-[#A1A1AA] uppercase tracking-wider w-[20%]">
                         Client
                       </th>
                       <th className="py-4 px-8 text-[12px] font-semibold text-[#A1A1AA] uppercase tracking-wider w-[15%]">
                         Phone
                       </th>
-                      <th className="py-4 px-8 text-[12px] font-semibold text-[#A1A1AA] uppercase tracking-wider w-[25%]">
+                      <th className="py-4 px-8 text-[12px] font-semibold text-[#A1A1AA] uppercase tracking-wider w-[20%]">
                         Event Type
                       </th>
                       <th className="py-4 px-8 text-[12px] font-semibold text-[#A1A1AA] uppercase tracking-wider w-[15%]">
                        Event Date
                       </th>
-                      <th className="py-4 px-8 text-[12px] font-semibold text-[#A1A1AA] uppercase tracking-wider w-[15%]">
-                       Requested Date
+                      <th className="py-4 px-8 text-[12px] font-semibold text-[#A1A1AA] uppercase tracking-wider w-[18%]">
+                        Payment & Amount
                       </th>
-                      <th className="py-4 px-8 text-[12px] font-semibold text-[#A1A1AA] uppercase tracking-wider w-[15%]">
-                        Amount
-                      </th>
-                      <th className="py-4 px-8 text-[12px] font-semibold text-[#A1A1AA] uppercase tracking-wider w-[10%] text-center">
+                      <th className="py-4 px-8 text-[12px] font-semibold text-[#A1A1AA] uppercase tracking-wider w-[6%] text-center">
                         Details
                       </th>
                       <th className="py-4 px-8 text-[12px] font-semibold text-[#A1A1AA] uppercase tracking-wider w-[1%] whitespace-nowrap">
@@ -273,7 +281,12 @@ export default function BookingsPage() {
                           className={`${index % 2 === 0 ? 'bg-[#F9FAFB]' : 'bg-white'} hover:bg-gray-100/50 transition-colors`}>
                           <td className="py-5 px-8 text-[14px] font-semibold text-[#111620]">
                             <div className="flex flex-col gap-1">
-                              <span>{booking.client?.name || 'Unknown Client'}</span>
+                              <a 
+                                href={`/dashboard/bookings/${booking.id}`}
+                                className="hover:text-primary transition-colors cursor-pointer"
+                              >
+                                {booking.client?.name || 'Unknown Client'}
+                              </a>
                               <span className="text-[12px] text-[#787878] font-normal flex items-center gap-1.5">
                                 <Mail className="w-3.5 h-3.5 shrink-0" />
                                 <span className="truncate">{booking.client?.email || 'N/A'}</span>
@@ -329,24 +342,50 @@ export default function BookingsPage() {
                             })()}
                           </td>
 
-                          <td className="py-5 px-8 text-[14px] text-[#787878]">
-                            {booking.createdAt && (
-                              <div className="flex items-center gap-2 font-medium text-[#111620] w-max">
-                                {new Date(booking.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
-                              </div>
-                            )}
-                          </td>        
-
-                          <td className="py-5 px-8 text-[14px] font-medium text-[#111620]">
-                            {booking.totalAmount ? `KES ${Number(booking.totalAmount).toLocaleString()}` : '-'}
+                          {/* Combined Payment & Amount Column */}
+                          <td className="py-5 px-8 text-[14px]">
+                            <div className="flex flex-col items-start gap-1.5">
+                              <span className="font-semibold text-[#111620]">
+                                {booking.totalAmount ? `KES ${Number(booking.totalAmount).toLocaleString()}` : '-'}
+                              </span>
+                              {booking.invoice ? (
+                                isInvoicePaid ? (
+                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-green-50 border border-green-200 text-green-700 text-[11px] font-bold">
+                                    <CheckCircle2 className="w-3 h-3" />
+                                    Paid
+                                  </span>
+                                ) : isApprovedCashRequest ? (
+                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-50 border border-amber-200 text-amber-700 text-[11px] font-bold">
+                                    <Clock className="w-3 h-3" />
+                                    Cash Approved
+                                  </span>
+                                ) : isPendingCashRequest ? (
+                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-50 border border-amber-200 text-amber-700 text-[11px] font-bold">
+                                    <Clock className="w-3 h-3" />
+                                    Cash Pending
+                                  </span>
+                                ) : (
+                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-gray-100 border border-gray-200 text-gray-600 text-[11px] font-medium">
+                                    <Clock className="w-3 h-3" />
+                                    Unpaid
+                                  </span>
+                                )
+                              ) : (
+                                <span className="text-[11px] text-gray-400 italic">
+                                  Not Invoiced
+                                </span>
+                              )}
+                            </div>
                           </td>
+
+                          {/* View Details Eye Icon Button */}
                           <td className="py-5 px-8 text-center">
                             <a
                               href={`/dashboard/bookings/${booking.id}`}
                               className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-50 text-blue-500 hover:bg-blue-100 transition-colors cursor-pointer"
                               title="View Event Details"
                             >
-                              <Eye className="w-4 h-4 " />
+                              <Eye className="w-4 h-4" />
                             </a>
                           </td>
                           <td className="py-5 px-8 flex flex-col items-start gap-2">
@@ -463,8 +502,16 @@ export default function BookingsPage() {
                     {isActionLoading ? 'Processing...' : 'Accept Booking Request'}
                   </Button>
                   <Button 
+                    type="button"
                     variant="outline" 
-                    onClick={handleRejectBooking}
+                    onClick={() => {
+                      if (bookingToUpdate) {
+                        const id = bookingToUpdate.id;
+                        setBookingToUpdate(null);
+                        setPriceInput('');
+                        setRejectBookingId(id);
+                      }
+                    }}
                     disabled={isActionLoading}
                     className="h-11 w-full rounded-[10px] text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700"
                   >
@@ -495,7 +542,13 @@ export default function BookingsPage() {
 
               {bookingToUpdate?.currentStatus?.toLowerCase() === 'accepted' && bookingToUpdate.isApprovedCashRequest && (
                 <Button 
-                  onClick={() => handleMarkCashPaid(bookingToUpdate.id)}
+                  onClick={() => {
+                    if (bookingToUpdate) {
+                      const id = bookingToUpdate.id;
+                      setBookingToUpdate(null);
+                      setCashPaidBookingId(id);
+                    }
+                  }}
                   disabled={isActionLoading}
                   className="bg-green-600 hover:bg-green-700 text-white font-bold h-11 w-full rounded-[10px]"
                 >
@@ -559,6 +612,77 @@ export default function BookingsPage() {
                 className="bg-primary hover:bg-primary/90 text-white font-bold px-6 h-10 rounded-[10px]"
               >
                 Close
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Reject Booking Confirmation Dialog */}
+      <ConfirmationDialog
+        isOpen={!!rejectBookingId}
+        title="Reject Booking Request"
+        description="Are you sure you want to reject this booking request? The client will be notified and this action cannot be undone."
+        confirmText="Reject Booking"
+        cancelText="Cancel"
+        isDestructive={true}
+        isLoading={isUpdating}
+        onConfirm={handleConfirmReject}
+        onCancel={() => setRejectBookingId(null)}
+      />
+
+      {/* Confirm Cash Received Dialog with 'PAID' verification */}
+      <Dialog 
+        open={!!cashPaidBookingId} 
+        onOpenChange={(open) => {
+          if (!open) {
+            setCashPaidBookingId(null);
+            setCashConfirmationText('');
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-[460px] bg-white rounded-2xl p-6 border-none shadow-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-gray-900 flex items-center gap-2">
+              <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+              Confirm Cash Payment Received
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-2">
+            <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-900 text-sm leading-relaxed">
+              <strong>Important:</strong> Marking this payment as received will immediately mark the invoice as <strong>PAID</strong> and transition this booking to <strong>COMPLETED</strong> status.
+            </div>
+            <p className="text-sm text-gray-600">
+              To prevent accidental completion, please confirm by typing <span className="font-bold text-gray-900 bg-gray-100 px-1.5 py-0.5 rounded border">PAID</span> below:
+            </p>
+            <Input
+              type="text"
+              placeholder="Type PAID to confirm"
+              value={cashConfirmationText}
+              onChange={(e) => setCashConfirmationText(e.target.value)}
+              className="h-11 rounded-xl text-center font-bold tracking-wider uppercase text-base"
+              autoFocus
+            />
+            <div className="flex justify-end gap-3 pt-3 border-t border-gray-100">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setCashPaidBookingId(null);
+                  setCashConfirmationText('');
+                }}
+                disabled={isMarkingPaid}
+                className="rounded-xl h-10 px-4"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                onClick={handleConfirmMarkCashPaid}
+                disabled={isMarkingPaid || cashConfirmationText.trim().toUpperCase() !== 'PAID'}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl h-10 px-5 font-bold shadow-md shadow-emerald-500/20 disabled:opacity-50"
+              >
+                {isMarkingPaid ? 'Completing Booking...' : 'Confirm Cash Received'}
               </Button>
             </div>
           </div>

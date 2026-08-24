@@ -294,10 +294,20 @@ export interface LandingPageSocial {
   order?: number;
 }
 
+export interface LandingPageSetting {
+  id?: number;
+  headerLogoUrl: string | null;
+  footerLogoUrl: string | null;
+  siteName?: string | null;
+  updatedAt?: string;
+}
+
 export interface LandingPageContent {
   hero: LandingPageHero | null;
   steps: LandingPageStep[];
   services: LandingPageService[];
   faqs: LandingPageFaq[];
   socials: LandingPageSocial[];
+  settings?: LandingPageSetting | null;
 }
+

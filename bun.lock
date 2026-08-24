@@ -80,6 +80,7 @@
       "dependencies": {
         "@repo/templates": "workspace:*",
         "@repo/types": "workspace:*",
+        "@repo/ui": "workspace:*",
         "react": "^19.2.0",
       },
       "devDependencies": {
@@ -131,6 +132,7 @@
         "@hookform/resolvers": "^5.2.2",
         "@repo/store": "workspace:*",
         "@repo/types": "workspace:*",
+        "@repo/ui": "workspace:*",
         "date-fns": "^4.4.0",
         "framer-motion": "^12.38.0",
         "lucide-react": "^0.479.0",

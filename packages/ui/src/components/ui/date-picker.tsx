@@ -35,6 +35,16 @@ export function DatePicker({
   const selectedDate = React.useMemo(() => {
     if (!date) return undefined
     if (typeof date === "string") {
+      // Parse YYYY-MM-DD without UTC timezone shifting
+      const parts = date.split('T')[0]?.split('-');
+      if (parts && parts.length === 3) {
+        const year = parseInt(parts[0]!, 10);
+        const month = parseInt(parts[1]!, 10) - 1;
+        const day = parseInt(parts[2]!, 10);
+        if (!isNaN(year) && !isNaN(month) && !isNaN(day)) {
+          return new Date(year, month, day);
+        }
+      }
       const parsed = new Date(date)
       return isNaN(parsed.getTime()) ? undefined : parsed
     }
@@ -42,7 +52,13 @@ export function DatePicker({
   }, [date])
 
   const handleSelect = (newDate?: Date) => {
-    onSelect?.(newDate)
+    if (newDate) {
+      // Normalize to local midnight
+      const localDate = new Date(newDate.getFullYear(), newDate.getMonth(), newDate.getDate());
+      onSelect?.(localDate);
+    } else {
+      onSelect?.(undefined);
+    }
     setOpen(false)
   }
 
@@ -51,10 +67,8 @@ export function DatePicker({
       return disabled(currentDate)
     }
     if (minDate) {
-      const todayZero = new Date(minDate)
-      todayZero.setHours(0, 0, 0, 0)
-      const currentZero = new Date(currentDate)
-      currentZero.setHours(0, 0, 0, 0)
+      const todayZero = new Date(minDate.getFullYear(), minDate.getMonth(), minDate.getDate())
+      const currentZero = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate())
       if (currentZero < todayZero) return true
     }
     return false

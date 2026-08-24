@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 import {useSidebar} from './SidebarContext';
 import Image from 'next/image';
-import { useGetCurrentProfileQuery } from '@repo/store';
+import { useGetCurrentProfileQuery, useGetLandingPageContentQuery } from '@repo/store';
 
 const sidebarGroups = [
   {
@@ -55,9 +55,9 @@ export function Sidebar() {
   const pathname = usePathname();
   const {isCollapsed, isMobileOpen, closeMobile} = useSidebar();
   const { data: profileResponse } = useGetCurrentProfileQuery();
+  const { data: landingResponse } = useGetLandingPageContentQuery();
   const subdomain = profileResponse?.data?.tenant?.subdomain || 'demo';
-
-  console.log("=============>profileResponse", profileResponse?.data?.lastName)
+  const logoUrl = landingResponse?.data?.settings?.headerLogoUrl || '/auth.logo.png';
   
   const getLiveWebsiteUrl = () => {
     if (typeof window === 'undefined') return '#';
@@ -92,22 +92,29 @@ export function Sidebar() {
           className={`h-16 flex items-center ${isCollapsed ? 'md:justify-center px-4' : 'justify-between px-6'} border-b border-gray-100`}>
           <Link href={'/'}>
             <h1
-              className={`text-xl font-bold text-primary flex items-center gap-3  tracking-wide whitespace-nowrap overflow-hidden ${isCollapsed ? 'md:hidden' : 'block'}`}>
+              className={`text-xl font-bold text-primary flex items-center gap-3 tracking-wide whitespace-nowrap overflow-hidden ${isCollapsed ? 'md:hidden' : 'block'}`}>
               <Image
-                src={'/auth.logo.png'}
+                src={logoUrl}
                 alt="Logo"
                 width={200}
                 height={200}
-                className="w-8"
+                className="w-10 h-10 object-contain"
+                unoptimized={Boolean(logoUrl && (logoUrl.startsWith('http') || logoUrl.endsWith('.svg')))}
               />
-              {profileResponse?.data?.firstName}
+              {profileResponse?.data?.firstName || 'Upbeat'}
             </h1>
           </Link>
           {/* Logo icon for desktop collapsed state */}
-          <h1
-            className={`hidden text-xl font-bold text-primary ${isCollapsed ? 'md:block' : 'md:hidden'}`}>
-            <HeadphonesIcon className="w-5 h-5" />
-          </h1>
+          <Link href={'/'} className={`hidden ${isCollapsed ? 'md:flex' : 'md:hidden'} items-center justify-center`}>
+            <Image
+              src={logoUrl}
+              alt="Logo"
+              width={40}
+              height={40}
+              className="w-10 h-10 object-contain"
+              unoptimized={Boolean(logoUrl && (logoUrl.startsWith('http') || logoUrl.endsWith('.svg')))}
+            />
+          </Link>
 
           <button
             onClick={closeMobile}

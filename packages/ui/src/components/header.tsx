@@ -37,9 +37,10 @@ export const navLinks = [
 
 export interface HeaderProps {
   userDropdown?: React.ReactNode;
+  logoUrl?: string;
 }
 
-export function Header({ userDropdown }: HeaderProps = {}) {
+export function Header({ userDropdown, logoUrl }: HeaderProps = {}) {
   const scrolled = useScroll(10);
   const pathname = usePathname();
   const [activeSection, setActiveSection] = useState('');
@@ -93,15 +94,16 @@ export function Header({ userDropdown }: HeaderProps = {}) {
           },
         )}>
         <Link
-          className="rounded-md p-2 hover:bg-muted dark:hover:bg-muted/50 py-4"
+          className="rounded-md p-2 hover:bg-muted/50 transition-colors flex items-center"
           href="/">
           <Image
-            src={'/home/upbeat.png'}
-            width={500}
-            height={500}
-            unoptimized
-            alt="logo"
-            className="max-w-15 bg-contain"
+            src={logoUrl || '/home/upbeat.png'}
+            width={240}
+            height={70}
+            priority
+            alt="UpBeat Africa"
+            className="h-12 md:h-16 w-auto object-contain [image-rendering:-webkit-optimize-contrast]"
+            unoptimized={Boolean(logoUrl && (logoUrl.startsWith('http') || logoUrl.endsWith('.svg')))}
           />
         </Link>
 

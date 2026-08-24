@@ -6,8 +6,9 @@ import {useState} from 'react';
 import {zodResolver} from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import {toast} from 'sonner';
-import {useCreateBookingMutation} from '@repo/store';
+import {useInitiateBookingMutation} from '@repo/store';
 import {DatePicker, AddressAutocomplete} from '@repo/ui';
+import BookingOtpModal from '../shared/BookingOtpModal';
 
 const bookingSchema = z.object({
   fullName: z.string().min(2, 'Full name is required'),
@@ -39,9 +40,14 @@ export default function BookingPage({content}: any) {
     },
   };
 
-  const [createBooking] = useCreateBookingMutation();
+  const [initiateBooking, {isLoading: isInitiating}] = useInitiateBookingMutation();
   const tenantId = content?.tenantId || '';
   const [submitStatus, setSubmitStatus] = useState<{type: 'success' | 'error', message: string} | null>(null);
+
+  // OTP Modal state
+  const [otpModalOpen, setOtpModalOpen] = useState(false);
+  const [verificationToken, setVerificationToken] = useState('');
+  const [pendingClientEmail, setPendingClientEmail] = useState('');
 
   const {
     register,
@@ -86,7 +92,7 @@ export default function BookingPage({content}: any) {
         `Requirements: ${data.details}`,
       ].filter(Boolean).join('\n');
 
-      const res = await createBooking({
+      const res = await initiateBooking({
         tenantId,
         clientName: data.fullName,
         clientEmail: data.email,
@@ -97,19 +103,28 @@ export default function BookingPage({content}: any) {
         eventDetails: enrichedDetails,
       }).unwrap();
       
-      toast.success('Booking request sent successfully!', {
-        description: "Your request has been sent to the DJ for review. You'll receive an email once approved.",
-      });
-      setSubmitStatus({
-        type: 'success', 
-        message: "Your request has been sent to the DJ for review. If your booking is accepted, you'll receive an email with a secure payment link to confirm your reservation."
-      });
-      reset();
+      if (res?.data?.verificationToken) {
+        setVerificationToken(res.data.verificationToken);
+        setPendingClientEmail(data.email);
+        setOtpModalOpen(true);
+        toast.success('Verification code sent to your email!');
+      }
     } catch (error: any) {
-      const errorMsg = error?.data?.message || 'Failed to send booking request. Please try again.';
+      const errorMsg = error?.data?.message || 'Failed to send verification code. Please try again.';
       toast.error(errorMsg);
       setSubmitStatus({ type: 'error', message: errorMsg });
     }
+  };
+
+  const handleBookingVerified = () => {
+    toast.success('Booking request submitted successfully!', {
+      description: "Your request has been sent to the DJ for review. You'll receive an email once approved.",
+    });
+    setSubmitStatus({
+      type: 'success', 
+      message: "Your request has been verified and sent to the DJ for review. If your booking is accepted, you'll receive an email with a secure payment link to confirm your reservation."
+    });
+    reset();
   };
 
   return (
@@ -455,11 +470,11 @@ export default function BookingPage({content}: any) {
               {/* Submit Button */}
               <motion.button
                 type="submit"
-                disabled={isSubmitting}
-                whileHover={{scale: isSubmitting ? 1 : 1.01}}
-                whileTap={{scale: isSubmitting ? 1 : 0.99}}
+                disabled={isSubmitting || isInitiating}
+                whileHover={{scale: isSubmitting || isInitiating ? 1 : 1.01}}
+                whileTap={{scale: isSubmitting || isInitiating ? 1 : 0.99}}
                 className="w-full bg-[var(--primary)] hover:opacity-90 text-white py-[15px] rounded-[10px] font-bold text-[16px] transition-all mt-[8px] flex justify-center items-center gap-2 shadow-lg shadow-[var(--primary)]/20 disabled:opacity-70 cursor-pointer">
-                {isSubmitting ? (
+                {isSubmitting || isInitiating ? (
                   <>
                     <svg
                       className="animate-spin h-5 w-5 text-white"
@@ -478,16 +493,24 @@ export default function BookingPage({content}: any) {
                         fill="currentColor"
                         d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    Sending Booking Request...
+                    Sending Verification Code...
                   </>
                 ) : (
-                  'Send Booking Request'
+                  'Request Booking (Verify Email)'
                 )}
               </motion.button>
             </form>
           </motion.div>
         </div>
       </div>
+
+      <BookingOtpModal
+        isOpen={otpModalOpen}
+        onClose={() => setOtpModalOpen(false)}
+        verificationToken={verificationToken}
+        clientEmail={pendingClientEmail}
+        onSuccess={handleBookingVerified}
+      />
     </section>
   );
 }

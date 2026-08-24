@@ -9,6 +9,7 @@ export interface SocialLink {
 
 interface FooterProps {
   socials?: SocialLink[];
+  logoUrl?: string;
 }
 
 const STATIC_SOCIALS = [
@@ -26,7 +27,7 @@ const STATIC_SOCIALS = [
   },
 ];
 
-export function Footer({ socials = [] }: FooterProps) {
+export function Footer({ socials = [], logoUrl }: FooterProps) {
   const getSocialUrl = (platformName: string) => {
     const found = socials.find(s => s.platform.toLowerCase() === platformName.toLowerCase());
     return found?.url || '#';
@@ -38,11 +39,12 @@ export function Footer({ socials = [] }: FooterProps) {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
           <div className="flex flex-col items-start justify-center">
             <Image
-              src="/home/footer-logo.png"
+              src={logoUrl || "/home/footer-logo.png"}
               alt="UpBeat Entertainment Africa"
-              width={2000}
-              height={2000}
-              className=" w-30 h-30 object-contain"
+              width={300}
+              height={300}
+              className="w-24 h-24 md:w-28 md:h-28 object-contain"
+              unoptimized={Boolean(logoUrl && (logoUrl.startsWith('http') || logoUrl.endsWith('.svg')))}
             />
           </div>
 

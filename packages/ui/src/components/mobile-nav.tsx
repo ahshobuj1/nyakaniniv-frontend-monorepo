@@ -38,17 +38,20 @@ export function MobileNav({ showLogin = true }: { showLogin?: boolean }) {
               {navLinks.map((link) => (
                 <Button
                   asChild
-                  className="justify-start hover:text-primary"
+                  className="justify-start hover:text-primary text-base py-3"
                   key={link.label}
-                  variant="ghost">
-                  <Link href={link.href}>{link.label}</Link>
+                  variant="ghost"
+                  onClick={() => setOpen(false)}>
+                  <Link href={link.href} onClick={() => setOpen(false)}>
+                    {link.label}
+                  </Link>
                 </Button>
               ))}
             </div>
             <div className="mt-12 flex flex-col gap-2">
               {showLogin && (
-                <Link href={'/auth/login'}>
-                  <Button size="lg" className="w-full" variant="default">
+                <Link href={'/auth/login'} onClick={() => setOpen(false)}>
+                  <Button size="lg" className="w-full bg-primary hover:bg-primary/90 text-white font-semibold" variant="default">
                     Log In
                   </Button>
                 </Link>
