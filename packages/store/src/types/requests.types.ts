@@ -117,6 +117,8 @@ export interface CreateBookingRequest {
   eventDate: string;
   eventType: string;
   eventDetails?: string;
+  eventTimezone?: string;
+  currencyCode?: string;
   address?: string;
 }
 
@@ -139,6 +141,9 @@ export interface UpdateBookingStatusRequest {
   id: string;
   status: string;
   totalAmount?: number;
+  currencyCode?: string;
+  cashBooking?: boolean;
+  reason?: string;
 }
 
 // --- Subscription Requests ---
@@ -147,6 +152,7 @@ export interface SubscribeRequest {
   billingCycle: 'monthly' | 'annually';
   successUrl?: string;
   cancelUrl?: string;
+  gateway?: string;
 }
 
 export interface SubscribeResponse {
@@ -157,17 +163,23 @@ export interface SubscribeResponse {
 export interface PaystackOnboardRequest {
   tenantId: string;
   bankCode: string;
+  bankName?: string;
   accountNumber: string;
-  businessName: string;
+  accountName?: string;
+  businessName?: string;
+  country?: string;
+  gateway?: string;
 }
 
 export interface PaystackOnboardResponse {
   success: boolean;
   subaccountCode: string;
+  gateway?: string;
 }
 
 export interface PaystackStatusResponse {
   isConnected: boolean;
+  gateway?: string;
   subaccountCode?: string;
   bankName?: string;
   accountNumber?: string;

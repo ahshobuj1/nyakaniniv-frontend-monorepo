@@ -32,6 +32,33 @@ export const subscriptionApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ['Subscription'],
     }),
+    getAvailableGateways: builder.query<BaseResponse<Array<{
+      id: string;
+      name: string;
+      title: string;
+      description: string;
+      currencies: string[];
+      isRecommended: boolean;
+      badge: string;
+      paymentMethods: string[];
+    }>>, string | void>({
+      query: (country) => ({
+        url: `/subscriptions/v1/gateways${country ? `?country=${country}` : ''}`,
+        method: 'GET',
+      }),
+    }),
+    validatePayoutAccount: builder.mutation<BaseResponse<{ valid: boolean; accountName?: string; message?: string }>, {
+      gateway: string;
+      bankCode?: string;
+      accountNumber: string;
+      country?: string;
+    }>({
+      query: (body) => ({
+        url: '/subscriptions/v1/validate-payout',
+        method: 'POST',
+        body,
+      }),
+    }),
   }),
   overrideExisting: false,
 });
@@ -41,4 +68,6 @@ export const {
   useGetMySubscriptionQuery,
   useSubscribeMutation,
   useCancelSubscriptionMutation,
+  useGetAvailableGatewaysQuery,
+  useValidatePayoutAccountMutation,
 } = subscriptionApi;

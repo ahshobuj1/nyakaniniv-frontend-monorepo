@@ -88,6 +88,21 @@ export const bookingApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: (result, error, id) => [{ type: 'Booking', id }, 'Booking'],
     }),
+    resendPaymentReminder: builder.mutation<BaseResponse<{ success: boolean; message: string }>, string>({
+      query: (id) => ({
+        url: `/bookings/v1/${id}/remind-payment`,
+        method: 'POST',
+      }),
+    }),
+    getBookingPaymentLink: builder.query<
+      BaseResponse<{ checkoutUrl: string; reference: string; gateway: string; amount: number; currency: string }>,
+      { id: string; gateway?: string }
+    >({
+      query: ({ id, gateway }) => ({
+        url: `/bookings/v1/${id}/payment-link${gateway ? `?gateway=${gateway}` : ''}`,
+        method: 'GET',
+      }),
+    }),
   }),
   overrideExisting: false,
 });
@@ -103,4 +118,7 @@ export const {
   useRequestCashPaymentMutation,
   useHandleCashRequestDecisionMutation,
   useMarkCashAsPaidMutation,
+  useResendPaymentReminderMutation,
+  useGetBookingPaymentLinkQuery,
+  useLazyGetBookingPaymentLinkQuery,
 } = bookingApi;

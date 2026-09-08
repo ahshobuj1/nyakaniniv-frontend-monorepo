@@ -45,7 +45,7 @@ export const baseApi = createApi({
   tagTypes: [
     'Auth', 'User', 'Tenant', 'Theme', 'Event', 'MixTape', 
     'Booking', 'Subscription', 'Invoice', 'PaystackConnect', 
-    'Client', 'Ticket', 'Notification', 'LandingPage'
+    'Client', 'Ticket', 'Notification', 'LandingPage', 'Wallet'
   ],
   endpoints: () => ({}), // Endpoints are injected in separate files
 });

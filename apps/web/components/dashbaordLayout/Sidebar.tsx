@@ -11,6 +11,7 @@ import {
   CalendarCheck,
   FileText,
   CreditCard,
+  Wallet,
   ExternalLink,
   Headphones,
   X,
@@ -47,6 +48,7 @@ const sidebarGroups = [
     title: 'Account',
     items: [
       {label: 'Billing & Plans', url: '/dashboard/billing', icon: CreditCard},
+      {label: 'Wallet & Payouts', url: '/dashboard/wallet', icon: Wallet},
     ],
   },
 ];

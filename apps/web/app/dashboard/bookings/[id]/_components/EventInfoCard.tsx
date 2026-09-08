@@ -3,30 +3,17 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@repo/ui';
 import { Music, Clock, MapPin } from 'lucide-react';
 import { Booking } from '@repo/store';
+import { parseBookingEventDetails } from '@/lib/bookingStatusHelper';
 
 interface EventInfoCardProps {
   booking: Booking;
 }
 
 export function EventInfoCard({ booking }: EventInfoCardProps) {
-  const rawDetails = booking.eventDetails || '';
-  let startTime = '';
-  let duration = '';
-  const otherLines: string[] = [];
-
-  rawDetails.split('\n').forEach((line: string) => {
-    if (line.startsWith('Start Time:')) {
-      startTime = line.replace('Start Time:', '').trim();
-    } else if (line.startsWith('Duration:')) {
-      duration = line.replace('Duration:', '').trim();
-    } else if (line.startsWith('Requirements:')) {
-      otherLines.push(line.replace('Requirements:', '').trim());
-    } else if (line.trim()) {
-      otherLines.push(line.trim());
-    }
-  });
-
-  const requirements = otherLines.join('\n').trim();
+  const parsed = parseBookingEventDetails(booking.eventDetails);
+  const startTime = parsed.startTime;
+  const duration = parsed.duration;
+  const requirements = parsed.requirements || parsed.otherDetails.join('\n').trim();
   const eventDateFormatted = booking.eventDate
     ? new Date(booking.eventDate).toLocaleDateString('en-GB', {
         weekday: 'short',

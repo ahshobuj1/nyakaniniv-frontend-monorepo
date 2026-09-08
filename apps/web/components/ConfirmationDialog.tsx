@@ -12,6 +12,7 @@ interface ConfirmationDialogProps {
   onCancel: () => void;
   isDestructive?: boolean;
   isLoading?: boolean;
+  confirmButtonClassName?: string;
 }
 
 export const ConfirmationDialog = ({
@@ -24,6 +25,7 @@ export const ConfirmationDialog = ({
   onCancel,
   isDestructive = false,
   isLoading = false,
+  confirmButtonClassName,
 }: ConfirmationDialogProps) => {
   if (!isOpen) return null;
 
@@ -37,7 +39,7 @@ export const ConfirmationDialog = ({
             type="button"
             onClick={onCancel}
             disabled={isLoading}
-            className="px-5 py-2.5 font-medium bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50"
+            className="px-5 py-2.5 font-medium bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50 cursor-pointer"
           >
             {cancelText}
           </button>
@@ -45,8 +47,12 @@ export const ConfirmationDialog = ({
             type="button"
             onClick={onConfirm}
             disabled={isLoading}
-            className={`px-5 py-2.5 font-medium text-white rounded-lg transition-colors disabled:opacity-50 ${
-              isDestructive ? 'bg-red-600 hover:bg-red-700 shadow-md shadow-red-500/20' : 'bg-primary hover:bg-primary/90 shadow-md shadow-primary/20'
+            className={`px-5 py-2.5 font-medium text-white rounded-lg transition-colors disabled:opacity-50 cursor-pointer ${
+              confirmButtonClassName
+                ? confirmButtonClassName
+                : isDestructive
+                  ? 'bg-red-600 hover:bg-red-700 shadow-md shadow-red-500/20'
+                  : 'bg-primary hover:bg-primary/90 shadow-md shadow-primary/20'
             }`}
           >
             {isLoading ? 'Processing...' : confirmText}

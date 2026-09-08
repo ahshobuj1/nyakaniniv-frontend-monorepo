@@ -23,6 +23,7 @@ export * from './api/clientApi';
 export * from './api/ticketApi';
 export * from './api/notificationApi';
 export * from './api/analyticsApi';
+export * from './api/walletApi';
 
 // Features (Reducers)
 export * from './features/auth/authSlice';

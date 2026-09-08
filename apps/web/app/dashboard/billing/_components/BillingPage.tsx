@@ -1,7 +1,8 @@
 'use client';
 
-import {useState} from 'react';
-import {Zap, Check, X, Calendar, CheckCircle2, CreditCard, ExternalLink} from 'lucide-react';
+import {useState, useEffect} from 'react';
+import Link from 'next/link';
+import {Zap, Check, X, Calendar, CheckCircle2, CreditCard, ExternalLink, ArrowUpRight} from 'lucide-react';
 import {
   Card, 
   CardContent, 
@@ -24,11 +25,9 @@ import {
   useGetMyInvoicesQuery,
   SubscriptionPlan,
   useGetCurrentProfileQuery,
-  useCheckPaystackAccountStatusQuery,
-  useGetPaystackOnboardingLinkMutation,
-  useGetPaystackBanksQuery,
-  useDisconnectPaystackAccountMutation
+  useDisconnectPaystackAccountMutation,
 } from '@repo/store';
+import GatewaySelectionModal from './GatewaySelectionModal';
 
 const ALL_FEATURES = [
   { key: 'CUSTOM_SUBDOMAIN', label: 'Custom Subdomain' },
@@ -58,21 +57,15 @@ export default function BillingSubscriptionPage() {
   const { data: invoicesResponse, isLoading: isLoadingInvoices } = useGetMyInvoicesQuery();
 
   const { data: profileResponse } = useGetCurrentProfileQuery();
-  const tenantId = profileResponse?.data?.tenant?.id;
-  const { data: paystackStatusResponse, isLoading: isLoadingPaystack } = useCheckPaystackAccountStatusQuery(tenantId || '', { skip: !tenantId });
-  const [getOnboardingLink, { isLoading: isGettingPaystackLink }] = useGetPaystackOnboardingLinkMutation();
-  const [disconnectAccount, { isLoading: isDisconnecting }] = useDisconnectPaystackAccountMutation();
-  const paystackStatus = paystackStatusResponse?.data;
-
-  const [paystackDialogOpen, setPaystackDialogOpen] = useState(false);
-  const [paystackDisconnectDialogOpen, setPaystackDisconnectDialogOpen] = useState(false);
-  const [paystackForm, setPaystackForm] = useState({ bankCode: '', accountNumber: '', businessName: '', country: 'nigeria' });
-
-  const { data: banksResponse, isLoading: isLoadingBanks } = useGetPaystackBanksQuery(paystackForm.country, { skip: !paystackDialogOpen });
-  const banksList = banksResponse?.data || [];
+  const tenant = profileResponse?.data?.tenant;
+  const tenantId = tenant?.id;
+  const tenantCountry = (tenant?.country || '').trim().toLowerCase();
+  const isEastAfrica = ['tanzania', 'tz', 'kenya', 'ke', 'uganda', 'ug', 'rwanda', 'rw'].includes(tenantCountry);
 
   const [subscribe, { isLoading: isSubscribing }] = useSubscribeMutation();
   const [cancelSubscription, { isLoading: isCanceling }] = useCancelSubscriptionMutation();
+  const [disconnectAccount] = useDisconnectPaystackAccountMutation();
+  const [paystackDisconnectDialogOpen, setPaystackDisconnectDialogOpen] = useState(false);
 
   const plans = plansResponse?.data || [];
   const activeSubscription = subResponse?.data;
@@ -82,38 +75,31 @@ export default function BillingSubscriptionPage() {
     (inv: any) => inv.type === 'SUBSCRIPTION'
   );
 
-  const handleSubscribe = async (planId: number) => {
+  const [gatewayModalOpen, setGatewayModalOpen] = useState(false);
+  const [selectedPlanId, setSelectedPlanId] = useState<number | null>(null);
+
+  const handleSubscribeClick = (planId: number) => {
+    setSelectedPlanId(planId);
+    setGatewayModalOpen(true);
+  };
+
+  const handleProceedSubscription = async (gateway: string) => {
+    if (!selectedPlanId) return;
     try {
-      const res = await subscribe({ 
-        planId: planId, 
+      const result = await subscribe({
+        planId: selectedPlanId,
         billingCycle: frequency === 'monthly' ? 'monthly' : 'annually',
         successUrl: window.location.origin + '/dashboard/billing?success=true',
-        cancelUrl: window.location.origin + '/dashboard/billing?canceled=true'
+        cancelUrl: window.location.origin + '/dashboard/billing?canceled=true',
+        gateway,
       }).unwrap();
-      if (res.data?.url) {
-        window.location.href = res.data.url;
+      if (result?.data?.url) {
+        window.location.href = result.data.url;
       }
     } catch (error: any) {
       toast.error(error?.data?.error?.message || error?.data?.message || 'Failed to initiate subscription');
     }
-  };
-
-  const handlePaystackSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!tenantId) return;
-    try {
-      const res = await getOnboardingLink({
-        tenantId,
-        ...paystackForm
-      }).unwrap();
-      
-      if (res.success) {
-        toast.success('Successfully connected Paystack account!');
-        setPaystackDialogOpen(false);
-      }
-    } catch (error: any) {
-      toast.error(error?.data?.message || 'Failed to connect Paystack');
-    }
+    setGatewayModalOpen(false);
   };
 
   const handleDisconnectPaystack = async () => {
@@ -121,11 +107,11 @@ export default function BillingSubscriptionPage() {
     try {
       const res = await disconnectAccount({ tenantId }).unwrap();
       if (res.success) {
-        toast.success('Successfully removed Paystack account');
+        toast.success('Successfully removed payout account');
         setPaystackDisconnectDialogOpen(false);
       }
     } catch (error: any) {
-      toast.error(error?.data?.message || 'Failed to remove account');
+      toast.error(error?.data?.error?.message || error?.data?.message || 'Failed to remove payout account');
     }
   };
 
@@ -154,175 +140,29 @@ export default function BillingSubscriptionPage() {
         </div>
 
 
-         {/* Payouts & Payments Section */}
-        <Card className="border-none shadow-[0_2px_20px_rgba(0,0,0,0.03)] overflow-hidden rounded-2xl bg-white mb-8">
-          <CardContent className="p-0">
-            <div className="p-6 md:p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border-b border-gray-100">
-              {isLoadingPaystack ? null : paystackStatus?.isConnected ? (
-                <div className="w-full relative overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-600 via-purple-600 to-indigo-900 p-6 text-white shadow-xl max-w-sm">
-                  {/* Decorative Elements */}
-                  <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white opacity-10 rounded-full blur-xl"></div>
-                  <div className="absolute bottom-0 left-0 -mb-4 -ml-4 w-32 h-32 bg-indigo-400 opacity-20 rounded-full blur-2xl"></div>
-                  
-                  <div className="relative z-10 flex justify-between items-start mb-8">
-                    <div>
-                      <p className="text-white/70 text-xs font-semibold uppercase tracking-wider mb-1">Connected Account</p>
-                      <h3 className="font-bold text-lg">{paystackStatus.bankName || 'Paystack Bank'}</h3>
-                    </div>
-                    <div className="flex items-center gap-1 bg-white/20 px-2 py-1 rounded backdrop-blur-sm">
-                      <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                      <span className="text-xs font-bold uppercase tracking-wider text-white">Active</span>
-                    </div>
-                  </div>
-                  
-                  <div className="relative z-10 mb-6">
-                    <p className="font-mono text-2xl tracking-widest text-white/90">
-                      **** **** **** {paystackStatus.accountNumber?.slice(-4) || '****'}
-                    </p>
-                  </div>
-                  
-                  <div className="relative z-10 flex justify-between items-end">
-                    <div>
-                      <p className="text-white/60 text-xs uppercase tracking-wider mb-1">Account Holder</p>
-                      <p className="font-medium">{profileResponse?.data?.tenant?.stageName || (profileResponse?.data as any)?.firstName || 'DJ Name'}</p>
-                    </div>
-                    <div className="flex items-center gap-2 text-white/80">
-                      <span className="text-xs font-bold uppercase">Paystack</span>
-                      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-6 h-6">
-                        <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" fill="currentColor" fillOpacity="0.2"/>
-                        <path d="M12 16L8 10H16L12 16Z" fill="currentColor"/>
-                      </svg>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="flex items-center gap-5">
-                  <div className="w-14 h-14 rounded-xl bg-[#F5F5F5] flex items-center justify-center shrink-0">
-                    <CreditCard className="w-6 h-6 text-[#111620]" />
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-3 mb-1">
-                      <h2 className="text-[20px] font-bold text-[#111620]">
-                        Payouts via Paystack
-                      </h2>
-                      <Badge className="bg-[#F59E0B] hover:bg-[#F59E0B] text-white text-[10px] font-bold px-2 py-0.5 rounded uppercase">
-                        NOT CONNECTED
-                      </Badge>
-                    </div>
-                    <p className="text-[#787878] text-[14px]">
-                      Connect your bank account to receive payments from client bookings.
-                    </p>
-                  </div>
-                </div>
-              )}
-              <div className="flex flex-col md:flex-row items-center gap-3 w-full md:w-auto">
-                {paystackStatus?.isConnected ? (
-                  <Dialog open={paystackDisconnectDialogOpen} onOpenChange={setPaystackDisconnectDialogOpen}>
-                    <DialogTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className="flex-1 md:flex-none text-red-600 hover:text-red-700 hover:bg-red-50 font-semibold h-11 rounded-lg">
-                        Remove Account
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>Remove Connected Bank Account</DialogTitle>
-                        <DialogDescription>
-                          Are you sure you want to remove this bank account? You will not be able to receive booking payouts until you connect a new one.
-                        </DialogDescription>
-                      </DialogHeader>
-                      <DialogFooter className="mt-4">
-                        <Button type="button" variant="outline" onClick={() => setPaystackDisconnectDialogOpen(false)}>Cancel</Button>
-                        <Button 
-                          type="button" 
-                          className="bg-red-600 hover:bg-red-700 text-white" 
-                          onClick={handleDisconnectPaystack} 
-                          disabled={isDisconnecting}
-                        >
-                          {isDisconnecting ? 'Removing...' : 'Yes, Remove Account'}
-                        </Button>
-                      </DialogFooter>
-                    </DialogContent>
-                  </Dialog>
-                ) : (
-                  <Dialog open={paystackDialogOpen} onOpenChange={setPaystackDialogOpen}>
-                    <DialogTrigger asChild>
-                      <Button
-                        className="flex-1 md:flex-none bg-primary hover:bg-primary/90 text-white font-semibold h-11 rounded-lg">
-                        Connect with Paystack
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>Connect Paystack Account</DialogTitle>
-                        <DialogDescription>
-                          Enter your bank details to receive booking payouts directly to your account.
-                        </DialogDescription>
-                      </DialogHeader>
-                      <form onSubmit={handlePaystackSubmit} className="space-y-4 mt-4">
-                        <div className="space-y-2">
-                          <label className="text-sm font-medium">Business Name</label>
-                          <input 
-                            required 
-                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
-                            value={paystackForm.businessName} 
-                            onChange={e => setPaystackForm({...paystackForm, businessName: e.target.value})} 
-                            placeholder="Your DJ Name" 
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <label className="text-sm font-medium">Country</label>
-                          <select
-                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
-                            value={paystackForm.country}
-                            onChange={e => setPaystackForm({...paystackForm, country: e.target.value, bankCode: ''})}
-                          >
-                            <option value="nigeria">Nigeria</option>
-                            <option value="kenya">Kenya</option>
-                            <option value="ghana">Ghana</option>
-                            <option value="south africa">South Africa</option>
-                          </select>
-                        </div>
-                        <div className="space-y-2">
-                          <label className="text-sm font-medium">Bank</label>
-                          <select 
-                            required 
-                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
-                            value={paystackForm.bankCode} 
-                            onChange={e => setPaystackForm({...paystackForm, bankCode: e.target.value})} 
-                            disabled={isLoadingBanks}
-                          >
-                            <option value="">{isLoadingBanks ? 'Loading banks...' : 'Select your bank'}</option>
-                            {banksList.map((bank: any) => (
-                              <option key={bank.id} value={bank.code}>{bank.name}</option>
-                            ))}
-                          </select>
-                        </div>
-                        <div className="space-y-2">
-                          <label className="text-sm font-medium">Account Number</label>
-                          <input 
-                            required 
-                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
-                            value={paystackForm.accountNumber} 
-                            onChange={e => setPaystackForm({...paystackForm, accountNumber: e.target.value})} 
-                            placeholder="0000000000" 
-                          />
-                        </div>
-                        <DialogFooter className="mt-6">
-                          <Button type="button" variant="outline" onClick={() => setPaystackDialogOpen(false)}>Cancel</Button>
-                          <Button type="submit" disabled={isGettingPaystackLink}>
-                            {isGettingPaystackLink ? 'Connecting...' : 'Connect'}
-                          </Button>
-                        </DialogFooter>
-                      </form>
-                    </DialogContent>
-                  </Dialog>
-                )}
-              </div>
+        {/* Shortcut to Wallet & Payouts */}
+        <div className="bg-white border border-[#E5E7EB] rounded-2xl p-5 shadow-[0_2px_20px_rgba(0,0,0,0.03)] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3.5">
+            <div className="w-11 h-11 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+              <CreditCard className="w-5 h-5" />
             </div>
-          </CardContent>
-        </Card>
+            <div>
+              <h4 className="text-[15px] font-bold text-[#111620]">
+                DJ Wallet & Payout Management
+              </h4>
+              <p className="text-[13px] text-[#787878] mt-0.5">
+                Manage your booking earnings, escrow balances, and bank/mobile money payouts.
+              </p>
+            </div>
+          </div>
+          <Link
+            href="/dashboard/wallet"
+            className="inline-flex items-center gap-2 px-4 h-11 rounded-xl bg-[#111620] hover:bg-[#202736] text-white text-sm font-bold transition-all shrink-0 cursor-pointer"
+          >
+            <span>Open DJ Wallet</span>
+            <ArrowUpRight className="w-4 h-4" />
+          </Link>
+        </div>
 
         {/* Current Plan & Usage Section */}
         {isLoadingSub ? (
@@ -514,7 +354,7 @@ export default function BillingSubscriptionPage() {
                             toast.info(isActivePlan ? 'You are already subscribed to this plan.' : 'Please cancel your current plan before switching.');
                             return;
                           }
-                          handleSubscribe(plan.id);
+                          handleSubscribeClick(plan.id);
                         }}
                         disabled={isSubscribing}
                         className={`w-full py-3.5 rounded-lg font-bold mb-8 transition-colors duration-300 text-[15px] ${
@@ -646,6 +486,25 @@ export default function BillingSubscriptionPage() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Payment Gateway Selection Modal */}
+        <GatewaySelectionModal
+          isOpen={gatewayModalOpen}
+          onClose={() => setGatewayModalOpen(false)}
+          onSelectGateway={handleProceedSubscription}
+          planName={plans.find((p: any) => p.id === selectedPlanId)?.name}
+          price={
+            selectedPlanId
+              ? frequency === 'monthly'
+                ? Number(plans.find((p: any) => p.id === selectedPlanId)?.priceMonthly)
+                : Number(plans.find((p: any) => p.id === selectedPlanId)?.priceAnnually)
+              : undefined
+          }
+          billingCycle={frequency === 'monthly' ? 'monthly' : 'annually'}
+          currency="KES"
+          tenantCountry={tenantCountry}
+          isLoading={isSubscribing}
+        />
       </div>
     </div>
   );

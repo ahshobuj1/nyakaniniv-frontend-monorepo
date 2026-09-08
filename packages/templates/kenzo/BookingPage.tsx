@@ -101,6 +101,7 @@ export default function BookingPage({content}: any) {
         eventDate: formattedDate,
         eventType: data.eventType,
         eventDetails: enrichedDetails,
+        eventTimezone: data.timezone,
       }).unwrap();
       
       if (res?.data?.verificationToken) {

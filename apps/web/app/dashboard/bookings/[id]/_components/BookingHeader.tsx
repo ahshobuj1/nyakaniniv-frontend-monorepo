@@ -5,6 +5,8 @@ import { Button } from '@repo/ui';
 import { DownloadIcon, ArrowLeft } from 'lucide-react';
 import { Booking } from '@repo/store';
 
+import { getBookingStatusBadge } from '@/lib/bookingStatusHelper';
+
 interface BookingHeaderProps {
   booking: Booking;
   downloading: boolean;
@@ -16,7 +18,7 @@ export function BookingHeader({
   downloading,
   onDownloadInvoice,
 }: BookingHeaderProps) {
-  const isCompleted = booking.status === 'completed';
+  const badgeConfig = getBookingStatusBadge(booking.status, booking.eventDate);
 
   return (
     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-gray-200">
@@ -30,13 +32,10 @@ export function BookingHeader({
           <div className="flex items-center gap-3">
             <h1 className="text-2xl font-semibold text-[#111827]">Booking Details</h1>
             <span
-              className={`px-2.5 py-0.5 rounded-full text-xs font-medium uppercase tracking-wide border ${
-                isCompleted
-                  ? 'bg-green-50 text-green-700 border-green-200'
-                  : 'bg-blue-50 text-blue-700 border-blue-200'
-              }`}
+              className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider border ${badgeConfig.badgeClass}`}
             >
-              {booking.status || 'pending'}
+              <span className={`w-1.5 h-1.5 rounded-full ${badgeConfig.dotClass}`} />
+              {badgeConfig.label}
             </span>
           </div>
           <p className="text-sm text-[#6B7280] mt-1 font-mono">{booking.id}</p>
