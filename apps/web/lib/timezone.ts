@@ -8,6 +8,9 @@ export interface AfricanTimezone {
 
 export const AFRICAN_TIMEZONES: AfricanTimezone[] = [
   { country: 'Kenya', code: 'EAT', label: 'EAT - East Africa (Nairobi, UTC+3)', iana: 'Africa/Nairobi', city: 'Nairobi' },
+  { country: 'Uganda', code: 'EAT', label: 'EAT - East Africa (Kampala, UTC+3)', iana: 'Africa/Kampala', city: 'Kampala' },
+  { country: 'Tanzania', code: 'EAT', label: 'EAT - East Africa (Dar es Salaam, UTC+3)', iana: 'Africa/Dar_es_Salaam', city: 'Dar es Salaam' },
+  { country: 'Rwanda', code: 'CAT', label: 'CAT - Central Africa (Kigali, UTC+2)', iana: 'Africa/Kigali', city: 'Kigali' },
   { country: 'Nigeria', code: 'WAT', label: 'WAT - West Africa (Lagos, UTC+1)', iana: 'Africa/Lagos', city: 'Lagos' },
   { country: 'Ghana', code: 'GMT', label: 'GMT - Greenwich (Accra, UTC+0)', iana: 'Africa/Accra', city: 'Accra' },
   { country: 'South Africa', code: 'SAST', label: 'SAST - South Africa (Johannesburg, UTC+2)', iana: 'Africa/Johannesburg', city: 'Johannesburg' },
@@ -17,14 +20,23 @@ export function getCountryTimezone(countryOrAddress?: string): AfricanTimezone {
   if (!countryOrAddress) return AFRICAN_TIMEZONES[0];
   const query = countryOrAddress.toLowerCase();
 
+  if (query.includes('uganda') || query.includes('kampala')) {
+    return AFRICAN_TIMEZONES[1]; // Uganda
+  }
+  if (query.includes('tanzania') || query.includes('dar es salaam') || query.includes('zanzibar')) {
+    return AFRICAN_TIMEZONES[2]; // Tanzania
+  }
+  if (query.includes('rwanda') || query.includes('kigali')) {
+    return AFRICAN_TIMEZONES[3]; // Rwanda
+  }
   if (query.includes('nigeria') || query.includes('lagos') || query.includes('abuja') || query.includes('wat')) {
-    return AFRICAN_TIMEZONES[1]; // Nigeria
+    return AFRICAN_TIMEZONES[4]; // Nigeria
   }
   if (query.includes('ghana') || query.includes('accra') || query.includes('gmt')) {
-    return AFRICAN_TIMEZONES[2]; // Ghana
+    return AFRICAN_TIMEZONES[5]; // Ghana
   }
   if (query.includes('south africa') || query.includes('johannesburg') || query.includes('cape town') || query.includes('sast')) {
-    return AFRICAN_TIMEZONES[3]; // South Africa
+    return AFRICAN_TIMEZONES[6]; // South Africa
   }
   return AFRICAN_TIMEZONES[0]; // Kenya (Default)
 }

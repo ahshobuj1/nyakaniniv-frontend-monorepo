@@ -24,7 +24,7 @@ import {
 } from '@repo/ui';
 import {Country, City} from 'country-state-city';
 import {useEffect, useState} from 'react';
-import {useOnboardTenantMutation} from '@repo/store';
+import {useOnboardTenantMutation, useGetCurrentProfileQuery} from '@repo/store';
 import {useRouter} from 'next/navigation';
 
 const profileSchema = z.object({
@@ -65,12 +65,21 @@ const availableGenres = [
 
 export default function SetupProfilePage() {
   const router = useRouter();
+  const {data: profileData, isLoading: isProfileLoading} = useGetCurrentProfileQuery();
   const [onboardTenant, {isLoading}] = useOnboardTenantMutation();
+
+  // If user already has a tenant profile, redirect immediately to dashboard
+  useEffect(() => {
+    if (profileData?.data?.tenant) {
+      router.replace('/dashboard');
+    }
+  }, [profileData, router]);
 
   const {
     register,
     handleSubmit,
     setValue,
+    setError,
     watch,
     formState: {errors, isSubmitting},
   } = useForm<ProfileFormValues>({
@@ -133,9 +142,34 @@ export default function SetupProfilePage() {
       toast.success(response.message || 'Profile setup complete!');
       router.push('/dashboard');
     } catch (error: any) {
-      toast.error(error?.data?.message || 'Failed to setup profile.');
+      const errorMsg =
+        error?.data?.error?.message ||
+        error?.data?.message ||
+        error?.message ||
+        'Failed to setup profile.';
+      
+      toast.error(errorMsg);
+
+      if (errorMsg.toLowerCase().includes('already has a tenant')) {
+        setTimeout(() => {
+          router.replace('/dashboard');
+        }, 1200);
+      } else if (errorMsg.toLowerCase().includes('subdomain')) {
+        setError('subdomain', {
+          type: 'server',
+          message: errorMsg,
+        });
+      }
     }
   };
+
+  if (isProfileLoading || profileData?.data?.tenant) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4 font-sans">

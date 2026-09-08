@@ -32,6 +32,8 @@ import {Card, CardContent, Button, Dialog, DialogContent, DialogHeader, DialogTi
 import Link from 'next/link';
 import { toast } from 'sonner';
 import { ConfirmationDialog } from '@/components/ConfirmationDialog';
+import { DeclineBookingModal } from '@/components/DeclineBookingModal';
+import { parseBookingEventDetails } from '@/lib/bookingStatusHelper';
 
 // ==========================================
 // 1. Dummy Data
@@ -53,7 +55,8 @@ const CustomTooltip = ({active, payload, label}: any) => {
 };
 
 // ==========================================
-// 3. Main Dashboard Component
+// 3. Main Dashboard Overview Component
+// ==========================================
 import { 
   useGetCurrentProfileQuery,
   useGetTenantAnalyticsQuery,
@@ -68,20 +71,62 @@ export default function DashboardOverview() {
   const [bookingToUpdate, setBookingToUpdate] = React.useState<{ 
     id: string; 
     currentStatus: string;
+    clientName?: string;
+    eventType?: string;
     isPendingCashRequest?: boolean;
     isApprovedCashRequest?: boolean;
     isInvoicePaid?: boolean;
   } | null>(null);
   const [priceInput, setPriceInput] = React.useState('');
-  const [rejectBookingId, setRejectBookingId] = React.useState<string | null>(null);
+  const [rejectBooking, setRejectBooking] = React.useState<{
+    id: string;
+    clientName?: string;
+    eventType?: string;
+  } | null>(null);
   const [cashPaidBookingId, setCashPaidBookingId] = React.useState<string | null>(null);
   const [cashConfirmationText, setCashConfirmationText] = React.useState('');
+  const [approveCashBookingId, setApproveCashBookingId] = React.useState<string | null>(null);
+  const [rejectCashBookingId, setRejectCashBookingId] = React.useState<string | null>(null);
+  const [completeBookingId, setCompleteBookingId] = React.useState<string | null>(null);
 
   const { data: myBookingsResponse } = useGetMyBookingsQuery();
   const [updateStatus, { isLoading: isUpdating }] = useUpdateBookingStatusMutation();
   const [handleCash, { isLoading: handlingCash }] = useHandleCashRequestDecisionMutation();
   const [markPaid, { isLoading: isMarkingPaid }] = useMarkCashAsPaidMutation();
   const isActionLoading = isUpdating || handlingCash || isMarkingPaid;
+
+  const handleConfirmApproveCash = async () => {
+    if (!approveCashBookingId) return;
+    try {
+      await handleCash({ id: approveCashBookingId, decision: 'approve' }).unwrap();
+      toast.success('Cash request approved successfully!');
+      setApproveCashBookingId(null);
+    } catch (error: any) {
+      toast.error(error?.data?.error?.message || error?.data?.message || 'Failed to approve cash request');
+    }
+  };
+
+  const handleConfirmRejectCash = async () => {
+    if (!rejectCashBookingId) return;
+    try {
+      await handleCash({ id: rejectCashBookingId, decision: 'reject' }).unwrap();
+      toast.success('Cash request declined. Online checkout link emailed to client.');
+      setRejectCashBookingId(null);
+    } catch (error: any) {
+      toast.error(error?.data?.error?.message || error?.data?.message || 'Failed to decline cash request');
+    }
+  };
+
+  const handleConfirmComplete = async () => {
+    if (!completeBookingId) return;
+    try {
+      await updateStatus({ id: completeBookingId, status: 'completed' as any }).unwrap();
+      toast.success('Booking marked as completed! Escrow funds released into wallet.');
+      setCompleteBookingId(null);
+    } catch (error: any) {
+      toast.error(error?.data?.error?.message || error?.data?.message || 'Failed to complete booking');
+    }
+  };
 
   const handleStatusUpdate = async (newStatus: 'ACCEPTED' | 'COMPLETED') => {
     if (!bookingToUpdate) return;
@@ -110,12 +155,16 @@ export default function DashboardOverview() {
     }
   };
 
-  const handleConfirmReject = async () => {
-    if (!rejectBookingId) return;
+  const handleConfirmReject = async (reason: string) => {
+    if (!rejectBooking) return;
     try {
-      await updateStatus({ id: rejectBookingId, status: 'rejected' as any }).unwrap();
-      toast.success('Booking rejected successfully');
-      setRejectBookingId(null);
+      await updateStatus({
+        id: rejectBooking.id,
+        status: 'REJECTED' as any,
+        reason: reason.trim(),
+      }).unwrap();
+      toast.success('Booking rejected and reason emailed to client');
+      setRejectBooking(null);
       setBookingToUpdate(null);
     } catch (error: any) {
       toast.error(error?.data?.error?.message || error?.data?.message || 'Failed to reject booking');
@@ -465,7 +514,7 @@ export default function DashboardOverview() {
                       
                       return (
                       <tr
-                        key={booking.id}
+                        key={booking.id ? `${booking.id}-${index}` : `booking-${index}`}
                         className={`${index % 2 === 0 ? 'bg-[#F9FAFB]' : 'bg-white'} hover:bg-gray-100/50 transition-colors`}>
                         <td className="py-5 px-8 text-[14px] font-semibold text-[#111620]">
                           <div className="flex flex-col gap-1">
@@ -508,11 +557,8 @@ export default function DashboardOverview() {
                         </td>
                         <td className="py-5 px-8 text-[14px] text-[#787878]">
                           {(() => {
-                            let timeTag = '';
-                            if (booking.eventDetails && booking.eventDetails.includes('Start Time:')) {
-                              const match = booking.eventDetails.match(/Start Time:\s*([^\n]+)/);
-                              if (match) timeTag = match[1].trim();
-                            }
+                            const parsed = parseBookingEventDetails(booking.eventDetails);
+                            const timeTag = parsed.startTime;
                             return (
                               <div className="flex flex-col gap-1">
                                 <div className="flex items-center gap-1.5 font-medium text-[#111620] w-max">                           
@@ -583,6 +629,8 @@ export default function DashboardOverview() {
                               setBookingToUpdate({ 
                                 id: booking.id, 
                                 currentStatus: booking.status,
+                                clientName: booking.client?.name || 'Client',
+                                eventType: booking.eventType || 'Event',
                                 isPendingCashRequest,
                                 isApprovedCashRequest,
                                 isInvoicePaid
@@ -694,10 +742,13 @@ export default function DashboardOverview() {
                     variant="outline" 
                     onClick={() => {
                       if (bookingToUpdate) {
-                        const id = bookingToUpdate.id;
+                        setRejectBooking({
+                          id: bookingToUpdate.id,
+                          clientName: bookingToUpdate.clientName,
+                          eventType: bookingToUpdate.eventType,
+                        });
                         setBookingToUpdate(null);
                         setPriceInput('');
-                        setRejectBookingId(id);
                       }
                     }}
                     disabled={isActionLoading}
@@ -711,15 +762,27 @@ export default function DashboardOverview() {
               {bookingToUpdate?.currentStatus?.toLowerCase() === 'accepted' && bookingToUpdate.isPendingCashRequest && (
                 <>
                   <Button 
-                    onClick={() => handleCashDecision('approve')}
+                    onClick={() => {
+                      if (bookingToUpdate) {
+                        const id = bookingToUpdate.id;
+                        setBookingToUpdate(null);
+                        setApproveCashBookingId(id);
+                      }
+                    }}
                     disabled={isActionLoading}
                     className="bg-amber-500 hover:bg-amber-600 text-white font-bold h-11 w-full rounded-[10px]"
                   >
-                    {isActionLoading ? 'Processing...' : 'Approve Cash Request'}
+                    Approve Cash Request
                   </Button>
                   <Button 
                     variant="outline" 
-                    onClick={() => handleCashDecision('reject')}
+                    onClick={() => {
+                      if (bookingToUpdate) {
+                        const id = bookingToUpdate.id;
+                        setBookingToUpdate(null);
+                        setRejectCashBookingId(id);
+                      }
+                    }}
                     disabled={isActionLoading}
                     className="h-11 w-full rounded-[10px]"
                   >
@@ -746,7 +809,13 @@ export default function DashboardOverview() {
 
               {bookingToUpdate?.currentStatus?.toLowerCase() === 'accepted' && bookingToUpdate.isInvoicePaid && (
                 <Button 
-                  onClick={() => handleStatusUpdate('COMPLETED')}
+                  onClick={() => {
+                    if (bookingToUpdate) {
+                      const id = bookingToUpdate.id;
+                      setBookingToUpdate(null);
+                      setCompleteBookingId(id);
+                    }
+                  }}
                   disabled={isActionLoading}
                   className="bg-blue-600 hover:bg-blue-700 text-white font-bold h-11 w-full rounded-[10px]"
                 >
@@ -780,17 +849,73 @@ export default function DashboardOverview() {
         </DialogContent>
       </Dialog>
 
-      {/* Reject Booking Confirmation Dialog */}
-      <ConfirmationDialog
-        isOpen={!!rejectBookingId}
-        title="Reject Booking Request"
-        description="Are you sure you want to reject this booking request? The client will be notified and this action cannot be undone."
-        confirmText="Reject Booking"
-        cancelText="Cancel"
-        isDestructive={true}
+      {/* Reject Booking with Decline Note Modal */}
+      <DeclineBookingModal
+        isOpen={!!rejectBooking}
+        clientName={rejectBooking?.clientName}
+        eventType={rejectBooking?.eventType}
         isLoading={isUpdating}
+        onClose={() => setRejectBooking(null)}
         onConfirm={handleConfirmReject}
-        onCancel={() => setRejectBookingId(null)}
+      />
+
+      {/* Approve Cash Payment Confirmation Dialog */}
+      <ConfirmationDialog
+        isOpen={!!approveCashBookingId}
+        title="Approve Cash on Event Day"
+        description={
+          <div className="space-y-2 text-sm text-gray-600">
+            <p>Are you sure you want to approve cash payment for this booking?</p>
+            <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-900 text-xs leading-relaxed">
+              <strong>Notice:</strong> This confirms the booking on your schedule. You agree to collect exact cash directly from the client at the venue.
+            </div>
+          </div>
+        }
+        confirmText="Approve Cash Payment"
+        cancelText="Cancel"
+        confirmButtonClassName="bg-amber-600 hover:bg-amber-700 shadow-md shadow-amber-500/20"
+        isLoading={handlingCash}
+        onConfirm={handleConfirmApproveCash}
+        onCancel={() => setApproveCashBookingId(null)}
+      />
+
+      {/* Reject Cash Request Confirmation Dialog */}
+      <ConfirmationDialog
+        isOpen={!!rejectCashBookingId}
+        title="Decline Cash Request"
+        description={
+          <div className="space-y-2 text-sm text-gray-600">
+            <p>Decline cash payment request for this booking?</p>
+            <p className="text-xs text-gray-500">
+              The booking will remain awaiting payment, and the client will be sent an official online payment checkout link.
+            </p>
+          </div>
+        }
+        confirmText="Decline & Demand Online Pay"
+        cancelText="Cancel"
+        isLoading={handlingCash}
+        onConfirm={handleConfirmRejectCash}
+        onCancel={() => setRejectCashBookingId(null)}
+      />
+
+      {/* Complete Event Confirmation Dialog */}
+      <ConfirmationDialog
+        isOpen={!!completeBookingId}
+        title="Complete Gig & Release Escrow"
+        description={
+          <div className="space-y-2 text-sm text-gray-600">
+            <p>Has this event been successfully completed?</p>
+            <div className="p-3 bg-blue-50 border border-blue-200 rounded-xl text-blue-900 text-xs leading-relaxed">
+              Marking this event as completed will transition the booking to <strong>COMPLETED</strong> and release escrow funds directly to your wallet available balance.
+            </div>
+          </div>
+        }
+        confirmText="Complete & Release Funds"
+        cancelText="Cancel"
+        confirmButtonClassName="bg-blue-600 hover:bg-blue-700 shadow-md shadow-blue-500/20"
+        isLoading={isUpdating}
+        onConfirm={handleConfirmComplete}
+        onCancel={() => setCompleteBookingId(null)}
       />
 
       {/* Confirm Cash Received Dialog with 'PAID' verification */}

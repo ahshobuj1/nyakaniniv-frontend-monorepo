@@ -34,12 +34,12 @@ export function AcceptBookingModal({
         </DialogHeader>
         <form onSubmit={onSubmit} className="space-y-4 pt-2">
           <p className="text-sm text-gray-600">
-            Set the total price for this event. An official invoice with a secure Paystack payment
+            Set the total price for this event. An official invoice with a secure online payment
             link will be sent to <strong>{booking.client?.email || 'the client'}</strong>.
           </p>
           <div className="space-y-2">
             <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">
-              Total Amount (KES)
+              Total Amount ({booking.currencyCode || 'KES'})
             </label>
             <Input
               type="number"

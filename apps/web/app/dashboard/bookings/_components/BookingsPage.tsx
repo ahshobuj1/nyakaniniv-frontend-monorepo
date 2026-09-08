@@ -1,118 +1,220 @@
 'use client';
 
-import React, {useState} from 'react';
-import {AlertCircle, Calendar, Mail, CheckCircle2, Clock, Phone, MapPin, Eye, XCircle} from 'lucide-react';
-import {Card, CardContent, Dialog, DialogContent, DialogHeader, DialogTitle, Input, Button} from '@repo/ui';
-import { useGetMyBookingsQuery, useUpdateBookingStatusMutation, useHandleCashRequestDecisionMutation, useMarkCashAsPaidMutation } from '@repo/store';
+import React, { useState } from 'react';
+import {
+  AlertCircle,
+  Calendar,
+  Mail,
+  CheckCircle2,
+  Clock,
+  Phone,
+  MapPin,
+  Eye,
+  Send,
+  MoreVertical,
+  DollarSign,
+  XCircle,
+  Banknote,
+  Copy,
+  Check,
+  FileText,
+} from 'lucide-react';
+import {
+  Card,
+  CardContent,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  Input,
+  Button,
+  MoneyDisplay,
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+} from '@repo/ui';
+import {
+  useGetMyBookingsQuery,
+  useUpdateBookingStatusMutation,
+  useHandleCashRequestDecisionMutation,
+  useMarkCashAsPaidMutation,
+  useResendPaymentReminderMutation,
+} from '@repo/store';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { ConfirmationDialog } from '@/components/ConfirmationDialog';
+import { DeclineBookingModal } from '@/components/DeclineBookingModal';
+import { normalizeBookingStatus, getBookingStatusBadge, parseBookingEventDetails } from '@/lib/bookingStatusHelper';
 import { toast } from 'sonner';
 
-type FilterType = 'All' | 'pending' | 'accepted' | 'completed' | 'canceled';
+type FilterType = 'All' | 'pending' | 'awaiting_payment' | 'confirmed' | 'completed' | 'canceled';
+
+interface ActiveBooking {
+  id: string;
+  clientName: string;
+  clientEmail: string;
+  eventType: string;
+  currencyCode: string;
+  totalAmount?: number | null;
+}
 
 export default function BookingsPage() {
   const [filter, setFilter] = useState<FilterType>('All');
+  const [copiedBookingId, setCopiedBookingId] = useState<string | null>(null);
 
   // APIs
   const { data: bookingsResponse, isLoading: isBookingsLoading } = useGetMyBookingsQuery();
   const [updateStatus, { isLoading: isUpdating }] = useUpdateBookingStatusMutation();
   const [handleCash, { isLoading: handlingCash }] = useHandleCashRequestDecisionMutation();
   const [markPaid, { isLoading: isMarkingPaid }] = useMarkCashAsPaidMutation();
+  const [resendReminder, { isLoading: isSendingReminder }] = useResendPaymentReminderMutation();
   const isActionLoading = isUpdating || handlingCash || isMarkingPaid;
 
-  // Dialog State
-  const [bookingToUpdate, setBookingToUpdate] = useState<{ 
-    id: string; 
-    currentStatus: string;
-    isPendingCashRequest?: boolean;
-    isApprovedCashRequest?: boolean;
-    isInvoicePaid?: boolean;
-  } | null>(null);
-  const [priceInput, setPriceInput] = useState('');
-  const [detailsModalContent, setDetailsModalContent] = useState<string | null>(null);
+  // Specific Action Modals State
+  const [acceptBooking, setAcceptBooking] = useState<ActiveBooking | null>(null);
+  const [quotePrice, setQuotePrice] = useState('');
 
-  // Confirmation Dialog states
-  const [rejectBookingId, setRejectBookingId] = useState<string | null>(null);
-  const [cashPaidBookingId, setCashPaidBookingId] = useState<string | null>(null);
+  const [declineBooking, setDeclineBooking] = useState<ActiveBooking | null>(null);
+
+  const [approveCashBooking, setApproveCashBooking] = useState<ActiveBooking | null>(null);
+  const [declineCashBooking, setDeclineCashBooking] = useState<ActiveBooking | null>(null);
+
+  const [completeEscrowBooking, setCompleteEscrowBooking] = useState<ActiveBooking | null>(null);
+
+  const [cashPaidBooking, setCashPaidBooking] = useState<ActiveBooking | null>(null);
   const [cashConfirmationText, setCashConfirmationText] = useState('');
+
+  const [reminderBooking, setReminderBooking] = useState<ActiveBooking | null>(null);
 
   const bookings = bookingsResponse?.data || [];
 
-  // Derived state for counts
-  const pendingCount = bookings.filter((b: any) => b.status?.toLowerCase() === 'pending').length;
-  const acceptedCount = bookings.filter((b: any) => b.status?.toLowerCase() === 'accepted').length;
-  const completedCount = bookings.filter((b: any) => b.status?.toLowerCase() === 'completed').length;
-  const canceledCount = bookings.filter((b: any) => b.status?.toLowerCase() === 'canceled' || b.status?.toLowerCase() === 'rejected').length;
+  // Derived state for counts using canonical statuses
+  const pendingCount = bookings.filter((b: any) => normalizeBookingStatus(b.status) === 'PENDING').length;
+  const awaitingPaymentCount = bookings.filter((b: any) => normalizeBookingStatus(b.status) === 'AWAITING_PAYMENT').length;
+  const confirmedCount = bookings.filter((b: any) => normalizeBookingStatus(b.status) === 'CONFIRMED').length;
+  const completedCount = bookings.filter((b: any) => normalizeBookingStatus(b.status) === 'COMPLETED').length;
+  const canceledCount = bookings.filter((b: any) => {
+    const s = normalizeBookingStatus(b.status);
+    return s === 'CANCELLED' || s === 'REJECTED';
+  }).length;
   const totalCount = bookings.length;
 
   const filteredBookings = bookings.filter((booking: any) => {
     if (filter === 'All') return true;
-    if (filter === 'canceled') return booking.status?.toLowerCase() === 'canceled' || booking.status?.toLowerCase() === 'rejected';
-    return booking.status?.toLowerCase() === filter.toLowerCase();
+    const s = normalizeBookingStatus(booking.status);
+    if (filter === 'pending') return s === 'PENDING';
+    if (filter === 'awaiting_payment') return s === 'AWAITING_PAYMENT';
+    if (filter === 'confirmed') return s === 'CONFIRMED';
+    if (filter === 'completed') return s === 'COMPLETED';
+    if (filter === 'canceled') return s === 'CANCELLED' || s === 'REJECTED';
+    return true;
   });
 
-  const handleStatusUpdate = async (newStatus: 'ACCEPTED' | 'COMPLETED') => {
-    if (!bookingToUpdate) return;
-    
-    if (newStatus === 'ACCEPTED' && !priceInput) {
-      toast.error('Please enter a total amount for the booking');
+  // Action handlers
+  const handleConfirmAccept = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!acceptBooking) return;
+    const amountNum = parseFloat(quotePrice);
+    if (isNaN(amountNum) || amountNum <= 0) {
+      toast.error('Please enter a valid price amount');
       return;
     }
 
     try {
-      const payload: any = {
-        id: bookingToUpdate.id,
-        status: newStatus.toLowerCase(),
-      };
-      
-      if (newStatus === 'ACCEPTED') {
-        payload.totalAmount = parseFloat(priceInput);
-      }
-
-      await updateStatus(payload).unwrap();
-      toast.success(`Booking marked as ${newStatus.toLowerCase()}!`);
-      setBookingToUpdate(null);
-      setPriceInput('');
+      await updateStatus({
+        id: acceptBooking.id,
+        status: 'AWAITING_PAYMENT',
+        totalAmount: amountNum,
+        currencyCode: acceptBooking.currencyCode || 'KES',
+      }).unwrap();
+      toast.success('Booking accepted! Client has been emailed the checkout link.');
+      setAcceptBooking(null);
+      setQuotePrice('');
     } catch (error: any) {
-      toast.error(error?.data?.error?.message || error?.data?.message || 'Failed to update status');
+      toast.error(error?.data?.error?.message || error?.data?.message || 'Failed to accept booking');
     }
   };
 
-  const handleConfirmReject = async () => {
-    if (!rejectBookingId) return;
+  const handleConfirmDecline = async (reason: string) => {
+    if (!declineBooking) return;
     try {
-      await updateStatus({ id: rejectBookingId, status: 'rejected' as any }).unwrap();
-      toast.success('Booking rejected successfully');
-      setRejectBookingId(null);
-      setBookingToUpdate(null);
+      await updateStatus({
+        id: declineBooking.id,
+        status: 'REJECTED',
+        reason: reason.trim(),
+      }).unwrap();
+      toast.success('Booking declined and reason emailed to client');
+      setDeclineBooking(null);
     } catch (error: any) {
-      toast.error(error?.data?.error?.message || error?.data?.message || 'Failed to reject booking');
+      toast.error(error?.data?.error?.message || error?.data?.message || 'Failed to decline booking');
     }
   };
 
-  const handleCashDecision = async (decision: 'approve' | 'reject') => {
-    if (!bookingToUpdate) return;
+  const handleConfirmResendReminder = async () => {
+    if (!reminderBooking) return;
     try {
-      await handleCash({ id: bookingToUpdate.id, decision }).unwrap();
-      toast.success(`Cash request ${decision}d successfully!`);
-      setBookingToUpdate(null);
+      await resendReminder(reminderBooking.id).unwrap();
+      toast.success('Payment reminder email sent to client successfully!');
+      setReminderBooking(null);
     } catch (error: any) {
-      toast.error(error?.data?.error?.message || error?.data?.message || `Failed to ${decision} cash request`);
+      toast.error(error?.data?.error?.message || error?.data?.message || 'Failed to send reminder');
+    }
+  };
+
+  const handleCopyCheckoutLink = (bookingId: string) => {
+    const url = typeof window !== 'undefined'
+      ? `${window.location.origin}/checkout/${bookingId}`
+      : `https://upbeat.africa/checkout/${bookingId}`;
+    navigator.clipboard.writeText(url);
+    setCopiedBookingId(bookingId);
+    toast.success('Direct client checkout link copied to clipboard!');
+    setTimeout(() => setCopiedBookingId(null), 2000);
+  };
+
+  const handleConfirmApproveCash = async () => {
+    if (!approveCashBooking) return;
+    try {
+      await handleCash({ id: approveCashBooking.id, decision: 'approve' }).unwrap();
+      toast.success('Cash payment approved! Booking confirmed and client notified.');
+      setApproveCashBooking(null);
+    } catch (error: any) {
+      toast.error(error?.data?.error?.message || error?.data?.message || 'Failed to approve cash request');
+    }
+  };
+
+  const handleConfirmDeclineCash = async () => {
+    if (!declineCashBooking) return;
+    try {
+      await handleCash({ id: declineCashBooking.id, decision: 'reject' }).unwrap();
+      toast.success('Cash request declined. Online checkout link emailed to client.');
+      setDeclineCashBooking(null);
+    } catch (error: any) {
+      toast.error(error?.data?.error?.message || error?.data?.message || 'Failed to decline cash request');
+    }
+  };
+
+  const handleConfirmCompleteEscrow = async () => {
+    if (!completeEscrowBooking) return;
+    try {
+      await updateStatus({ id: completeEscrowBooking.id, status: 'COMPLETED' }).unwrap();
+      toast.success('Gig marked as completed! Escrow funds released into your wallet.');
+      setCompleteEscrowBooking(null);
+    } catch (error: any) {
+      toast.error(error?.data?.error?.message || error?.data?.message || 'Failed to complete gig');
     }
   };
 
   const handleConfirmMarkCashPaid = async () => {
-    if (!cashPaidBookingId) return;
+    if (!cashPaidBooking) return;
     if (cashConfirmationText.trim().toUpperCase() !== 'PAID') {
       toast.error('Please type PAID to confirm');
       return;
     }
     try {
-      await markPaid(cashPaidBookingId).unwrap();
+      await markPaid(cashPaidBooking.id).unwrap();
       toast.success('Payment marked as paid via Cash and booking completed!');
-      setCashPaidBookingId(null);
+      setCashPaidBooking(null);
       setCashConfirmationText('');
-      setBookingToUpdate(null);
     } catch (error: any) {
       toast.error(error?.data?.error?.message || error?.data?.message || 'Failed to mark as paid');
     }
@@ -128,7 +230,7 @@ export default function BookingsPage() {
               Booking Requests
             </h1>
             <p className="text-[#787878] text-[15px]">
-              Check out all the bookings!
+              Manage your DJ bookings, invoices, and payments in one organized workspace.
             </p>
           </div>
         </div>
@@ -140,25 +242,25 @@ export default function BookingsPage() {
             <p className="text-[15px]">
               You have{' '}
               <span className="font-bold">
-                {pendingCount} pending booking requests
+                {pendingCount} pending booking {pendingCount === 1 ? 'request' : 'requests'}
               </span>{' '}
-              waiting for your response.
+              waiting for your review and quote.
             </p>
           </div>
         )}
 
         {/* Filters */}
-        <div className="flex items-center gap-3 pt-2 pb-2">
+        <div className="flex items-center gap-2.5 pt-2 pb-2 overflow-x-auto">
           <button
             onClick={() => setFilter('All')}
-            className={`flex items-center gap-2 px-2 md:px-5 py-1 md:py-2.5 rounded-md md:rounded-full text-[14px] font-semibold transition-all border ${
+            className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-semibold transition-all border shrink-0 cursor-pointer ${
               filter === 'All'
-                ? 'border-primary text-primary bg-white'
+                ? 'border-primary text-primary bg-white shadow-xs'
                 : 'border-transparent bg-white text-[#787878] hover:bg-gray-50'
             }`}>
             All
             <span
-              className={`flex items-center justify-center md:min-w-5 md:h-5 px-1.5 text-[11px] rounded-full text-white ${
+              className={`flex items-center justify-center min-w-5 h-5 px-1.5 text-[11px] rounded-full text-white ${
                 filter === 'All' ? 'bg-primary' : 'bg-[#D1D5DB]'
               }`}>
               {totalCount}
@@ -167,14 +269,14 @@ export default function BookingsPage() {
 
           <button
             onClick={() => setFilter('pending')}
-            className={`flex items-center gap-2 px-2 md:px-5 py-1 md:py-2.5 rounded-md md:rounded-full text-[14px] font-semibold transition-all border ${
+            className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-semibold transition-all border shrink-0 cursor-pointer ${
               filter === 'pending'
-                ? 'border-primary text-primary bg-white'
+                ? 'border-primary text-primary bg-white shadow-xs'
                 : 'border-transparent bg-white text-[#787878] hover:bg-gray-50'
             }`}>
             Pending
             <span
-              className={`flex items-center justify-center md:min-w-5 md:h-5 px-1.5 text-[11px] rounded-full text-white ${
+              className={`flex items-center justify-center min-w-5 h-5 px-1.5 text-[11px] rounded-full text-white ${
                 filter === 'pending' ? 'bg-primary' : 'bg-[#D1D5DB]'
               }`}>
               {pendingCount}
@@ -182,32 +284,48 @@ export default function BookingsPage() {
           </button>
 
           <button
-            onClick={() => setFilter('accepted')}
-            className={`flex items-center gap-2 px-2 md:px-5 py-1 md:py-2.5 rounded-md md:rounded-full text-[14px] font-semibold transition-all border ${
-              filter === 'accepted'
-                ? 'border-primary text-primary bg-white'
+            onClick={() => setFilter('awaiting_payment')}
+            className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-semibold transition-all border shrink-0 cursor-pointer ${
+              filter === 'awaiting_payment'
+                ? 'border-primary text-primary bg-white shadow-xs'
                 : 'border-transparent bg-white text-[#787878] hover:bg-gray-50'
             }`}>
-            Accepted
+            Awaiting Payment
             <span
-              className={`flex items-center justify-center md:min-w-5 md:h-5 px-1.5 text-[11px] rounded-full text-white ${
-                filter === 'accepted' ? 'bg-primary' : 'bg-[#D1D5DB]'
+              className={`flex items-center justify-center min-w-5 h-5 px-1.5 text-[11px] rounded-full text-white ${
+                filter === 'awaiting_payment' ? 'bg-orange-500' : 'bg-[#D1D5DB]'
               }`}>
-              {acceptedCount}
+              {awaitingPaymentCount}
+            </span>
+          </button>
+
+          <button
+            onClick={() => setFilter('confirmed')}
+            className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-semibold transition-all border shrink-0 cursor-pointer ${
+              filter === 'confirmed'
+                ? 'border-primary text-primary bg-white shadow-xs'
+                : 'border-transparent bg-white text-[#787878] hover:bg-gray-50'
+            }`}>
+            Confirmed
+            <span
+              className={`flex items-center justify-center min-w-5 h-5 px-1.5 text-[11px] rounded-full text-white ${
+                filter === 'confirmed' ? 'bg-emerald-600' : 'bg-[#D1D5DB]'
+              }`}>
+              {confirmedCount}
             </span>
           </button>
 
           <button
             onClick={() => setFilter('completed')}
-            className={`flex items-center gap-2 px-2 md:px-5 py-1 md:py-2.5 rounded-md md:rounded-full text-[14px] font-semibold transition-all border ${
+            className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-semibold transition-all border shrink-0 cursor-pointer ${
               filter === 'completed'
-                ? 'border-primary text-primary bg-white'
+                ? 'border-primary text-primary bg-white shadow-xs'
                 : 'border-transparent bg-white text-[#787878] hover:bg-gray-50'
             }`}>
             Completed
             <span
-              className={`flex items-center justify-center md:min-w-5 md:h-5 px-1.5 text-[11px] rounded-full text-white ${
-                filter === 'completed' ? 'bg-primary' : 'bg-[#D1D5DB]'
+              className={`flex items-center justify-center min-w-5 h-5 px-1.5 text-[11px] rounded-full text-white ${
+                filter === 'completed' ? 'bg-blue-600' : 'bg-[#D1D5DB]'
               }`}>
               {completedCount}
             </span>
@@ -215,15 +333,15 @@ export default function BookingsPage() {
 
           <button
             onClick={() => setFilter('canceled')}
-            className={`flex items-center gap-2 px-2 md:px-5 py-1 md:py-2.5 rounded-md md:rounded-full text-[14px] font-semibold transition-all border ${
+            className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-semibold transition-all border shrink-0 cursor-pointer ${
               filter === 'canceled'
-                ? 'border-primary text-primary bg-white'
+                ? 'border-primary text-primary bg-white shadow-xs'
                 : 'border-transparent bg-white text-[#787878] hover:bg-gray-50'
             }`}>
             Canceled
             <span
-              className={`flex items-center justify-center md:min-w-5 md:h-5 px-1.5 text-[11px] rounded-full text-white ${
-                filter === 'canceled' ? 'bg-primary' : 'bg-[#D1D5DB]'
+              className={`flex items-center justify-center min-w-5 h-5 px-1.5 text-[11px] rounded-full text-white ${
+                filter === 'canceled' ? 'bg-gray-600' : 'bg-[#D1D5DB]'
               }`}>
               {canceledCount}
             </span>
@@ -236,209 +354,364 @@ export default function BookingsPage() {
         ) : (
           <Card className="border-none shadow-[0_2px_20px_rgba(0,0,0,0.03)] overflow-hidden rounded-2xl bg-white">
             <CardContent className="p-0">
-              <div className="p-4 md:p-4 border-b-4 border-gray-100">
+              <div className="p-4 md:p-4 border-b border-gray-100 flex items-center justify-between">
                 <h2 className="text-[18px] font-bold text-[#111620]">Bookings</h2>
+                <span className="text-xs text-gray-500 font-medium">
+                  Showing {filteredBookings.length} {filteredBookings.length === 1 ? 'booking' : 'bookings'}
+                </span>
               </div>
 
               <div className="overflow-x-auto">
                 <table className="w-full min-w-225 text-left border-collapse">
                   <thead>
-                    <tr>
-                      <th className="py-4 px-8 text-[12px] font-semibold text-[#A1A1AA] uppercase tracking-wider w-[20%]">
+                    <tr className="border-b border-gray-100 bg-gray-50/50">
+                      <th className="py-4 px-6 text-[12px] font-semibold text-[#A1A1AA] uppercase tracking-wider">
                         Client
                       </th>
-                      <th className="py-4 px-8 text-[12px] font-semibold text-[#A1A1AA] uppercase tracking-wider w-[15%]">
+                      <th className="py-4 px-6 text-[12px] font-semibold text-[#A1A1AA] uppercase tracking-wider">
                         Phone
                       </th>
-                      <th className="py-4 px-8 text-[12px] font-semibold text-[#A1A1AA] uppercase tracking-wider w-[20%]">
+                      <th className="py-4 px-6 text-[12px] font-semibold text-[#A1A1AA] uppercase tracking-wider">
                         Event Type
                       </th>
-                      <th className="py-4 px-8 text-[12px] font-semibold text-[#A1A1AA] uppercase tracking-wider w-[15%]">
-                       Event Date
+                      <th className="py-4 px-6 text-[12px] font-semibold text-[#A1A1AA] uppercase tracking-wider">
+                        Event Date
                       </th>
-                      <th className="py-4 px-8 text-[12px] font-semibold text-[#A1A1AA] uppercase tracking-wider w-[18%]">
+                      <th className="py-4 px-6 text-[12px] font-semibold text-[#A1A1AA] uppercase tracking-wider">
                         Payment & Amount
                       </th>
-                      <th className="py-4 px-8 text-[12px] font-semibold text-[#A1A1AA] uppercase tracking-wider w-[6%] text-center">
-                        Details
+                      <th className="py-4 px-6 text-[12px] font-semibold text-[#A1A1AA] uppercase tracking-wider">
+                        Status
                       </th>
-                      <th className="py-4 px-8 text-[12px] font-semibold text-[#A1A1AA] uppercase tracking-wider w-[1%] whitespace-nowrap">
-                        Status & Action
+                      <th className="py-4 px-6 text-[12px] font-semibold text-[#A1A1AA] uppercase tracking-wider text-right pr-8">
+                        Actions
                       </th>
                     </tr>
                   </thead>
-                  <tbody>
+                  <tbody className="divide-y divide-gray-100">
                     {filteredBookings.length > 0 ? (
                       filteredBookings.map((booking: any, index: number) => {
-                        const cashTransaction = booking.invoice?.transactions?.find((tx: any) => tx.gateway === 'CASH');
-                        const isPendingCashRequest = cashTransaction?.status === 'PENDING' && !cashTransaction?.metadata?.cashApproved;
-                        const isApprovedCashRequest = cashTransaction?.status === 'PENDING' && cashTransaction?.metadata?.cashApproved;
-                        const isInvoicePaid = booking.invoice?.status === 'PAID';
-                        
+                        const status = normalizeBookingStatus(booking.status);
+                        const isPending = status === 'PENDING';
+                        const isAwaitingPayment = status === 'AWAITING_PAYMENT';
+                        const isConfirmed = status === 'CONFIRMED';
+                        const isCompleted = status === 'COMPLETED';
+
+                        const cashTransaction = booking.invoice?.transactions?.find(
+                          (tx: any) => tx.gateway === 'CASH' || tx.gateway === 'MANUAL' || tx.channel === 'CASH'
+                        );
+
+                        // Strict state checks:
+                        // Cash request can ONLY be pending if booking status is AWAITING_PAYMENT (or PENDING) and transaction status is PENDING without cashApproved
+                        const isPendingCashRequest =
+                          (isAwaitingPayment || isPending) &&
+                          cashTransaction?.status === 'PENDING' &&
+                          !cashTransaction?.metadata?.cashApproved;
+
+                        // Approved cash request is ONLY active if booking is CONFIRMED and payment is not yet PAID
+                        const isApprovedCashRequest =
+                          isConfirmed &&
+                          (booking.paymentMethod === 'CASH' || cashTransaction?.gateway === 'CASH' || Boolean(cashTransaction?.metadata?.cashApproved)) &&
+                          booking.paymentStatus !== 'PAID';
+
+                        const isInvoicePaid = booking.invoice?.status === 'PAID' || booking.paymentStatus === 'PAID';
+                        const badge = getBookingStatusBadge(booking.status, booking.eventDate);
+
+                        const bookingInfo: ActiveBooking = {
+                          id: booking.id,
+                          clientName: booking.client?.name || 'Client',
+                          clientEmail: booking.client?.email || 'N/A',
+                          eventType: booking.eventType || 'Event',
+                          currencyCode: booking.currencyCode || 'KES',
+                          totalAmount: booking.totalAmount,
+                        };
+
                         return (
-                        <tr
-                          key={booking.id}
-                          className={`${index % 2 === 0 ? 'bg-[#F9FAFB]' : 'bg-white'} hover:bg-gray-100/50 transition-colors`}>
-                          <td className="py-5 px-8 text-[14px] font-semibold text-[#111620]">
-                            <div className="flex flex-col gap-1">
-                              <a 
-                                href={`/dashboard/bookings/${booking.id}`}
-                                className="hover:text-primary transition-colors cursor-pointer"
-                              >
-                                {booking.client?.name || 'Unknown Client'}
-                              </a>
-                              <span className="text-[12px] text-[#787878] font-normal flex items-center gap-1.5">
-                                <Mail className="w-3.5 h-3.5 shrink-0" />
-                                <span className="truncate">{booking.client?.email || 'N/A'}</span>
-                              </span>
-                            </div>
-                          </td>
-                          <td className="py-5 px-8 text-[14px] text-[#787878]">
-                            {booking.client?.phone ? (
-                              <span className="text-[13px] font-medium flex items-center gap-1.5 text-[#111620]">
-                                <Phone className="w-3.5 h-3.5 shrink-0 text-[#787878]" />
-                                <span className="truncate">{booking.client.phone}</span>
-                              </span>
-                            ) : '-'}
-                          </td>
-                          <td className="py-5 px-8 text-[14px] text-[#787878]">
-                            <div className="flex flex-col gap-1">
-                              <span className="font-medium text-[#111620] capitalize">{booking.eventType}</span>
-                              {booking.address && (
+                          <tr
+                            key={booking.id}
+                            className={`${index % 2 === 0 ? 'bg-white' : 'bg-[#FAFAFB]'} hover:bg-gray-50/80 transition-colors`}>
+                            {/* Client Column */}
+                            <td className="py-5 px-6 text-[14px] font-semibold text-[#111620]">
+                              <div className="flex flex-col gap-1">
                                 <a
-                                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(booking.address)}`}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-[12px] text-[#787878] hover:text-primary font-normal flex items-center gap-1.5 transition-colors group cursor-pointer"
-                                  title={`Open in Google Maps: ${booking.address}`}
+                                  href={`/dashboard/bookings/${booking.id}`}
+                                  className="hover:text-primary transition-colors font-bold flex items-center gap-1.5"
                                 >
-                                  <MapPin className="w-3.5 h-3.5 shrink-0 text-primary group-hover:scale-110 transition-transform" />
-                                  <span className="truncate max-w-[180px] group-hover:underline">{booking.address}</span>
+                                  <span>{booking.client?.name || 'Unknown Client'}</span>
                                 </a>
-                              )}
-                            </div>
-                          </td>
-                          <td className="py-5 px-8 text-[14px] text-[#787878]">
-                            {(() => {
-                              let timeTag = '';
-                              if (booking.eventDetails && booking.eventDetails.includes('Start Time:')) {
-                                const match = booking.eventDetails.match(/Start Time:\s*([^\n]+)/);
-                                if (match) timeTag = match[1].trim();
-                              }
-                              return (
-                                <div className="flex flex-col gap-1">
-                                  <div className="flex items-center gap-1.5 font-medium text-[#111620] w-max">                           
-                                    <Calendar className="w-3.5 h-3.5 text-gray-400" />
-                                    {new Date(booking.eventDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
-                                  </div>
-                                  {timeTag && (
-                                    <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-200/60 w-max">
-                                      <Clock className="w-3 h-3" />
-                                      {timeTag}
-                                    </div>
-                                  )}
-                                </div>
-                              );
-                            })()}
-                          </td>
-
-                          {/* Combined Payment & Amount Column */}
-                          <td className="py-5 px-8 text-[14px]">
-                            <div className="flex flex-col items-start gap-1.5">
-                              <span className="font-semibold text-[#111620]">
-                                {booking.totalAmount ? `KES ${Number(booking.totalAmount).toLocaleString()}` : '-'}
-                              </span>
-                              {booking.invoice ? (
-                                isInvoicePaid ? (
-                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-green-50 border border-green-200 text-green-700 text-[11px] font-bold">
-                                    <CheckCircle2 className="w-3 h-3" />
-                                    Paid
-                                  </span>
-                                ) : isApprovedCashRequest ? (
-                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-50 border border-amber-200 text-amber-700 text-[11px] font-bold">
-                                    <Clock className="w-3 h-3" />
-                                    Cash Approved
-                                  </span>
-                                ) : isPendingCashRequest ? (
-                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-50 border border-amber-200 text-amber-700 text-[11px] font-bold">
-                                    <Clock className="w-3 h-3" />
-                                    Cash Pending
-                                  </span>
-                                ) : (
-                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-gray-100 border border-gray-200 text-gray-600 text-[11px] font-medium">
-                                    <Clock className="w-3 h-3" />
-                                    Unpaid
-                                  </span>
-                                )
-                              ) : (
-                                <span className="text-[11px] text-gray-400 italic">
-                                  Not Invoiced
+                                <span className="text-[12px] text-[#787878] font-normal flex items-center gap-1.5">
+                                  <Mail className="w-3.5 h-3.5 shrink-0" />
+                                  <span className="truncate max-w-[170px]">{booking.client?.email || 'N/A'}</span>
                                 </span>
-                              )}
-                            </div>
-                          </td>
+                              </div>
+                            </td>
 
-                          {/* View Details Eye Icon Button */}
-                          <td className="py-5 px-8 text-center">
-                            <a
-                              href={`/dashboard/bookings/${booking.id}`}
-                              className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-50 text-blue-500 hover:bg-blue-100 transition-colors cursor-pointer"
-                              title="View Event Details"
-                            >
-                              <Eye className="w-4 h-4" />
-                            </a>
-                          </td>
-                          <td className="py-5 px-8 flex flex-col items-start gap-2">
-                            <button
-                              onClick={() => {
-                                setBookingToUpdate({ 
-                                  id: booking.id, 
-                                  currentStatus: booking.status,
-                                  isPendingCashRequest,
-                                  isApprovedCashRequest,
-                                  isInvoicePaid
-                                });
-                                setPriceInput('');
-                              }}
-                              className="focus:outline-none focus:ring-2 cursor-pointer focus:ring-primary/20 rounded-md transition-transform hover:scale-105 active:scale-95"
-                            >
-                              {booking.status?.toLowerCase() === 'completed' ? (
-                                <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-[#10B981] text-white text-[13px] font-medium">
-                                  <CheckCircle2 className="w-3.5 h-3.5" />
-                                  Completed
-                                </div>
-                              ) : booking.status?.toLowerCase() === 'accepted' ? (
-                                <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-blue-500 text-white text-[13px] font-medium">
-                                  <CheckCircle2 className="w-3.5 h-3.5" />
-                                  Accepted
-                                </div>
-                              ) : booking.status?.toLowerCase() === 'canceled' || booking.status?.toLowerCase() === 'rejected' ? (
-                                <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-red-500 text-white text-[13px] font-medium">
-                                  <XCircle className="w-3.5 h-3.5" />
-                                  {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
-                                </div>
+                            {/* Phone Column */}
+                            <td className="py-5 px-6 text-[14px] text-[#787878]">
+                              {booking.client?.phone ? (
+                                <span className="text-[13px] font-medium flex items-center gap-1.5 text-[#111620]">
+                                  <Phone className="w-3.5 h-3.5 shrink-0 text-[#787878]" />
+                                  <span className="truncate">{booking.client.phone}</span>
+                                </span>
                               ) : (
-                                <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-[#F59E0B] text-white text-[13px] font-medium">
-                                  <Clock className="w-3.5 h-3.5" />
-                                  Pending
-                                </div>
+                                <span className="text-gray-400 text-xs">-</span>
                               )}
-                            </button>
+                            </td>
 
-                            {isPendingCashRequest && (
-                              <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-[#FFF8E6] border border-[#FDE68A] text-[#D97706] text-[11px] font-bold">
-                                Cash Requested
-                              </span>
-                            )}
-                          </td>
-                        </tr>
-                      );
-                    })
+                            {/* Event Type Column */}
+                            <td className="py-5 px-6 text-[14px] text-[#787878]">
+                              <div className="flex flex-col gap-1">
+                                <span className="font-semibold text-[#111620] capitalize">{booking.eventType}</span>
+                                {booking.address && (
+                                  <a
+                                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(booking.address)}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-[12px] text-[#787878] hover:text-primary font-normal flex items-center gap-1.5 transition-colors group"
+                                    title={`Open in Google Maps: ${booking.address}`}
+                                  >
+                                    <MapPin className="w-3.5 h-3.5 shrink-0 text-primary group-hover:scale-110 transition-transform" />
+                                    <span className="truncate max-w-[160px] group-hover:underline">{booking.address}</span>
+                                  </a>
+                                )}
+                              </div>
+                            </td>
+
+                            {/* Event Date Column */}
+                            <td className="py-5 px-6 text-[14px] text-[#787878]">
+                              {(() => {
+                                const parsed = parseBookingEventDetails(booking.eventDetails);
+                                const timeTag = parsed.startTime;
+                                return (
+                                  <div className="flex flex-col gap-1">
+                                    <div className="flex items-center gap-1.5 font-medium text-[#111620] w-max text-xs">
+                                      <Calendar className="w-3.5 h-3.5 text-gray-400" />
+                                      {new Date(booking.eventDate).toLocaleDateString('en-GB', {
+                                        day: '2-digit',
+                                        month: 'short',
+                                        year: 'numeric',
+                                      })}
+                                    </div>
+                                    {timeTag && (
+                                      <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-200/60 w-max">
+                                        <Clock className="w-3 h-3" />
+                                        {timeTag}
+                                      </div>
+                                    )}
+                                  </div>
+                                );
+                              })()}
+                            </td>
+
+                            {/* Combined Payment & Amount Column */}
+                            <td className="py-5 px-6 text-[14px]">
+                              <div className="flex flex-col items-start gap-1.5">
+                                <span className="font-bold text-[#111620]">
+                                  {booking.totalAmount ? (
+                                    <MoneyDisplay amount={booking.totalAmount} currencyCode={booking.currencyCode || 'KES'} />
+                                  ) : (
+                                    <span className="text-gray-400 font-normal text-xs italic">Quote Pending</span>
+                                  )}
+                                </span>
+                                {booking.invoice ? (
+                                  isInvoicePaid ? (
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-green-50 border border-green-200 text-green-700 text-[11px] font-bold">
+                                      <CheckCircle2 className="w-3 h-3" />
+                                      Paid
+                                    </span>
+                                  ) : isApprovedCashRequest ? (
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-50 border border-amber-200 text-amber-700 text-[11px] font-bold">
+                                      <Banknote className="w-3 h-3" />
+                                      Cash Approved
+                                    </span>
+                                  ) : isPendingCashRequest ? (
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-50 border border-amber-200 text-amber-700 text-[11px] font-bold">
+                                      <Clock className="w-3 h-3" />
+                                      Cash Pending
+                                    </span>
+                                  ) : (
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-gray-100 border border-gray-200 text-gray-600 text-[11px] font-medium">
+                                      <Clock className="w-3 h-3" />
+                                      Unpaid
+                                    </span>
+                                  )
+                                ) : (
+                                  <span className="text-[11px] text-gray-400 italic">Not Invoiced</span>
+                                )}
+                              </div>
+                            </td>
+
+                            {/* Status Column (Clean Badge Only) */}
+                            <td className="py-5 px-6">
+                              <div className="flex flex-col items-start gap-1.5">
+                                <div
+                                  className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-md border text-xs font-semibold uppercase tracking-wider ${badge.badgeClass}`}
+                                >
+                                  <span className={`w-1.5 h-1.5 rounded-full ${badge.dotClass}`} />
+                                  {badge.label}
+                                </div>
+                                {isPendingCashRequest && (
+                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-[#FFF8E6] border border-[#FDE68A] text-[#D97706]">
+                                    <Banknote className="w-3 h-3" />
+                                    Cash Requested
+                                  </span>
+                                )}
+                              </div>
+                            </td>
+
+                            {/* Actions Column (Action Menu Popover + Quick View) */}
+                            <td className="py-5 px-6 text-right pr-8">
+                              <div className="flex items-center justify-end gap-2">
+                                <a
+                                  href={`/dashboard/bookings/${booking.id}`}
+                                  className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 hover:text-gray-900 transition-colors"
+                                  title="View Booking Details"
+                                >
+                                  <Eye className="w-4 h-4" />
+                                </a>
+
+                                <Popover>
+                                  <PopoverTrigger asChild>
+                                    <button
+                                      type="button"
+                                      className="inline-flex items-center justify-center w-8 h-8 rounded-lg border border-gray-200 bg-white hover:bg-gray-100 text-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer shadow-2xs"
+                                      title="Open Actions Menu"
+                                    >
+                                      <MoreVertical className="w-4 h-4" />
+                                    </button>
+                                  </PopoverTrigger>
+                                  <PopoverContent align="end" sideOffset={6} className="w-56 p-1.5 bg-white border border-gray-200 shadow-xl rounded-xl">
+                                    <div className="px-2.5 py-1.5 border-b border-gray-100 mb-1">
+                                      <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Booking Actions</p>
+                                      <p className="text-xs font-semibold text-gray-800 truncate">{booking.eventType}</p>
+                                    </div>
+
+                                    {/* Action items based on state */}
+                                    {isPending && (
+                                      <>
+                                        <button
+                                          type="button"
+                                          onClick={() => {
+                                            setAcceptBooking(bookingInfo);
+                                            setQuotePrice('');
+                                          }}
+                                          className="w-full flex items-center gap-2 px-2.5 py-2 text-xs font-semibold text-emerald-700 hover:bg-emerald-50 rounded-lg transition-colors text-left cursor-pointer"
+                                        >
+                                          <DollarSign className="w-3.5 h-3.5 shrink-0 text-emerald-600" />
+                                          Accept & Quote Price
+                                        </button>
+                                        <button
+                                          type="button"
+                                          onClick={() => setDeclineBooking(bookingInfo)}
+                                          className="w-full flex items-center gap-2 px-2.5 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 rounded-lg transition-colors text-left cursor-pointer"
+                                        >
+                                          <XCircle className="w-3.5 h-3.5 shrink-0 text-rose-600" />
+                                          Decline Booking
+                                        </button>
+                                      </>
+                                    )}
+
+                                    {isAwaitingPayment && (
+                                      <>
+                                        {isPendingCashRequest ? (
+                                          <>
+                                            <button
+                                              type="button"
+                                              onClick={() => setApproveCashBooking(bookingInfo)}
+                                              className="w-full flex items-center gap-2 px-2.5 py-2 text-xs font-semibold text-amber-700 hover:bg-amber-50 rounded-lg transition-colors text-left cursor-pointer"
+                                            >
+                                              <Banknote className="w-3.5 h-3.5 shrink-0 text-amber-600" />
+                                              Approve Cash Request
+                                            </button>
+                                            <button
+                                              type="button"
+                                              onClick={() => setDeclineCashBooking(bookingInfo)}
+                                              className="w-full flex items-center gap-2 px-2.5 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50 rounded-lg transition-colors text-left cursor-pointer"
+                                            >
+                                              <XCircle className="w-3.5 h-3.5 shrink-0 text-gray-500" />
+                                              Decline Cash Request
+                                            </button>
+                                          </>
+                                        ) : (
+                                          <>
+                                            <button
+                                              type="button"
+                                              onClick={() => setReminderBooking(bookingInfo)}
+                                              className="w-full flex items-center gap-2 px-2.5 py-2 text-xs font-semibold text-gray-800 hover:bg-gray-50 rounded-lg transition-colors text-left cursor-pointer"
+                                            >
+                                              <Send className="w-3.5 h-3.5 shrink-0 text-primary" />
+                                              Resend Payment Reminder
+                                            </button>
+                                            <button
+                                              type="button"
+                                              onClick={() => handleCopyCheckoutLink(booking.id)}
+                                              className="w-full flex items-center gap-2 px-2.5 py-2 text-xs font-semibold text-gray-800 hover:bg-gray-50 rounded-lg transition-colors text-left cursor-pointer"
+                                            >
+                                              {copiedBookingId === booking.id ? (
+                                                <Check className="w-3.5 h-3.5 shrink-0 text-green-600" />
+                                              ) : (
+                                                <Copy className="w-3.5 h-3.5 shrink-0 text-gray-500" />
+                                              )}
+                                              Copy Checkout Link
+                                            </button>
+                                          </>
+                                        )}
+                                        <button
+                                          type="button"
+                                          onClick={() => setDeclineBooking(bookingInfo)}
+                                          className="w-full flex items-center gap-2 px-2.5 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 rounded-lg transition-colors text-left cursor-pointer"
+                                        >
+                                          <XCircle className="w-3.5 h-3.5 shrink-0 text-rose-600" />
+                                          Decline Booking
+                                        </button>
+                                      </>
+                                    )}
+
+                                    {isConfirmed && (
+                                      <>
+                                        {isApprovedCashRequest && (
+                                          <button
+                                            type="button"
+                                            onClick={() => {
+                                              setCashPaidBooking(bookingInfo);
+                                              setCashConfirmationText('');
+                                            }}
+                                            className="w-full flex items-center gap-2 px-2.5 py-2 text-xs font-semibold text-emerald-700 hover:bg-emerald-50 rounded-lg transition-colors text-left cursor-pointer"
+                                          >
+                                            <Banknote className="w-3.5 h-3.5 shrink-0 text-emerald-600" />
+                                            Mark Cash Received (Venue)
+                                          </button>
+                                        )}
+                                        <button
+                                          type="button"
+                                          onClick={() => setCompleteEscrowBooking(bookingInfo)}
+                                          className="w-full flex items-center gap-2 px-2.5 py-2 text-xs font-semibold text-blue-700 hover:bg-blue-50 rounded-lg transition-colors text-left cursor-pointer"
+                                        >
+                                          <CheckCircle2 className="w-3.5 h-3.5 shrink-0 text-blue-600" />
+                                          Complete Gig & Release
+                                        </button>
+                                      </>
+                                    )}
+
+                                    <div className="border-t border-gray-100 mt-1 pt-1">
+                                      <a
+                                        href={`/dashboard/bookings/${booking.id}`}
+                                        className="w-full flex items-center gap-2 px-2.5 py-2 text-xs font-medium text-gray-600 hover:bg-gray-50 rounded-lg transition-colors text-left cursor-pointer"
+                                      >
+                                        <Eye className="w-3.5 h-3.5 shrink-0 text-gray-400" />
+                                        View Full Details
+                                      </a>
+                                    </div>
+                                  </PopoverContent>
+                                </Popover>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })
                     ) : (
                       <tr>
-                        <td
-                          colSpan={6}
-                          className="py-12 text-center text-[#787878]">
+                        <td colSpan={7} className="py-12 text-center text-[#787878]">
                           No bookings found for the selected filter.
                         </td>
                       </tr>
@@ -451,192 +724,137 @@ export default function BookingsPage() {
         )}
       </div>
 
-      {/* Status Update Dialog */}
-      <Dialog open={!!bookingToUpdate} onOpenChange={(open) => !open && setBookingToUpdate(null)}>
-        <DialogContent className="sm:max-w-[425px] bg-white rounded-2xl border-none">
+      {/* MODAL 1: Accept Booking & Enter Price Quote */}
+      <Dialog open={!!acceptBooking} onOpenChange={(open) => !open && setAcceptBooking(null)}>
+        <DialogContent className="sm:max-w-[450px] bg-white rounded-2xl p-6 border-none shadow-2xl">
           <DialogHeader>
-            <DialogTitle className="text-[20px] font-bold text-[#111620]">
-              Update Booking Status
+            <DialogTitle className="text-xl font-bold text-gray-900 flex items-center gap-2">
+              <DollarSign className="w-5 h-5 text-emerald-600" />
+              Accept Booking Request
             </DialogTitle>
+            <DialogDescription className="text-sm text-gray-600 pt-1">
+              Set your quote for this event. An official invoice with a secure online checkout link will be sent to{' '}
+              <strong>{acceptBooking?.clientEmail}</strong>.
+            </DialogDescription>
           </DialogHeader>
-          <div className="py-4 space-y-4">
-            <p className="text-[14px] text-[#787878]">
-              Current status: <span className="font-semibold text-black uppercase">{bookingToUpdate?.currentStatus || 'Unknown'}</span>
-            </p>
-            
-            {bookingToUpdate?.currentStatus?.toLowerCase() === 'pending' && (
-              <div className="space-y-2">
-                <label className="text-[14px] font-semibold text-[#111620]">
-                  Total Amount / Price
-                </label>
-                <Input
-                  type="number"
-                  placeholder="Enter total amount (e.g. 500)"
-                  value={priceInput}
-                  onChange={(e) => setPriceInput(e.target.value)}
-                  className="bg-[#F5F5F5] border-transparent h-11 rounded-[10px] focus-visible:ring-1 focus-visible:ring-primary shadow-none"
-                />
-                <p className="text-[12px] text-gray-500">
-                  Accepting this booking will generate an invoice for the client. An email will send to the client with the invoice and payment link.
-                </p>
-              </div>
-            )}
-            
-            {bookingToUpdate?.isPendingCashRequest && (
-              <div className="bg-[#FFF8E6] border border-[#FDE68A] rounded-xl p-4 flex items-center gap-3 text-[#D97706]">
-                <AlertCircle className="w-5 h-5 shrink-0" />
-                <p className="text-[13px] font-medium">
-                  The client has requested to pay by cash.
-                </p>
-              </div>
-            )}
-            
-            <div className="flex flex-col gap-3 pt-4">
-              {bookingToUpdate?.currentStatus?.toLowerCase() === 'pending' && (
-                <>
-                  <Button 
-                    onClick={() => handleStatusUpdate('ACCEPTED')}
-                    disabled={isActionLoading}
-                    className="bg-primary hover:bg-primary/90 text-white font-bold h-11 w-full rounded-[10px]"
-                  >
-                    {isActionLoading ? 'Processing...' : 'Accept Booking Request'}
-                  </Button>
-                  <Button 
-                    type="button"
-                    variant="outline" 
-                    onClick={() => {
-                      if (bookingToUpdate) {
-                        const id = bookingToUpdate.id;
-                        setBookingToUpdate(null);
-                        setPriceInput('');
-                        setRejectBookingId(id);
-                      }
-                    }}
-                    disabled={isActionLoading}
-                    className="h-11 w-full rounded-[10px] text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700"
-                  >
-                    Reject Booking
-                  </Button>
-                </>
-              )}
-
-              {bookingToUpdate?.currentStatus?.toLowerCase() === 'accepted' && bookingToUpdate.isPendingCashRequest && (
-                <>
-                  <Button 
-                    onClick={() => handleCashDecision('approve')}
-                    disabled={isActionLoading}
-                    className="bg-amber-500 hover:bg-amber-600 text-white font-bold h-11 w-full rounded-[10px]"
-                  >
-                    {isActionLoading ? 'Processing...' : 'Approve Cash Request'}
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    onClick={() => handleCashDecision('reject')}
-                    disabled={isActionLoading}
-                    className="h-11 w-full rounded-[10px]"
-                  >
-                    Reject & Demand Online Pay
-                  </Button>
-                </>
-              )}
-
-              {bookingToUpdate?.currentStatus?.toLowerCase() === 'accepted' && bookingToUpdate.isApprovedCashRequest && (
-                <Button 
-                  onClick={() => {
-                    if (bookingToUpdate) {
-                      const id = bookingToUpdate.id;
-                      setBookingToUpdate(null);
-                      setCashPaidBookingId(id);
-                    }
-                  }}
-                  disabled={isActionLoading}
-                  className="bg-green-600 hover:bg-green-700 text-white font-bold h-11 w-full rounded-[10px]"
-                >
-                  {isActionLoading ? 'Processing...' : 'Mark as Paid (Received Cash)'}
-                </Button>
-              )}
-
-              {bookingToUpdate?.currentStatus?.toLowerCase() === 'accepted' && bookingToUpdate.isInvoicePaid && (
-                <Button 
-                  onClick={() => handleStatusUpdate('COMPLETED')}
-                  disabled={isActionLoading}
-                  className="bg-blue-600 hover:bg-blue-700 text-white font-bold h-11 w-full rounded-[10px]"
-                >
-                  {isActionLoading ? 'Processing...' : 'Complete Event'}
-                </Button>
-              )}
-
-              {bookingToUpdate?.currentStatus?.toLowerCase() === 'accepted' && !bookingToUpdate.isPendingCashRequest && !bookingToUpdate.isApprovedCashRequest && !bookingToUpdate.isInvoicePaid && (
-                <div className="text-center py-4">
-                  <Clock className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-                  <p className="text-sm text-gray-500">Waiting for client payment...</p>
-                </div>
-              )}
-
-              {(bookingToUpdate?.currentStatus?.toLowerCase() === 'canceled' || bookingToUpdate?.currentStatus?.toLowerCase() === 'rejected') && (
-                <div className="text-center py-4">
-                  <XCircle className="w-8 h-8 text-red-400 mx-auto mb-2" />
-                  <p className="text-sm font-medium text-gray-700">This booking was {bookingToUpdate.currentStatus.toLowerCase()}.</p>
-                </div>
-              )}
-
-              <Button 
-                variant="outline" 
-                onClick={() => setBookingToUpdate(null)}
-                className="h-11 w-full rounded-[10px] mt-2"
+          <form onSubmit={handleConfirmAccept} className="space-y-4 pt-2">
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">
+                Total Price Quote ({acceptBooking?.currencyCode || 'KES'})
+              </label>
+              <Input
+                type="number"
+                min="1"
+                step="any"
+                placeholder="e.g. 50000"
+                value={quotePrice}
+                onChange={(e) => setQuotePrice(e.target.value)}
+                required
+                autoFocus
+                className="h-11 rounded-xl"
+              />
+            </div>
+            <div className="flex justify-end gap-3 pt-3 border-t border-gray-100">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setAcceptBooking(null)}
+                disabled={isUpdating}
+                className="rounded-xl h-10 px-4"
               >
-                Close
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={isUpdating || !quotePrice}
+                className="bg-primary hover:bg-primary/90 text-white rounded-xl h-10 px-5 font-bold"
+              >
+                {isUpdating ? 'Generating Invoice...' : 'Confirm & Accept'}
               </Button>
             </div>
-          </div>
+          </form>
         </DialogContent>
       </Dialog>
 
-      {/* Event Details Dialog */}
-      <Dialog open={!!detailsModalContent} onOpenChange={(open) => !open && setDetailsModalContent(null)}>
-        <DialogContent className="sm:max-w-[500px] bg-white rounded-2xl border-none">
-          <DialogHeader>
-            <DialogTitle className="text-[20px] font-bold text-[#111620]">
-              Event Details
-            </DialogTitle>
-          </DialogHeader>
-          <div className="py-4">
-            <div className="bg-[#F9FAFB] rounded-xl p-4 border border-gray-100 max-h-[300px] overflow-y-auto">
-              <p className="text-[14px] text-[#4B5563] whitespace-pre-wrap leading-relaxed">
-                {detailsModalContent}
-              </p>
-            </div>
-            <div className="mt-6 flex justify-end">
-              <Button 
-                onClick={() => setDetailsModalContent(null)}
-                className="bg-primary hover:bg-primary/90 text-white font-bold px-6 h-10 rounded-[10px]"
-              >
-                Close
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Reject Booking Confirmation Dialog */}
-      <ConfirmationDialog
-        isOpen={!!rejectBookingId}
-        title="Reject Booking Request"
-        description="Are you sure you want to reject this booking request? The client will be notified and this action cannot be undone."
-        confirmText="Reject Booking"
-        cancelText="Cancel"
-        isDestructive={true}
+      {/* MODAL 2: Decline Booking Request with Note/Reason */}
+      <DeclineBookingModal
+        isOpen={!!declineBooking}
+        clientName={declineBooking?.clientName}
+        eventType={declineBooking?.eventType}
         isLoading={isUpdating}
-        onConfirm={handleConfirmReject}
-        onCancel={() => setRejectBookingId(null)}
+        onClose={() => setDeclineBooking(null)}
+        onConfirm={handleConfirmDecline}
       />
 
-      {/* Confirm Cash Received Dialog with 'PAID' verification */}
-      <Dialog 
-        open={!!cashPaidBookingId} 
+      {/* MODAL 3: Approve Cash Payment Request */}
+      <ConfirmationDialog
+        isOpen={!!approveCashBooking}
+        title="Approve Cash on Event Day"
+        description={
+          <div className="space-y-2 text-sm text-gray-600">
+            <p>
+              Are you sure you want to approve cash payment for <strong className="text-gray-900">{approveCashBooking?.clientName}</strong>?
+            </p>
+            <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-900 text-xs leading-relaxed">
+              <strong>Notice:</strong> This will confirm the booking on your schedule. You agree to collect exact cash directly from the client at the venue.
+            </div>
+          </div>
+        }
+        confirmText="Approve Cash Payment"
+        cancelText="Cancel"
+        isLoading={handlingCash}
+        onConfirm={handleConfirmApproveCash}
+        onCancel={() => setApproveCashBooking(null)}
+      />
+
+      {/* MODAL 4: Decline Cash Request (Demand Online Pay) */}
+      <ConfirmationDialog
+        isOpen={!!declineCashBooking}
+        title="Decline Cash Request"
+        description={
+          <div className="space-y-2 text-sm text-gray-600">
+            <p>
+              Decline cash payment request for <strong className="text-gray-900">{declineCashBooking?.clientName}</strong>?
+            </p>
+            <p className="text-xs text-gray-500">
+              The booking will remain awaiting payment, and the client will be emailed the official online payment link to pay via card or mobile money.
+            </p>
+          </div>
+        }
+        confirmText="Decline & Demand Online Pay"
+        cancelText="Cancel"
+        isLoading={handlingCash}
+        onConfirm={handleConfirmDeclineCash}
+        onCancel={() => setDeclineCashBooking(null)}
+      />
+
+      {/* MODAL 5: Complete Gig & Release Escrow */}
+      <ConfirmationDialog
+        isOpen={!!completeEscrowBooking}
+        title="Complete Gig & Release Escrow"
+        description={
+          <div className="space-y-2 text-sm text-gray-600">
+            <p>
+              Has the event for <strong className="text-gray-900">{completeEscrowBooking?.clientName}</strong> been successfully performed?
+            </p>
+            <div className="p-3 bg-blue-50 border border-blue-200 rounded-xl text-blue-900 text-xs leading-relaxed">
+              Marking this event as completed will transition the booking to <strong>COMPLETED</strong> and release escrow funds directly to your wallet available balance.
+            </div>
+          </div>
+        }
+        confirmText="Complete & Release Funds"
+        cancelText="Cancel"
+        isLoading={isUpdating}
+        onConfirm={handleConfirmCompleteEscrow}
+        onCancel={() => setCompleteEscrowBooking(null)}
+      />
+
+      {/* MODAL 6: Confirm Cash Received at Venue (Requires typing PAID) */}
+      <Dialog
+        open={!!cashPaidBooking}
         onOpenChange={(open) => {
           if (!open) {
-            setCashPaidBookingId(null);
+            setCashPaidBooking(null);
             setCashConfirmationText('');
           }
         }}
@@ -647,6 +865,9 @@ export default function BookingsPage() {
               <CheckCircle2 className="w-5 h-5 text-emerald-600" />
               Confirm Cash Payment Received
             </DialogTitle>
+            <DialogDescription className="text-sm text-gray-600 pt-1">
+              Confirm that you have received the exact cash from <strong>{cashPaidBooking?.clientName}</strong>.
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 pt-2">
             <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-900 text-sm leading-relaxed">
@@ -668,7 +889,7 @@ export default function BookingsPage() {
                 type="button"
                 variant="outline"
                 onClick={() => {
-                  setCashPaidBookingId(null);
+                  setCashPaidBooking(null);
                   setCashConfirmationText('');
                 }}
                 disabled={isMarkingPaid}
@@ -688,6 +909,29 @@ export default function BookingsPage() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* MODAL 7: Resend Payment Reminder Confirmation */}
+      <ConfirmationDialog
+        isOpen={!!reminderBooking}
+        title="Send Payment Reminder"
+        description={
+          <div className="space-y-2 text-sm text-gray-600">
+            <p>
+              Are you sure you want to resend the payment reminder email to{' '}
+              <strong className="text-gray-900">{reminderBooking?.clientName}</strong> (
+              <span className="text-gray-800 font-medium">{reminderBooking?.clientEmail}</span>)?
+            </p>
+            <p className="text-xs text-gray-500">
+              This will send an official notification with the online checkout link so the client can complete payment.
+            </p>
+          </div>
+        }
+        confirmText="Send Reminder"
+        cancelText="Cancel"
+        isLoading={isSendingReminder}
+        onConfirm={handleConfirmResendReminder}
+        onCancel={() => setReminderBooking(null)}
+      />
     </div>
   );
 }

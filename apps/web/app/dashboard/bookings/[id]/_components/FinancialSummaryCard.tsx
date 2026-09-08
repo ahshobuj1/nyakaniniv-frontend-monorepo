@@ -1,6 +1,6 @@
 'use client';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@repo/ui';
+import { Card, CardContent, CardHeader, CardTitle, formatMoney } from '@repo/ui';
 import { CreditCard, FileText } from 'lucide-react';
 import { Booking } from '@repo/store';
 
@@ -11,7 +11,7 @@ interface FinancialSummaryCardProps {
 export function FinancialSummaryCard({ booking }: FinancialSummaryCardProps) {
   const invoice = booking.invoice;
   const amountFormatted = booking.totalAmount
-    ? `KES ${Number(booking.totalAmount).toFixed(2)}`
+    ? formatMoney(booking.totalAmount, booking.currencyCode || 'KES')
     : 'Pending';
 
   const getPaymentMethodLabel = () => {

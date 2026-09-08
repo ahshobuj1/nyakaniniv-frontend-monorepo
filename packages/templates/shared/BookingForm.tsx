@@ -121,10 +121,11 @@ export default function BookingForm({themeColor}: {themeColor: string}) {
                   onChange={(e) => setTimezone(e.target.value)}
                   className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-sm h-[48px] outline-none cursor-pointer"
                 >
-                  <option value="WAT">WAT (Nigeria)</option>
-                  <option value="EAT">EAT (Kenya)</option>
-                  <option value="GMT">GMT (Ghana)</option>
-                  <option value="SAST">SAST (South Africa)</option>
+                  <option value="EAT">EAT - East Africa (Kenya, Uganda, Tanzania, UTC+3)</option>
+                  <option value="CAT">CAT - Central Africa (Rwanda, UTC+2)</option>
+                  <option value="WAT">WAT - West Africa (Nigeria, UTC+1)</option>
+                  <option value="GMT">GMT - Greenwich (Ghana, UTC+0)</option>
+                  <option value="SAST">SAST - South Africa (UTC+2)</option>
                 </select>
               </div>
               <div className="space-y-2">

@@ -9,7 +9,7 @@ export const paystackConnectApi = baseApi.injectEndpoints({
         method: 'POST',
         body,
       }),
-      invalidatesTags: ['PaystackConnect'],
+      invalidatesTags: ['PaystackConnect', 'Wallet'],
     }),
     checkAccountStatus: builder.query<BaseResponse<PaystackStatusResponse>, string>({
       query: (tenantId) => ({
@@ -18,11 +18,15 @@ export const paystackConnectApi = baseApi.injectEndpoints({
       }),
       providesTags: ['PaystackConnect'],
     }),
-    getBanks: builder.query<BaseResponse<PaystackBank[]>, string>({
-      query: (country) => ({
-        url: `/paystack-connect/v1/banks?country=${country}`,
-        method: 'GET',
-      }),
+    getBanks: builder.query<BaseResponse<PaystackBank[]>, { country?: string; gateway?: string } | string>({
+      query: (arg) => {
+        const country = typeof arg === 'string' ? arg : arg?.country || 'nigeria';
+        const gateway = typeof arg === 'string' ? undefined : arg?.gateway;
+        return {
+          url: `/paystack-connect/v1/banks?country=${country}${gateway ? `&gateway=${gateway}` : ''}`,
+          method: 'GET',
+        };
+      },
     }),
     disconnectAccount: builder.mutation<BaseResponse<void>, { tenantId: string }>({
       query: (body) => ({
@@ -30,7 +34,20 @@ export const paystackConnectApi = baseApi.injectEndpoints({
         method: 'DELETE',
         body,
       }),
-      invalidatesTags: ['PaystackConnect'],
+      invalidatesTags: ['PaystackConnect', 'Wallet'],
+    }),
+    validateAccount: builder.mutation<BaseResponse<{ valid: boolean; accountName?: string; message?: string }>, { bankCode: string; accountNumber: string; country?: string; gateway?: string }>({
+      query: (body) => ({
+        url: `/paystack-connect/v1/validate`,
+        method: 'POST',
+        body,
+      }),
+    }),
+    getPaystackOAuthUrl: builder.query<BaseResponse<{ url: string }>, string>({
+      query: (tenantId) => ({
+        url: `/paystack-connect/v1/oauth/url?tenantId=${tenantId}`,
+        method: 'GET',
+      }),
     }),
   }),
   overrideExisting: false,
@@ -41,4 +58,7 @@ export const {
   useCheckAccountStatusQuery: useCheckPaystackAccountStatusQuery,
   useGetBanksQuery: useGetPaystackBanksQuery,
   useDisconnectAccountMutation: useDisconnectPaystackAccountMutation,
+  useValidateAccountMutation: useValidatePaystackAccountMutation,
+  useGetPaystackOAuthUrlQuery,
+  useLazyGetPaystackOAuthUrlQuery,
 } = paystackConnectApi;

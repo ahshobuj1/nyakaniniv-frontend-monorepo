@@ -131,6 +131,44 @@ export interface Event {
   tenant?: Tenant;
 }
 
+export type BookingStatus =
+  | 'PENDING'
+  | 'AWAITING_PAYMENT'
+  | 'CONFIRMED'
+  | 'IN_PROGRESS'
+  | 'COMPLETED'
+  | 'CANCELLED'
+  | 'REJECTED'
+  | 'EXPIRED'
+  | 'NO_SHOW'
+  | 'DISPUTED'
+  | 'pending'
+  | 'accepted'
+  | 'completed'
+  | 'canceled'
+  | 'rejected'
+  | string;
+
+export type PaymentStatus =
+  | 'UNPAID'
+  | 'PENDING'
+  | 'PARTIALLY_PAID'
+  | 'PAID'
+  | 'REFUNDED'
+  | 'FAILED'
+  | string;
+
+export type PayoutStatus =
+  | 'NOT_APPLICABLE'
+  | 'PENDING_EVENT'
+  | 'ESCROW_HELD'
+  | 'PAYOUT_REQUESTED'
+  | 'PROCESSING'
+  | 'PAID'
+  | 'FAILED'
+  | 'DISPUTED'
+  | string;
+
 export interface Booking {
   id: string;
   tenantId?: string;
@@ -138,9 +176,17 @@ export interface Booking {
   eventType?: string;
   eventDetails?: string;
   eventDate?: string;
+  eventTimezone?: string;
+  currencyCode?: string;
+  currency?: string;
   address?: string;
-  status?: 'pending' | 'accepted' | 'completed';
+  status?: BookingStatus;
+  paymentStatus?: PaymentStatus;
+  payoutStatus?: PayoutStatus;
   totalAmount?: number | string;
+  grossAmount?: number | string;
+  djNetEarning?: number | string;
+  paymentMethod?: string;
   createdAt?: string;
   updatedAt?: string;
   deletedAt?: string;
@@ -170,6 +216,7 @@ export interface Invoice {
   bookingId?: string;
   planId?: number;
   amount?: number | string;
+  currencyCode?: string;
   status: 'UNPAID' | 'PAID' | 'OVERDUE' | 'CANCELLED';
   type: 'SUBSCRIPTION' | 'BOOKING';
   createdAt?: string;
@@ -188,9 +235,16 @@ export interface Transaction {
   tenantId?: string;
   userId?: string;
   amount: number | string;
-  gateway: 'PAYSTACK' | 'STRIPE' | 'MANUAL';
-  channel: 'CARD' | 'BANK_TRANSFER' | 'USSD' | 'MOBILE_MONEY' | 'CASH';
-  status: 'PENDING' | 'SUCCESS' | 'FAILED' | 'REFUNDED';
+  grossAmount?: number | string;
+  platformFee?: number | string;
+  gatewayFee?: number | string;
+  djNetEarning?: number | string;
+  refundedAmount?: number | string;
+  remainingAmount?: number | string;
+  currency?: string;
+  gateway: 'PAYSTACK' | 'PESAPAL' | 'FLUTTERWAVE' | 'STRIPE' | 'CASH' | 'MANUAL';
+  channel: 'CARD' | 'BANK_TRANSFER' | 'USSD' | 'MOBILE_MONEY' | 'CASH' | 'UNKNOWN';
+  status: 'PENDING' | 'PROCESSING' | 'SUCCESS' | 'SUCCEEDED' | 'FAILED' | 'CANCELLED' | 'REFUNDED' | 'PARTIALLY_REFUNDED';
   gatewayReference?: string;
   cardBrand?: string;
   cardLast4?: string;

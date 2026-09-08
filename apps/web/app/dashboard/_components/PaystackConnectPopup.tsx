@@ -20,9 +20,12 @@ export function PaystackConnectPopup() {
 
   // Get tenant info
   const { data: profileResponse, isLoading: isLoadingProfile } = useGetCurrentProfileQuery();
-  const tenantId = profileResponse?.data?.tenant?.id;
+  const tenant = profileResponse?.data?.tenant;
+  const tenantId = tenant?.id;
+  const tenantCountry = (tenant?.country || '').trim().toLowerCase();
+  const isEastAfrica = ['tanzania', 'tz', 'kenya', 'ke', 'uganda', 'ug', 'rwanda', 'rw'].includes(tenantCountry);
 
-  // Check paystack status
+  // Check payout connection status
   const { data: statusResponse, isLoading: isLoadingStatus } = useCheckPaystackAccountStatusQuery(tenantId || '', {
     skip: !tenantId,
   });
@@ -67,7 +70,10 @@ export function PaystackConnectPopup() {
           </div>
           <DialogTitle className="text-center text-xl">Set up Payouts</DialogTitle>
           <DialogDescription className="text-center text-gray-500 pt-2">
-            Connect your Paystack account to receive payments from client bookings directly to your bank account. Without a payment method, you won't be able to receive payouts for your paid bookings.
+            {isEastAfrica 
+              ? "Connect your Mobile Money (M-Pesa, Tigo Pesa, Airtel Money) or bank account to receive booking payments directly. Without a payout method, you won't be able to receive payouts for your bookings."
+              : "Connect your bank account to receive payments from client bookings directly. Without a payout method, you won't be able to receive payouts for your paid bookings."
+            }
           </DialogDescription>
         </DialogHeader>
         <DialogFooter className="sm:justify-center gap-2 pt-4">
@@ -75,7 +81,7 @@ export function PaystackConnectPopup() {
             Later
           </Button>
           <Button onClick={handleConnectClick} className="bg-primary text-white hover:bg-primary/90">
-            Add Payment Method
+            Set Up Payouts
           </Button>
         </DialogFooter>
       </DialogContent>
