@@ -12,18 +12,25 @@ import {Button} from '@repo/ui';
 import {useRouter} from 'next/navigation';
 import {useRegisterMutation} from '@repo/store';
 
-const signupSchema = z.object({
-  firstName: z.string().min(2, 'First name must be at least 2 characters'),
-  lastName: z.string().min(2, 'Last name must be at least 2 characters'),
-  email: z.string().min(1, 'Email is required').email('Invalid email address'),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
-});
+const signupSchema = z
+  .object({
+    firstName: z.string().min(2, 'First name must be at least 2 characters'),
+    lastName: z.string().min(2, 'Last name must be at least 2 characters'),
+    email: z.string().min(1, 'Email is required').email('Invalid email address'),
+    password: z.string().min(8, 'Password must be at least 8 characters'),
+    confirmPassword: z.string().min(1, 'Please confirm your password'),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: 'Passwords do not match',
+    path: ['confirmPassword'],
+  });
 
 type SignupFormValues = z.infer<typeof signupSchema>;
 
 export default function SignupPage() {
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [registerApi, {isLoading}] = useRegisterMutation();
 
   const {
@@ -36,7 +43,12 @@ export default function SignupPage() {
 
   const onSubmit = async (data: SignupFormValues) => {
     try {
-      const response = await registerApi(data).unwrap();
+      const response = await registerApi({
+        firstName: data.firstName,
+        lastName: data.lastName,
+        email: data.email,
+        password: data.password,
+      }).unwrap();
       toast.success(response.message || 'Account created successfully!');
       router.push(`/auth/verify-email?email=${encodeURIComponent(data.email)}`);
     } catch (error: any) {
@@ -179,6 +191,43 @@ export default function SignupPage() {
             {errors.password && (
               <p className="text-red-500 text-xs mt-1.5">
                 {errors.password.message}
+              </p>
+            )}
+          </div>
+
+          <div>
+            <label
+              htmlFor="confirmPassword"
+              className="block text-lg font-semibold text-[#0F0F0F] mb-2">
+              Confirm Password
+            </label>
+            <div className="relative">
+              <input
+                id="confirmPassword"
+                type={showConfirmPassword ? 'text' : 'password'}
+                placeholder="Confirm your password..."
+                className={`w-full px-4 py-3.5 bg-white text-sm placeholder:text-gray-400 outline-none transition-all pr-12 ${
+                  errors.confirmPassword
+                    ? 'border border-red-500'
+                    : 'border border-transparent focus:border-gray-300 shadow-sm'
+                }`}
+                {...register('confirmPassword')}
+                suppressHydrationWarning
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="absolute inset-y-0 right-0 flex items-center px-4 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer">
+                {showConfirmPassword ? (
+                  <EyeOff size={18} strokeWidth={2} />
+                ) : (
+                  <Eye size={18} strokeWidth={2} />
+                )}
+              </button>
+            </div>
+            {errors.confirmPassword && (
+              <p className="text-red-500 text-xs mt-1.5">
+                {errors.confirmPassword.message}
               </p>
             )}
           </div>

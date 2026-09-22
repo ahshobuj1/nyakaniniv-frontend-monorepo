@@ -13,6 +13,7 @@ export interface WalletData {
     createdAt: string;
     updatedAt: string;
   };
+  balancesByCurrency?: Record<string, { pendingBalance: number; availableBalance: number; totalEarnings: number; totalWithdrawn: number }>;
   payoutRequests: Array<{
     id: string;
     amount: number;

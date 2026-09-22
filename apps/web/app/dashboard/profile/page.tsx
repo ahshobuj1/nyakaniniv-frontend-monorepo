@@ -10,7 +10,7 @@ import {toast} from 'sonner';
 import {Button} from '@repo/ui';
 import {Country, City} from 'country-state-city';
 import {useEffect, useState} from 'react';
-import {Check, ChevronsUpDown} from 'lucide-react';
+import {Check, ChevronsUpDown, User, Lock, Eye, EyeOff} from 'lucide-react';
 import {
   Popover,
   PopoverContent,
@@ -43,10 +43,16 @@ const profileSchema = z.object({
   profileImage: z.any().optional(),
 });
 
-const passwordSchema = z.object({
-  currentPassword: z.string().min(1, 'Current password is required'),
-  newPassword: z.string().min(8, 'Password must be at least 8 characters'),
-});
+const passwordSchema = z
+  .object({
+    currentPassword: z.string().min(1, 'Current password is required'),
+    newPassword: z.string().min(8, 'Password must be at least 8 characters'),
+    confirmPassword: z.string().min(1, 'Please confirm your new password'),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: 'Passwords do not match',
+    path: ['confirmPassword'],
+  });
 
 type ProfileFormValues = z.infer<typeof profileSchema>;
 type PasswordFormValues = z.infer<typeof passwordSchema>;
@@ -122,8 +128,14 @@ export default function ProfileContent() {
     defaultValues: {
       currentPassword: '',
       newPassword: '',
+      confirmPassword: '',
     },
   });
+
+  const [activeTab, setActiveTab] = useState<'profile' | 'password'>('profile');
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const [countries] = useState(Country.getAllCountries());
   const selectedCountry = watch('country');
@@ -247,15 +259,49 @@ export default function ProfileContent() {
   return (
     <div className="w-full bg-slate-50 min-h-full p-6 md:p-8 font-sans">
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900 mb-1">Profile</h1>
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-gray-900 mb-1">
+          {activeTab === 'profile' ? 'Profile Settings' : 'Change Password'}
+        </h1>
         <p className="text-sm text-gray-500">
-          View and manage your personal information here.
+          {activeTab === 'profile'
+            ? 'View and manage your personal DJ information and preferences.'
+            : 'Update and secure your account credentials.'}
         </p>
       </div>
 
+      {/* Navigation Tabs */}
+      <div className="flex items-center gap-2 border-b border-gray-200 mb-8">
+        <button
+          type="button"
+          onClick={() => setActiveTab('profile')}
+          className={`flex items-center gap-2 pb-3.5 px-4 text-sm font-semibold transition-all relative cursor-pointer ${
+            activeTab === 'profile'
+              ? 'text-primary border-b-2 border-primary'
+              : 'text-gray-500 hover:text-gray-800'
+          }`}
+        >
+          <User className="w-4 h-4" />
+          Profile Settings
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab('password')}
+          className={`flex items-center gap-2 pb-3.5 px-4 text-sm font-semibold transition-all relative cursor-pointer ${
+            activeTab === 'password'
+              ? 'text-primary border-b-2 border-primary'
+              : 'text-gray-500 hover:text-gray-800'
+          }`}
+        >
+          <Lock className="w-4 h-4" />
+          Change Password
+        </button>
+      </div>
+
       {/* Main Profile Form */}
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 mb-12">
+      {activeTab === 'profile' && (
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 mb-12">
         {/* Profile Image Section */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8 flex flex-col items-center sm:flex-row sm:items-start gap-6">
           <div className="relative group">
@@ -599,56 +645,116 @@ export default function ProfileContent() {
           </Button>
         </div>
       </form>
+      )}
 
-      {/* Password Change Form */}
-      <form onSubmit={handlePasswordSubmit(onPasswordSubmit)} className="space-y-6">
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8 h-full">
-          <h3 className="text-base font-bold text-gray-800 pb-6 mb-6 border-b border-gray-200">
-            Change Password
-          </h3>
-          <div className="space-y-6 max-w-md">
-            <div>
-              <label className={labelClass}>Current password</label>
-              <input
-                type="password"
-                {...registerPassword('currentPassword')}
-                placeholder="Enter your current password"
-                className={inputBaseClass}
-              />
-              {passwordErrors.currentPassword && (
-                <p className="text-red-500 text-xs mt-1.5">
-                  {passwordErrors.currentPassword.message}
-                </p>
-              )}
-            </div>
-
-            <div>
-              <label className={labelClass}>New password</label>
-              <input
-                type="password"
-                {...registerPassword('newPassword')}
-                placeholder="Enter your new password"
-                className={inputBaseClass}
-              />
-              {passwordErrors.newPassword && (
-                <p className="text-red-500 text-xs mt-1.5">
-                  {passwordErrors.newPassword.message}
-                </p>
-              )}
+      {/* Password Change Tab */}
+      {activeTab === 'password' && (
+        <form onSubmit={handlePasswordSubmit(onPasswordSubmit)} className="space-y-6">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8 max-w-2xl">
+            <div className="border-b border-gray-100 pb-5 mb-6">
+              <h3 className="text-base font-bold text-gray-800">
+                Change Password
+              </h3>
+              <p className="text-sm text-gray-500 mt-1">
+                Make sure to choose a strong password with at least 8 characters.
+              </p>
             </div>
             
-            <div className="pt-2">
-              <Button
-                size={'lg'}
-                type="submit"
-                disabled={isSubmittingPassword}
-                className="bg-primary hover:bg-primary/90 text-white text-sm font-semibold py-3 px-10 rounded-md shadow-md transition-all active:scale-95 disabled:opacity-70">
-                {isSubmittingPassword ? 'Updating...' : 'Update Password'}
-              </Button>
+            <div className="space-y-5 max-w-md">
+              <div>
+                <label className={labelClass}>Current Password</label>
+                <div className="relative">
+                  <input
+                    type={showCurrentPassword ? 'text' : 'password'}
+                    {...registerPassword('currentPassword')}
+                    placeholder="Enter your current password"
+                    className={`${inputBaseClass} pr-12`}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                    className="absolute inset-y-0 right-0 flex items-center px-4 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer">
+                    {showCurrentPassword ? (
+                      <EyeOff size={18} strokeWidth={2} />
+                    ) : (
+                      <Eye size={18} strokeWidth={2} />
+                    )}
+                  </button>
+                </div>
+                {passwordErrors.currentPassword && (
+                  <p className="text-red-500 text-xs mt-1.5">
+                    {passwordErrors.currentPassword.message}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <label className={labelClass}>New Password</label>
+                <div className="relative">
+                  <input
+                    type={showNewPassword ? 'text' : 'password'}
+                    {...registerPassword('newPassword')}
+                    placeholder="Enter your new password"
+                    className={`${inputBaseClass} pr-12`}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPassword(!showNewPassword)}
+                    className="absolute inset-y-0 right-0 flex items-center px-4 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer">
+                    {showNewPassword ? (
+                      <EyeOff size={18} strokeWidth={2} />
+                    ) : (
+                      <Eye size={18} strokeWidth={2} />
+                    )}
+                  </button>
+                </div>
+                {passwordErrors.newPassword && (
+                  <p className="text-red-500 text-xs mt-1.5">
+                    {passwordErrors.newPassword.message}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <label className={labelClass}>Confirm New Password</label>
+                <div className="relative">
+                  <input
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    {...registerPassword('confirmPassword')}
+                    placeholder="Confirm your new password"
+                    className={`${inputBaseClass} pr-12`}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute inset-y-0 right-0 flex items-center px-4 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer">
+                    {showConfirmPassword ? (
+                      <EyeOff size={18} strokeWidth={2} />
+                    ) : (
+                      <Eye size={18} strokeWidth={2} />
+                    )}
+                  </button>
+                </div>
+                {passwordErrors.confirmPassword && (
+                  <p className="text-red-500 text-xs mt-1.5">
+                    {passwordErrors.confirmPassword.message}
+                  </p>
+                )}
+              </div>
+
+              <div className="pt-2">
+                <Button
+                  size={'lg'}
+                  type="submit"
+                  disabled={isSubmittingPassword}
+                  className="bg-primary hover:bg-primary/90 text-white text-sm font-semibold py-3 px-10 rounded-md shadow-md transition-all active:scale-95 disabled:opacity-70 cursor-pointer">
+                  {isSubmittingPassword ? 'Updating...' : 'Update Password'}
+                </Button>
+              </div>
             </div>
           </div>
-        </div>
-      </form>
+        </form>
+      )}
     </div>
   );
 }

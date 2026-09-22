@@ -43,11 +43,14 @@ export default function WalletDashboardPage() {
   const [connectModalOpen, setConnectModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'ledgers' | 'withdrawals'>('ledgers');
 
+  const balancesByCurrency = walletData?.balancesByCurrency || {};
   const currency = wallet?.currency || 'KES';
-  const availableBalance = wallet?.availableBalance || 0;
-  const pendingBalance = wallet?.pendingBalance || 0;
-  const totalEarnings = wallet?.totalEarnings || 0;
-  const totalWithdrawn = wallet?.totalWithdrawn || 0;
+  const dynamicBalance = balancesByCurrency[currency] || {};
+  
+  const availableBalance = dynamicBalance.availableBalance !== undefined ? dynamicBalance.availableBalance : (wallet?.availableBalance || 0);
+  const pendingBalance = dynamicBalance.pendingBalance !== undefined ? dynamicBalance.pendingBalance : (wallet?.pendingBalance || 0);
+  const totalEarnings = dynamicBalance.totalEarnings !== undefined ? dynamicBalance.totalEarnings : (wallet?.totalEarnings || 0);
+  const totalWithdrawn = dynamicBalance.totalWithdrawn !== undefined ? dynamicBalance.totalWithdrawn : (wallet?.totalWithdrawn || 0);
 
   const isMobile = connectedAccount?.gateway === 'PESAPAL';
 
@@ -92,25 +95,43 @@ export default function WalletDashboardPage() {
 
         {/* Escrow Financial Protection Banner */}
         <div className="bg-white border border-[#E5E7EB] rounded-2xl p-5 shadow-[0_2px_20px_rgba(0,0,0,0.03)] flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-          <div className="flex items-start sm:items-center gap-3.5">
-            <div className="w-11 h-11 rounded-xl bg-emerald-50 border border-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
-              <ShieldCheck className="w-6 h-6" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <h4 className="text-[15px] font-bold text-[#111620]">
-                  Escrow Financial Protection & Instant Payouts
-                </h4>
-                <span className="text-[11px] bg-primary/10 text-primary font-bold px-2 py-0.5 rounded-md">
-                  2% Platform Fee Model
-                </span>
+          <div className="flex flex-col w-full gap-4">
+            <div className="flex items-start sm:items-center gap-3.5">
+              <div className="w-11 h-11 rounded-xl bg-emerald-50 border border-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
+                <ShieldCheck className="w-6 h-6" />
               </div>
-              <p className="text-[13px] text-[#787878] mt-0.5">
-                Client payments are held securely in Escrow until gig completion. Net earnings are unlocked into your Available Balance for immediate transfer.
-              </p>
+              <div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h4 className="text-[15px] font-bold text-[#111620]">
+                    Escrow Financial Protection & Instant Payouts
+                  </h4>
+                  <span className="text-[11px] bg-primary/10 text-primary font-bold px-2 py-0.5 rounded-md">
+                    2% Platform Fee Model
+                  </span>
+                </div>
+                <p className="text-[13px] text-[#787878] mt-0.5">
+                  Client payments are held securely in Escrow until gig completion. Net earnings are unlocked into your Available Balance for immediate transfer.
+                </p>
+              </div>
+            </div>
+            
+            {/* Escrow Timeline */}
+            <div className="flex flex-wrap items-center gap-2 md:gap-4 mt-1 text-xs sm:text-sm font-medium">
+              <div className="flex items-center gap-1.5 text-amber-600 bg-amber-50/50 px-2.5 py-1.5 rounded-lg border border-amber-200">
+                <Clock className="w-3.5 h-3.5" /> Pending Escrow
+              </div>
+              <span className="text-gray-300 hidden sm:inline">→</span>
+              <div className="flex items-center gap-1.5 text-emerald-600 bg-emerald-50/50 px-2.5 py-1.5 rounded-lg border border-emerald-200">
+                <Wallet className="w-3.5 h-3.5" /> Available Balance
+              </div>
+              <span className="text-gray-300 hidden sm:inline">→</span>
+              <div className="flex items-center gap-1.5 text-blue-600 bg-blue-50/50 px-2.5 py-1.5 rounded-lg border border-blue-200">
+                <CheckCircle2 className="w-3.5 h-3.5" /> Withdrawn
+              </div>
             </div>
           </div>
-          <div className="flex items-center gap-2 text-xs text-[#787878] bg-[#F9FAFB] border border-[#E5E7EB] px-3 py-1.5 rounded-lg shrink-0">
+          
+          <div className="flex items-center gap-2 text-xs text-[#787878] bg-[#F9FAFB] border border-[#E5E7EB] px-3 py-1.5 rounded-lg shrink-0 h-fit hidden md:flex">
             <Info className="w-3.5 h-3.5 text-primary" />
             <span>Automated settlement upon booking completion</span>
           </div>

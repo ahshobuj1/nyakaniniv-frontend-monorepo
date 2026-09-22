@@ -51,6 +51,11 @@ export function TenantOnboardingPopup() {
       toast.error('Both Stage Name and Subdomain are required.');
       return;
     }
+
+    if (subdomain.length < 2) {
+      toast.error('Subdomain must be at least 2 characters.');
+      return;
+    }
     
     try {
       await createTenant({

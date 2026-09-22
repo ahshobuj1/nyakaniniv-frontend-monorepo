@@ -162,11 +162,18 @@ export default function Footer({content}: FooterProps) {
                   strokeWidth="2"
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  className="text-[var(--primary)]">
+                  className="text-[var(--primary)] shrink-0">
                   <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
                   <circle cx="12" cy="10" r="3" />
                 </svg>
-                {content?.contact?.location || footerData.contactLocation}
+                <a
+                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(content?.contact?.location || footerData.contactLocation)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-white hover:underline transition-colors"
+                  title={`Open in Google Maps: ${content?.contact?.location || footerData.contactLocation}`}>
+                  {content?.contact?.location || footerData.contactLocation}
+                </a>
               </li>
             </ul>
           </div>

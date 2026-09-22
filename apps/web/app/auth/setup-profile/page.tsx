@@ -30,7 +30,7 @@ import {useRouter} from 'next/navigation';
 const profileSchema = z.object({
   stageName: z.string().min(1, 'Stage name is required'),
   subdomain: z.string()
-    .min(3, 'Subdomain must be at least 3 characters')
+    .min(2, 'Subdomain must be at least 2 characters')
     .toLowerCase()
     .regex(/^[a-z0-9-]+$/, 'Subdomain can only contain lowercase letters, numbers, and hyphens (no spaces)'),
   country: z.string().min(1, 'Please select a country'),

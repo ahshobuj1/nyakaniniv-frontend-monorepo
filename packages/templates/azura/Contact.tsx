@@ -41,9 +41,15 @@ export default function Contact({content}: {content: Content}) {
               <MapPin className="text-[var(--primary)]" />
             </div>
             <h3 className="text-xl font-bold">Location</h3>
-            <p className="text-[#787878]">
+            <a
+              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(content?.location || 'Lagos, Nigeria')}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[#787878] hover:text-[var(--primary)] hover:underline transition-colors"
+              title={`Open in Google Maps: ${content?.location || 'Lagos, Nigeria'}`}
+            >
               {content?.location || 'Lagos, Nigeria'}
-            </p>
+            </a>
           </div>
         </div>
       </div>

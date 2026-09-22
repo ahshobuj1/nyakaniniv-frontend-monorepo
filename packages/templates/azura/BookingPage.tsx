@@ -1,6 +1,5 @@
 'use client';
 
-import { motion } from 'framer-motion';
 import { useForm } from 'react-hook-form';
 import { useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -9,26 +8,45 @@ import { toast } from 'sonner';
 import { useInitiateBookingMutation } from '@repo/store';
 import { DatePicker, AddressAutocomplete } from '@repo/ui';
 import BookingOtpModal from '../shared/BookingOtpModal';
+import { ShieldCheck, AlertCircle, CheckCircle2, ArrowRight, ChevronDown } from 'lucide-react';
 
 const bookingSchema = z.object({
   fullName: z.string().min(2, 'Full name is required'),
   email: z.string().email('Valid email is required'),
   clientPhone: z.string().min(5, 'Phone number is required'),
-  address: z.string().min(3, 'Event address is required'),
-  eventDate: z.string().min(1, 'Event date is required'),
+  address: z.string().min(3, 'Event venue or city is required'),
+  eventDate: z.string().min(1, 'Please select event date'),
   eventTime: z.string().optional(),
   timezone: z.string().optional(),
   duration: z.string().optional(),
-  eventType: z.string().min(1, 'Event type is required'),
-  details: z.string().min(10, 'Please provide some event details'),
+  eventType: z.string().min(1, 'Please select event category'),
+  details: z.string().min(6, 'Please provide some event details or music requests'),
 });
 
 type BookingFormValues = z.infer<typeof bookingSchema>;
 
+const EVENT_TYPES = [
+  'Wedding',
+  'Club / Lounge',
+  'Corporate Event',
+  'Concert / Festival',
+  'Birthday Party',
+  'Private Gathering',
+  'Other',
+];
+
+const DURATION_OPTIONS = [
+  '2 Hours',
+  '4 Hours (Standard)',
+  '6 Hours',
+  'Full Day (8h+)',
+];
+
 export default function BookingPage({ content }: any) {
   const [initiateBooking, { isLoading: isInitiating }] = useInitiateBookingMutation();
   const tenantId = content?.tenantId || '';
-  const [submitStatus, setSubmitStatus] = useState<{type: 'success' | 'error', message: string} | null>(null);
+  const djName = content?.djName || 'The DJ';
+  const [submitStatus, setSubmitStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   // OTP Modal state
   const [otpModalOpen, setOtpModalOpen] = useState(false);
@@ -50,14 +68,16 @@ export default function BookingPage({ content }: any) {
       clientPhone: '',
       address: '',
       eventDate: '',
-      eventTime: '',
+      eventTime: '20:00',
       timezone: 'EAT',
-      duration: '4 Hours',
+      duration: '4 Hours (Standard)',
       eventType: '',
       details: '',
-    }
+    },
   });
 
+  const selectedEventType = watch('eventType');
+  const selectedDuration = watch('duration');
   const selectedDateValue = watch('eventDate');
   const currentAddress = watch('address');
 
@@ -65,18 +85,31 @@ export default function BookingPage({ content }: any) {
     setSubmitStatus(null);
     if (!tenantId) {
       toast.error('Unable to process booking: Tenant ID is missing.');
-      setSubmitStatus({ type: 'error', message: 'Unable to process booking: Tenant ID is missing.' });
+      setSubmitStatus({ type: 'error', message: 'Tenant ID is missing.' });
       return;
     }
     try {
       const timePart = data.eventTime ? `${data.eventTime}:00` : '00:00:00';
-      const formattedDate = new Date(`${data.eventDate}T${timePart}`).toISOString();
-      
+      const tzOffsets: Record<string, string> = {
+        'EAT': '+03:00',
+        'Africa/Nairobi': '+03:00',
+        'WAT': '+01:00',
+        'Africa/Lagos': '+01:00',
+        'SAST': '+02:00',
+        'Africa/Johannesburg': '+02:00',
+        'GMT': 'Z',
+        'UTC': 'Z'
+      };
+      const offset = tzOffsets[data.timezone || ''] || '+03:00';
+      const formattedDate = `${data.eventDate}T${timePart}${offset}`;
+
       const enrichedDetails = [
-        data.eventTime ? `Start Time: ${data.eventTime} (${data.timezone})` : null,
+        data.eventTime ? `Start Time: ${data.eventTime} (${data.timezone || 'EAT'})` : null,
         data.duration ? `Duration: ${data.duration}` : null,
         `Requirements: ${data.details}`,
-      ].filter(Boolean).join('\n');
+      ]
+        .filter(Boolean)
+        .join('\n');
 
       const res = await initiateBooking({
         tenantId,
@@ -87,9 +120,9 @@ export default function BookingPage({ content }: any) {
         eventDate: formattedDate,
         eventType: data.eventType,
         eventDetails: enrichedDetails,
-        eventTimezone: data.timezone,
+        eventTimezone: data.timezone || 'Africa/Nairobi',
       }).unwrap();
-      
+
       if (res?.data?.verificationToken) {
         setVerificationToken(res.data.verificationToken);
         setPendingClientEmail(data.email);
@@ -108,147 +141,93 @@ export default function BookingPage({ content }: any) {
       description: "Your request has been sent to the DJ for review. You'll receive an email once approved.",
     });
     setSubmitStatus({
-      type: 'success', 
-      message: "Your request has been verified and sent to the DJ for review. If your booking is accepted, you'll receive an email with a secure payment link to confirm your reservation."
+      type: 'success',
+      message:
+        "Your request has been verified and sent to the DJ. Once accepted, you will receive an email with a secure payment link to confirm your reservation.",
     });
     reset();
   };
 
   return (
-    <section className="bg-[#f8f9fa] py-[80px] min-h-screen flex items-center justify-center font-sans">
-      <div className="max-w-[860px] w-full mx-auto px-6">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="text-center mb-[40px]"
-        >
-          <h2 className="text-[34px] md:text-[42px] font-bold text-[#111111] mb-[12px] tracking-tight">
-            Book {content?.djName || 'The DJ'} For Your Event
-          </h2>
-          <p className="text-[#666666] text-[15px] md:text-[16px] max-w-[600px] mx-auto leading-relaxed">
+    <section className="bg-[#f0f0f0] py-8 sm:py-14 lg:py-20 font-sans text-[#111111] min-h-screen flex items-center justify-center">
+      <div className="max-w-[860px] w-full mx-auto px-3.5 sm:px-6 lg:px-8">
+        
+        {/* Header */}
+        <div className="text-center mb-5 sm:mb-8">
+          <span className="inline-block text-[11px] font-bold uppercase tracking-wider text-[var(--primary)] mb-1">
+            Direct Booking
+          </span>
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-[#0f0f0f] tracking-tight mb-1.5">
+            Book <span className="text-[var(--primary)]">{djName}</span> For Your Event
+          </h1>
+          <p className="text-[#666666] text-xs sm:text-sm max-w-[560px] mx-auto leading-relaxed px-2">
             Fill out the form below with your event details, location, and preferred music vibe. The DJ team will review and confirm availability.
           </p>
-        </motion.div>
+        </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.1 }}
-          className="bg-white p-[32px] md:p-[48px] rounded-[24px] shadow-[0_10px_40px_rgba(0,0,0,0.04)] border border-gray-100"
-        >
-          <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-[22px]" noValidate>
+        {/* Form Card (Sleek, Tailored, Comfortable, Fully Responsive) */}
+        <div className="bg-white p-4 sm:p-7 md:p-8 rounded-xl border border-[#e5e5e5] shadow-xs">
+          
+          {submitStatus && (
+            <div
+              className={`mb-5 p-3.5 rounded-lg flex items-start gap-2.5 text-xs sm:text-sm border ${
+                submitStatus.type === 'success'
+                  ? 'bg-emerald-50 text-emerald-950 border-emerald-200'
+                  : 'bg-red-50 text-red-950 border-red-200'
+              }`}
+            >
+              {submitStatus.type === 'success' ? (
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+              ) : (
+                <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
+              )}
+              <div>
+                <p className="font-bold">
+                  {submitStatus.type === 'success' ? 'Booking Request Submitted!' : 'Submission Error'}
+                </p>
+                <p className="mt-0.5 opacity-90 leading-relaxed">{submitStatus.message}</p>
+              </div>
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 sm:space-y-5" noValidate>
             
-            {submitStatus && (
-              <motion.div 
-                initial={{ opacity: 0, y: -10 }} 
-                animate={{ opacity: 1, y: 0 }}
-                className={`text-[14px] font-medium leading-relaxed p-[16px] rounded-[14px] flex items-start gap-3 ${
-                  submitStatus.type === 'success' 
-                    ? 'bg-emerald-50 text-emerald-900 border border-emerald-200' 
-                    : 'bg-red-50 text-red-900 border border-red-200'
-                }`}
-              >
-                <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${
-                  submitStatus.type === 'success' ? 'bg-emerald-500 text-white' : 'bg-red-500 text-white'
-                }`}>
-                  {submitStatus.type === 'success' ? (
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                      <polyline points="20 6 9 17 4 12"></polyline>
-                    </svg>
-                  ) : (
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                      <line x1="18" y1="6" x2="6" y2="18"></line>
-                      <line x1="6" y1="6" x2="18" y2="18"></line>
-                    </svg>
-                  )}
+            {/* Field 1: Event Type (Sleek, compact dropdown with chevron) */}
+            <div className="space-y-1">
+              <label className="text-xs font-semibold text-[#111111] uppercase tracking-wide block">
+                Event Type <span className="text-red-500">*</span>
+              </label>
+              <div className="relative">
+                <select
+                  {...register('eventType')}
+                  className={`w-full bg-white border ${
+                    errors.eventType ? '!border-red-500' : 'border-[#d4d4d4]'
+                  } rounded-lg pl-3 pr-9 h-10 text-xs sm:text-sm ${
+                    selectedEventType ? 'text-[#111111] font-medium' : 'text-[#999999]'
+                  } outline-none focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)]/20 transition-all cursor-pointer appearance-none`}
+                >
+                  <option value="" disabled>
+                    Select event type...
+                  </option>
+                  {EVENT_TYPES.map((type) => (
+                    <option key={type} value={type} className="text-[#111111] font-normal py-1">
+                      {type}
+                    </option>
+                  ))}
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-neutral-400">
+                  <ChevronDown className="w-4 h-4 stroke-[2]" />
                 </div>
-                <div className="flex-1">
-                  <p className="font-bold">{submitStatus.type === 'success' ? 'Booking Request Submitted!' : 'Submission Error'}</p>
-                  <p className="text-[13px] mt-0.5 opacity-90">{submitStatus.message}</p>
-                </div>
-              </motion.div>
-            )}
-
-            {/* Row 1: Full Name & Email */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-[20px]">
-              <div className="flex flex-col gap-[6px]">
-                <label className="text-[13px] font-bold text-[#111111]">
-                  Full Name <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  placeholder="Enter your name"
-                  {...register('fullName')}
-                  className={`w-full bg-[#f9fafb] border ${
-                    errors.fullName ? 'border-red-500' : 'border-gray-200'
-                  } rounded-[10px] px-[16px] py-[12px] text-[14px] text-[#111111] placeholder-gray-400 outline-none focus:border-[var(--primary)] transition-colors`}
-                />
-                {errors.fullName && (
-                  <span className="text-red-500 text-[12px]">{errors.fullName.message}</span>
-                )}
               </div>
-
-              <div className="flex flex-col gap-[6px]">
-                <label className="text-[13px] font-bold text-[#111111]">
-                  Email Address <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="email"
-                  placeholder="Enter your email"
-                  {...register('email')}
-                  className={`w-full bg-[#f9fafb] border ${
-                    errors.email ? 'border-red-500' : 'border-gray-200'
-                  } rounded-[10px] px-[16px] py-[12px] text-[14px] text-[#111111] placeholder-gray-400 outline-none focus:border-[var(--primary)] transition-colors`}
-                />
-                {errors.email && (
-                  <span className="text-red-500 text-[12px]">{errors.email.message}</span>
-                )}
-              </div>
+              {errors.eventType && (
+                <span className="text-red-500 text-xs block">{errors.eventType.message}</span>
+              )}
             </div>
 
-            {/* Row 2: Phone Number & Venue Address */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-[20px]">
-              <div className="flex flex-col gap-[6px]">
-                <label className="text-[13px] font-bold text-[#111111]">
-                  Phone Number <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="tel"
-                  placeholder="e.g. +234 801 234 5678"
-                  {...register('clientPhone')}
-                  className={`w-full bg-[#f9fafb] border ${
-                    errors.clientPhone ? 'border-red-500' : 'border-gray-200'
-                  } rounded-[10px] px-[16px] py-[12px] text-[14px] text-[#111111] placeholder-gray-400 outline-none focus:border-[var(--primary)] transition-colors`}
-                />
-                {errors.clientPhone && (
-                  <span className="text-red-500 text-[12px]">{errors.clientPhone.message}</span>
-                )}
-              </div>
-
-              <div className="flex flex-col gap-[6px]">
-                <label className="text-[13px] font-bold text-[#111111]">
-                  Venue / Event Address <span className="text-red-500">*</span>
-                </label>
-                <AddressAutocomplete
-                  value={currentAddress}
-                  onChange={(val) => setValue('address', val, { shouldValidate: true })}
-                  onSelectTimezone={(tz) => setValue('timezone', tz)}
-                  placeholder="Search venue or address..."
-                  inputClassName={`w-full bg-[#f9fafb] border ${
-                    errors.address ? '!border-red-500' : 'border-gray-200'
-                  } rounded-[10px] px-[16px] py-[12px] h-[46px] text-[14px] text-[#111111] placeholder-gray-400 outline-none focus:border-[var(--primary)]`}
-                />
-                {errors.address && (
-                  <span className="text-red-500 text-[12px]">{errors.address.message}</span>
-                )}
-              </div>
-            </div>
-
-            {/* Row 3: Event Date & Event Type */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-[20px]">
-              <div className="flex flex-col gap-[6px]">
-                <label className="text-[13px] font-bold text-[#111111]">
+            {/* Field 2: Date & Time (Stacked on mobile, 2 cols on tablet+) */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-[#111111] uppercase tracking-wide block">
                   Event Date <span className="text-red-500">*</span>
                 </label>
                 <DatePicker
@@ -265,135 +244,195 @@ export default function BookingPage({ content }: any) {
                   }}
                   placeholder="Select event date"
                   minDate={new Date()}
-                  buttonClassName={`w-full bg-[#f9fafb] border ${
-                    errors.eventDate ? '!border-red-500' : 'border-gray-200'
-                  } rounded-[10px] px-[16px] py-[12px] h-[46px] text-[14px] text-left`}
+                  buttonClassName={`w-full bg-white border ${
+                    errors.eventDate ? '!border-red-500' : '!border-[#d4d4d4]'
+                  } !rounded-lg !px-3 !h-10 text-xs sm:text-sm text-left text-[#111111] hover:!border-[#999999] focus:!border-[var(--primary)] transition-all`}
                 />
                 {errors.eventDate && (
-                  <span className="text-red-500 text-[12px]">{errors.eventDate.message}</span>
+                  <span className="text-red-500 text-xs block">{errors.eventDate.message}</span>
                 )}
               </div>
 
-              <div className="flex flex-col gap-[6px]">
-                <label className="text-[13px] font-bold text-[#111111]">
-                  Event Type <span className="text-red-500">*</span>
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-[#111111] uppercase tracking-wide block">
+                  Start Time & Timezone
                 </label>
-                <div className="relative">
-                  <select
-                    {...register('eventType')}
-                    className={`w-full bg-[#f9fafb] border ${
-                      errors.eventType ? 'border-red-500' : 'border-gray-200'
-                    } rounded-[10px] px-[16px] py-[12px] text-[14px] text-[#111111] outline-none focus:border-[var(--primary)] transition-colors appearance-none`}
-                  >
-                    <option value="" disabled hidden>Select event type</option>
-                    <option value="Wedding">Wedding</option>
-                    <option value="Club / Lounge Gig">Club / Lounge Gig</option>
-                    <option value="Corporate">Corporate</option>
-                    <option value="Private">Private</option>
-                    <option value="Concert / Festival">Concert / Festival</option>
-                    <option value="Birthday Celebration">Birthday Celebration</option>
-                    <option value="Other">Other</option>
-                  </select>
-                  <div className="absolute inset-y-0 right-[16px] flex items-center pointer-events-none">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#a3a3a3" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <polyline points="6 9 12 15 18 9"></polyline>
-                    </svg>
+                <div className="flex gap-2">
+                  <input
+                    type="time"
+                    {...register('eventTime')}
+                    className="flex-1 bg-white border border-[#d4d4d4] rounded-lg px-3 h-10 text-xs sm:text-sm text-[#111111] outline-none focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)]/20 transition-all cursor-pointer"
+                  />
+                  <div className="relative">
+                    <select
+                      {...register('timezone')}
+                      className="w-24 sm:w-28 bg-white border border-[#d4d4d4] rounded-lg pl-2.5 pr-7 h-10 text-xs sm:text-sm font-medium text-[#111111] outline-none focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)]/20 transition-all cursor-pointer appearance-none"
+                    >
+                      <option value="Africa/Nairobi">EAT</option>
+                      <option value="Africa/Lagos">WAT</option>
+                      <option value="Africa/Johannesburg">SAST</option>
+                      <option value="GMT">GMT</option>
+                      <option value="UTC">UTC</option>
+                    </select>
+                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2 text-neutral-400">
+                      <ChevronDown className="w-3.5 h-3.5 stroke-[2]" />
+                    </div>
                   </div>
                 </div>
-                {errors.eventType && (
-                  <span className="text-red-500 text-[12px]">{errors.eventType.message}</span>
-                )}
               </div>
             </div>
 
-            {/* Row 4: Event Start Time & Timezone & Duration */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-[20px]">
-              <div className="flex flex-col gap-[6px]">
-                <label className="text-[13px] font-bold text-[#111111]">
-                  Start Time
-                </label>
-                <input
-                  type="time"
-                  {...register('eventTime')}
-                  className="w-full bg-[#f9fafb] border border-gray-200 rounded-[10px] px-[16px] py-[12px] h-[46px] text-[14px] text-[#111111] outline-none focus:border-[var(--primary)] transition-colors"
-                />
-              </div>
-
-              <div className="flex flex-col gap-[6px]">
-                <label className="text-[13px] font-bold text-[#111111]">
-                  Timezone
-                </label>
-                <select
-                  {...register('timezone')}
-                  className="w-full bg-[#f9fafb] border border-gray-200 rounded-[10px] px-[16px] py-[12px] h-[46px] text-[14px] text-[#111111] outline-none focus:border-[var(--primary)] transition-colors cursor-pointer"
-                >
-                  <option value="WAT">WAT (Nigeria/West Africa)</option>
-                  <option value="EAT">EAT (Kenya/East Africa)</option>
-                  <option value="GMT">GMT (Ghana)</option>
-                  <option value="SAST">SAST (South Africa)</option>
-                </select>
-              </div>
-
-              <div className="flex flex-col gap-[6px]">
-                <label className="text-[13px] font-bold text-[#111111]">
-                  Estimated Duration
-                </label>
-                <select
-                  {...register('duration')}
-                  className="w-full bg-[#f9fafb] border border-gray-200 rounded-[10px] px-[16px] py-[12px] h-[46px] text-[14px] text-[#111111] outline-none focus:border-[var(--primary)] transition-colors cursor-pointer"
-                >
-                  <option value="1 Hour">1 Hour</option>
-                  <option value="2 Hours">2 Hours</option>
-                  <option value="3 Hours">3 Hours</option>
-                  <option value="4 Hours">4 Hours</option>
-                  <option value="5 Hours">5 Hours</option>
-                  <option value="6 Hours">6 Hours</option>
-                  <option value="8 Hours">8 Hours</option>
-                  <option value="10+ Hours (Full Day)">10+ Hours (Full Day)</option>
-                </select>
-              </div>
-            </div>
-
-            {/* Row 5: Event Details */}
-            <div className="flex flex-col gap-[6px]">
-              <label className="text-[13px] font-bold text-[#111111]">
-                Event Details & Music Preferences <span className="text-red-500">*</span>
+            {/* Field 3: Venue Address */}
+            <div className="space-y-1">
+              <label className="text-xs font-semibold text-[#111111] uppercase tracking-wide block">
+                Venue Address or Location <span className="text-red-500">*</span>
               </label>
-              <textarea
-                rows={4}
-                placeholder="Tell me about the event, crowd size, preferred music genres (Afrobeats, Amapiano, Hip Hop, House), sound equipment setup..."
-                {...register('details')}
-                className={`w-full bg-[#f9fafb] border ${
-                  errors.details ? 'border-red-500' : 'border-gray-200'
-                } rounded-[10px] px-[16px] py-[12px] text-[14px] text-[#111111] placeholder-gray-400 outline-none focus:border-[var(--primary)] transition-colors resize-none`}
-              ></textarea>
-              {errors.details && (
-                <span className="text-red-500 text-[12px]">{errors.details.message}</span>
+              <AddressAutocomplete
+                value={currentAddress}
+                onChange={(val) => setValue('address', val, { shouldValidate: true })}
+                placeholder="Search hotel, club, hall, or street address..."
+                inputClassName={`w-full bg-white border ${
+                  errors.address ? '!border-red-500' : 'border-[#d4d4d4]'
+                } rounded-lg px-3 h-10 text-xs sm:text-sm text-[#111111] placeholder:text-[#999999] outline-none focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)]/20 transition-all`}
+              />
+              {errors.address && (
+                <span className="text-red-500 text-xs block">{errors.address.message}</span>
               )}
             </div>
 
-            {/* Submit Button */}
-            <motion.button
+            {/* Field 4: Duration (Clean compact pills with dynamic primary color) */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-[#111111] uppercase tracking-wide block">
+                Estimated Performance Duration
+              </label>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-2">
+                {DURATION_OPTIONS.map((dur) => {
+                  const isSelected = selectedDuration === dur;
+                  return (
+                    <button
+                      key={dur}
+                      type="button"
+                      onClick={() => setValue('duration', dur)}
+                      className={`h-8 sm:h-8.5 px-3 rounded-lg text-xs font-medium border text-center transition-all cursor-pointer ${
+                        isSelected
+                          ? 'border-[var(--primary)] bg-[var(--primary)] text-white shadow-xs'
+                          : 'border-[#d8d8d8] bg-[#fafafa] text-[#444444] hover:border-[#999999] hover:bg-[#f0f0f0]'
+                      }`}
+                    >
+                      {dur}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Field 5: Details & Music */}
+            <div className="space-y-1">
+              <label className="text-xs font-semibold text-[#111111] uppercase tracking-wide block">
+                Event Notes & Music Preferences <span className="text-red-500">*</span>
+              </label>
+              <textarea
+                rows={3}
+                placeholder="Preferred genres (Afrobeats, Amapiano, Hip Hop, etc.), crowd vibe, special entrance song, sound setup on-site..."
+                {...register('details')}
+                className={`w-full bg-white border ${
+                  errors.details ? 'border-red-500' : 'border-[#d4d4d4]'
+                } rounded-lg p-2.5 sm:p-3 text-xs sm:text-sm text-[#111111] placeholder:text-[#999999] outline-none focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)]/20 transition-all resize-none leading-relaxed`}
+              />
+              {errors.details && (
+                <span className="text-red-500 text-xs block">{errors.details.message}</span>
+              )}
+            </div>
+
+            {/* Field 6: Client Contact Details */}
+            <div className="pt-3 border-t border-[#eeeeee] space-y-3">
+              <p className="text-xs font-semibold text-[#111111] uppercase tracking-wide">
+                Your Contact Information
+              </p>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                <div className="space-y-1">
+                  <label className="text-xs text-[#555555] font-medium block">
+                    Full Name <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Your name"
+                    {...register('fullName')}
+                    className={`w-full bg-white border ${
+                      errors.fullName ? 'border-red-500' : 'border-[#d4d4d4]'
+                    } rounded-lg px-3 h-10 text-xs sm:text-sm text-[#111111] placeholder:text-[#999999] outline-none focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)]/20 transition-all`}
+                  />
+                  {errors.fullName && (
+                    <span className="text-red-500 text-xs block">{errors.fullName.message}</span>
+                  )}
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs text-[#555555] font-medium block">
+                    Phone Number (WhatsApp) <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="tel"
+                    placeholder="e.g. +254 712 345 678"
+                    {...register('clientPhone')}
+                    className={`w-full bg-white border ${
+                      errors.clientPhone ? 'border-red-500' : 'border-[#d4d4d4]'
+                    } rounded-lg px-3 h-10 text-xs sm:text-sm text-[#111111] placeholder:text-[#999999] outline-none focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)]/20 transition-all`}
+                  />
+                  {errors.clientPhone && (
+                    <span className="text-red-500 text-xs block">{errors.clientPhone.message}</span>
+                  )}
+                </div>
+
+                <div className="sm:col-span-2 space-y-1">
+                  <label className="text-xs text-[#555555] font-medium block">
+                    Email Address <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="email"
+                    placeholder="your-email@example.com"
+                    {...register('email')}
+                    className={`w-full bg-white border ${
+                      errors.email ? 'border-red-500' : 'border-[#d4d4d4]'
+                    } rounded-lg px-3 h-10 text-xs sm:text-sm text-[#111111] placeholder:text-[#999999] outline-none focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)]/20 transition-all`}
+                  />
+                  {errors.email && (
+                    <span className="text-red-500 text-xs block">{errors.email.message}</span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Escrow Note */}
+            <div className="pt-1 flex items-center gap-2 text-xs text-[#666666]">
+              <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+              <span>No upfront payment required now. The DJ will review and send your booking quote.</span>
+            </div>
+
+            {/* Submit Button (Uses Dynamic Primary Color var(--primary), sleek and fit) */}
+            <button
               type="submit"
               disabled={isSubmitting || isInitiating}
-              whileHover={{ scale: isSubmitting || isInitiating ? 1 : 1.01 }}
-              whileTap={{ scale: isSubmitting || isInitiating ? 1 : 0.99 }}
-              className="w-full bg-[var(--primary)] hover:opacity-90 text-white py-[15px] rounded-[12px] font-bold text-[16px] transition-all mt-[8px] flex justify-center items-center gap-2 shadow-lg shadow-[var(--primary)]/20 disabled:opacity-70 cursor-pointer"
+              className="w-full h-10.5 sm:h-11 bg-[var(--primary)] hover:opacity-95 active:scale-[0.99] text-white font-semibold text-sm rounded-lg transition-all shadow-xs flex items-center justify-center gap-2 disabled:opacity-60 cursor-pointer"
             >
               {isSubmitting || isInitiating ? (
                 <>
-                  <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
-                  Sending Verification Code...
+                  <span>Sending Verification Code...</span>
                 </>
               ) : (
-                'Request Booking (Verify Email)'
+                <>
+                  <span>Submit Booking Request</span>
+                  <ArrowRight className="w-4 h-4" />
+                </>
               )}
-            </motion.button>
+            </button>
           </form>
-        </motion.div>
+        </div>
       </div>
 
       <BookingOtpModal

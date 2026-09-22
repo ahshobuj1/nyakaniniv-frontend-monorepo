@@ -258,25 +258,20 @@ export default function ConnectPayoutModal({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-xl w-full p-6 sm:p-7 bg-white rounded-3xl shadow-2xl border border-gray-100 max-h-[92vh] overflow-y-auto">
-        <DialogHeader className="space-y-2 text-left border-b border-gray-100 pb-4">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary font-bold text-xs border border-primary/20 w-max">
-            <ShieldCheck className="w-3.5 h-3.5 text-primary" />
-            <span>Automated DJ Settlements</span>
-          </div>
-          <DialogTitle className="text-xl sm:text-2xl font-bold text-[#111620]">
-            Connect Payout Destination
+        <DialogHeader className="space-y-1.5 text-left border-b border-gray-100/50 pb-5">
+          <DialogTitle className="text-xl font-bold text-gray-900">
+            Connect Payout Account
           </DialogTitle>
-          <DialogDescription className="text-sm text-[#787878] leading-relaxed">
-            Link your verified commercial bank account or mobile money wallet to receive automated booking settlements and withdrawals.
+          <DialogDescription className="text-sm text-gray-500">
+            Link a verified bank account or mobile wallet to receive automated booking settlements.
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6 pt-3">
           {/* 1. Choose Payout Provider / Gateway (DJ Choice) */}
           <div className="space-y-2.5">
-            <Label className="text-[13px] font-bold text-[#111620] flex items-center justify-between">
-              <span>1. Select Payout Channel</span>
-              <span className="text-xs text-gray-500 font-normal">Pick your preferred payout rails</span>
+            <Label className="text-sm font-semibold text-gray-900">
+              1. Settlement Network
             </Label>
 
             <div className="grid grid-cols-1 gap-2.5">
@@ -309,8 +304,8 @@ export default function ConnectPayoutModal({
           </div>
 
           {/* 2. Select Country */}
-          <div className="space-y-2">
-            <Label className="text-[13px] font-bold text-[#111620]">
+          <div className="space-y-2.5 pt-1">
+            <Label className="text-sm font-semibold text-gray-900">
               2. Settlement Country
             </Label>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -340,17 +335,14 @@ export default function ConnectPayoutModal({
 
           {/* 3. Bank / Mobile Money Provider Selection */}
           {selectedGateway !== 'PESAPAL' ? (
-            <div className="space-y-2">
-              <Label className="text-[13px] font-bold text-[#111620] flex items-center justify-between">
-                <span className="flex items-center gap-1.5">
-                  <BankTransferLogo size="xs" />
-                  <span>3. Select Settlement Bank</span>
-                </span>
-                {isLoadingBanks ? (
-                  <span className="text-xs text-primary flex items-center gap-1">
-                    <Loader2 className="w-3 h-3 animate-spin" /> Loading banks...
+            <div className="space-y-2.5 pt-1">
+              <Label className="text-sm font-semibold text-gray-900 flex items-center justify-between">
+                <span>3. Select Bank</span>
+                {isLoadingBanks && (
+                  <span className="text-xs text-gray-400 flex items-center gap-1.5">
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" /> Loading...
                   </span>
-                ) : null}
+                )}
               </Label>
 
               <div className="space-y-1.5">
@@ -378,9 +370,9 @@ export default function ConnectPayoutModal({
               </div>
             </div>
           ) : (
-            <div className="space-y-2">
-              <Label className="text-[13px] font-bold text-[#111620]">
-                3. Mobile Money Network Provider
+            <div className="space-y-2.5 pt-1">
+              <Label className="text-sm font-semibold text-gray-900">
+                3. Mobile Money Provider
               </Label>
               <div className="grid grid-cols-2 gap-2.5">
                 {[
@@ -427,9 +419,9 @@ export default function ConnectPayoutModal({
           )}
 
           {/* 4. Account Number & Real Interbank Verification */}
-          <div className="space-y-2">
-            <Label className="text-[13px] font-bold text-[#111620]">
-              {selectedGateway === 'PESAPAL' ? 'Mobile Money Phone Number' : 'Account Number'}
+          <div className="space-y-2.5 pt-1">
+            <Label className="text-sm font-semibold text-gray-900">
+              {selectedGateway === 'PESAPAL' ? '4. Phone Number' : '4. Account Number'}
             </Label>
             <div className="flex gap-2">
               <Input
@@ -443,7 +435,7 @@ export default function ConnectPayoutModal({
                 type="button"
                 onClick={handleVerifyAccount}
                 disabled={isValidating || !accountNumber.trim()}
-                className="h-11 px-5 rounded-xl bg-[#111620] hover:bg-black text-white text-xs font-bold shrink-0 transition-all cursor-pointer"
+                className="h-11 px-5 rounded-xl bg-gray-900 hover:bg-black text-white text-sm font-medium shrink-0 transition-all cursor-pointer"
               >
                 {isValidating ? (
                   <>

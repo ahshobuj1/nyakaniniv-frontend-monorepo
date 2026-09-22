@@ -93,7 +93,7 @@ export default function OurThemes() {
                   className="min-w-full md:min-w-[calc(50%-1rem)] snap-center group/card cursor-pointer">
                   <div className="relative w-full aspect-16/13 bg-white shadow-sm hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] transition-all duration-500 ease-out overflow-hidden transform group-hover/card:-translate-y-2">
                     <Image
-                      src={theme.previewImageUrl || theme.image || '/theme/Theme1.png'}
+                      src={theme.previewImageUrl}
                       alt={theme.name}
                       width={1000}
                       height={1000}
