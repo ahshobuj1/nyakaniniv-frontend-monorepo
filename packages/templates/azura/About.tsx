@@ -165,20 +165,19 @@ export default function UpcomingEvents({content}: any) {
                           </div>
                         )}
 
-                        {/* Venue */}
-                        {event.venue && (
-                          <div className="flex items-center gap-1.5">
-                            <MapPin size={14} className="text-gray-400 shrink-0" />
-                            <span>{event.venue}</span>
-                          </div>
-                        )}
-
-                        {/* Location */}
-                        {event.location && (
-                          <div className="flex items-center gap-1.5">
-                            <span className="text-gray-400">·</span>
-                            <span>{event.location}</span>
-                          </div>
+                        {/* Venue & Location */}
+                        {(event.venue || event.location) && (
+                          <a
+                            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([event.venue, event.location].filter(Boolean).join(', '))}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1.5 hover:text-[var(--primary)] transition-colors group cursor-pointer"
+                            title={`Open in Google Maps: ${[event.venue, event.location].filter(Boolean).join(', ')}`}
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <MapPin size={14} className="text-gray-400 group-hover:text-[var(--primary)] group-hover:scale-110 transition-all shrink-0" />
+                            <span className="group-hover:underline">{[event.venue, event.location].filter(Boolean).join(' · ')}</span>
+                          </a>
                         )}
                       </div>
                     </div>

@@ -5,6 +5,7 @@ import { Card, CardContent } from '@repo/ui';
 import { MixTape } from '@repo/store';
 import ReactPlayer from 'react-player';
 import { useState, useRef } from 'react';
+import Image from 'next/image';
 
 interface MixTapeCardProps {
   mixtape: MixTape;
@@ -42,9 +43,10 @@ export function MixTapeCard({ mixtape, onEdit, onDelete }: MixTapeCardProps) {
         {/* Image Section */}
         <div className="relative aspect-video w-full overflow-hidden bg-gray-100 flex items-center justify-center">
           {mixtape.coverUrl ? (
-            <img
-              src={mixtape.coverUrl}
-              alt={mixtape.title}
+            <Image
+              src={mixtape?.coverUrl}
+              alt={mixtape?.title || 'cover image for mixtapes'}
+              fill
               className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500"
             />
           ) : (

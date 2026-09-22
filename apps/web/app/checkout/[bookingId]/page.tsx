@@ -115,6 +115,10 @@ function CheckoutContent() {
   const isCashDeclined = cashTx?.status === 'FAILED';
   const isCashPending = (cashTx?.status === 'PENDING' && !isCashApproved) || cashRequestedSuccess;
 
+  // Inactive / Declined status check
+  const isDeclinedOrInactive = status === 'REJECTED' || status === 'CANCELLED' || status === 'EXPIRED';
+  const declineReason = (booking?.eventDetails as any)?.declineReason || null;
+
   // If already paid via gateway or completed
   const isAlreadyPaid = (booking?.paymentStatus === 'PAID' || status === 'COMPLETED' || (status === 'CONFIRMED' && !isCashApproved)) && !isCashPending;
 
@@ -256,8 +260,54 @@ function CheckoutContent() {
           </div>
         </header>
 
+        {/* STATE 0: Booking Declined / Inactive */}
+        {isDeclinedOrInactive && (
+          <div className="max-w-md mx-auto bg-white border border-rose-200 rounded-2xl p-8 sm:p-10 shadow-xs text-center space-y-6 my-8">
+            <div className="w-14 h-14 rounded-full bg-rose-50 text-rose-600 border border-rose-200 flex items-center justify-center mx-auto">
+              <AlertCircle className="w-7 h-7" />
+            </div>
+
+            <div className="space-y-2">
+              <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-xs font-semibold bg-rose-100 text-rose-800">
+                Booking {status === 'REJECTED' ? 'Declined' : status === 'CANCELLED' ? 'Cancelled' : 'Expired'}
+              </span>
+              <h1 className="text-2xl font-bold text-gray-900">
+                Payment Link Inactive
+              </h1>
+              <p className="text-gray-600 text-sm leading-relaxed">
+                This booking request has been {status === 'REJECTED' ? 'declined by the DJ' : status.toLowerCase()}. This checkout link is no longer valid and payments cannot be processed.
+              </p>
+              {declineReason && (
+                <div className="p-3.5 bg-rose-50/70 border border-rose-100 rounded-xl text-xs text-rose-800 text-left mt-3">
+                  <span className="font-bold block mb-1">Reason from DJ:</span>
+                  <span>{declineReason}</span>
+                </div>
+              )}
+            </div>
+
+            {/* Navigation Actions */}
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+              <a
+                href={getDjWebsiteUrl()}
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 h-11 px-6 rounded-xl bg-primary hover:bg-[#d62828] text-white font-medium text-sm transition-colors cursor-pointer shadow-xs"
+              >
+                <span>Visit DJ Website</span>
+                <ExternalLink className="w-4 h-4" />
+              </a>
+
+              <Link
+                href="/"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 h-11 px-6 rounded-xl bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium text-sm transition-colors shadow-xs"
+              >
+                <Home className="w-4 h-4 text-gray-500" />
+                <span>UpBeat Africa Home</span>
+              </Link>
+            </div>
+          </div>
+        )}
+
         {/* STATE 1: Cash Payment APPROVED by DJ */}
-        {isCashApproved && (
+        {isCashApproved && !isDeclinedOrInactive && (
           <div className="max-w-md mx-auto bg-white border border-emerald-200 rounded-2xl p-8 sm:p-10 shadow-xs text-center space-y-6 my-8">
             <div className="w-14 h-14 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200 flex items-center justify-center mx-auto">
               <CheckCircle2 className="w-7 h-7" />
@@ -337,7 +387,7 @@ function CheckoutContent() {
         )}
 
         {/* STATE 2: Cash Payment REQUESTED (Pending Approval) */}
-        {!isCashApproved && isCashPending && !overrideOnlinePayment && (
+        {!isDeclinedOrInactive && !isCashApproved && isCashPending && !overrideOnlinePayment && (
           <div className="max-w-4xl mx-auto bg-white border border-gray-200 rounded-2xl p-8 sm:p-10 shadow-xs text-center space-y-6 my-8">
             <div className="w-14 h-14 rounded-full bg-amber-50 text-amber-600 border border-amber-200 flex items-center justify-center mx-auto">
               <Banknote className="w-7 h-7" />
@@ -429,7 +479,7 @@ function CheckoutContent() {
         )}
 
         {/* STATE 3: Already Paid via Gateway (Simple & Professional) */}
-        {isAlreadyPaid && !isCashApproved && (
+        {!isDeclinedOrInactive && isAlreadyPaid && !isCashApproved && (
           <div className="max-w-md mx-auto bg-white border border-gray-200 rounded-2xl p-8 sm:p-10 shadow-xs text-center space-y-6 my-8">
             <div className="w-14 h-14 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200 flex items-center justify-center mx-auto">
               <CheckCircle2 className="w-7 h-7" />
@@ -506,7 +556,7 @@ function CheckoutContent() {
         )}
 
         {/* STATE 4: Active Checkout 2-Column Grid */}
-        {!isAlreadyPaid && !isCashApproved && (!isCashPending || overrideOnlinePayment) && (
+        {!isDeclinedOrInactive && !isAlreadyPaid && !isCashApproved && (!isCashPending || overrideOnlinePayment) && (
           <div className="space-y-6">
             {/* If cash request was declined by DJ, show clear notice */}
             {isCashDeclined && (

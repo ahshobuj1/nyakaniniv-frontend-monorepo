@@ -172,6 +172,18 @@ export function ActionCenterCard({
               </Button>
             )}
 
+            {/* Decline Booking Option */}
+            {onOpenRejectModal && (
+              <Button
+                variant="outline"
+                className="w-full text-rose-600 border-rose-200 hover:bg-rose-50 hover:text-rose-700 font-semibold h-10 rounded-xl text-xs"
+                disabled={isActionLoading}
+                onClick={onOpenRejectModal}
+              >
+                Decline Booking Request
+              </Button>
+            )}
+
             {/* Copy Client Checkout Link */}
             <div className="pt-2 border-t border-gray-100">
               <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider block mb-1.5">

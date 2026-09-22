@@ -221,9 +221,9 @@ export default function BookingOtpModal({
             </div>
 
             {/* OTP Form */}
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-4">
               {/* 6 Digit Input Boxes */}
-              <div className="flex justify-center gap-2 sm:gap-2.5" onPaste={handlePaste}>
+              <div className="flex justify-center gap-1.5 sm:gap-2" onPaste={handlePaste}>
                 {digits.map((digit, idx) => (
                   <input
                     key={idx}
@@ -238,10 +238,10 @@ export default function BookingOtpModal({
                     onChange={(e) => handleDigitChange(idx, e.target.value)}
                     onKeyDown={(e) => handleKeyDown(idx, e)}
                     disabled={isVerifying}
-                    className={`w-11 h-13 sm:w-12 sm:h-14 text-center text-xl sm:text-2xl font-black rounded-xl bg-slate-50 border-2 outline-none transition-all ${
+                    className={`w-9 h-11 sm:w-10 sm:h-11 text-center text-base sm:text-lg font-bold rounded-lg bg-slate-50 border outline-none transition-all ${
                       digit
-                        ? 'border-primary shadow-sm bg-white'
-                        : 'border-slate-200 focus:border-primary focus:bg-white focus:ring-4 focus:ring-primary/10'
+                        ? 'border-primary shadow-xs bg-white'
+                        : 'border-slate-300 focus:border-primary focus:bg-white focus:ring-2 focus:ring-primary/15'
                     }`}
                     style={digit ? { borderColor: themeColor } : {}}
                   />
@@ -253,17 +253,17 @@ export default function BookingOtpModal({
                 <motion.div
                   initial={{ opacity: 0, y: -5 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="flex items-center gap-2 p-3 bg-red-50 text-red-600 rounded-xl text-xs font-medium border border-red-100"
+                  className="flex items-center gap-2 p-2.5 bg-red-50 text-red-600 rounded-lg text-xs font-medium border border-red-100"
                 >
-                  <AlertCircle size={16} className="shrink-0" />
+                  <AlertCircle size={15} className="shrink-0" />
                   <span>{errorMsg}</span>
                 </motion.div>
               )}
 
               {/* Countdown & Expiry */}
-              <div className="flex items-center justify-between text-xs text-slate-500 pt-1">
+              <div className="flex items-center justify-between text-xs text-slate-500 pt-0.5">
                 <span>Code expires in:</span>
-                <span className="font-mono font-bold text-slate-700">
+                <span className="font-mono font-semibold text-slate-700">
                   {formatTimer(timeLeft)}
                 </span>
               </div>
@@ -272,17 +272,17 @@ export default function BookingOtpModal({
               <button
                 type="submit"
                 disabled={isVerifying || digits.join('').length !== 6 || timeLeft <= 0}
-                className="w-full py-4 rounded-2xl text-white font-bold text-sm tracking-wide shadow-lg shadow-primary/20 hover:opacity-95 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
+                className="w-full h-11 rounded-lg text-white font-semibold text-sm tracking-wide shadow-xs hover:opacity-95 active:scale-[0.99] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
                 style={{ backgroundColor: themeColor }}
               >
                 {isVerifying ? (
                   <>
-                    <RefreshCw size={16} className="animate-spin" />
+                    <RefreshCw size={15} className="animate-spin" />
                     <span>Verifying & Submitting...</span>
                   </>
                 ) : (
                   <>
-                    <CheckCircle2 size={18} />
+                    <CheckCircle2 size={16} />
                     <span>Verify & Confirm Booking</span>
                   </>
                 )}
