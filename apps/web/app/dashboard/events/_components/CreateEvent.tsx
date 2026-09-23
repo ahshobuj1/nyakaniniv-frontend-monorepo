@@ -146,7 +146,7 @@ export default function AddEventModal({isOpen, onClose, eventToEdit}: AddEventMo
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-200 w-[95vw] max-h-[90vh] overflow-y-auto p-0 border-none rounded-3xl bg-white [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+      <DialogContent className="max-w-200 w-[95vw] max-h-[90vh] overflow-y-auto p-0 border border-gray-200 rounded-[4px] bg-white shadow-xl [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         {/* Header */}
         <div className="px-8 pt-8 pb-4">
           <DialogHeader className="space-y-1">
@@ -167,14 +167,14 @@ export default function AddEventModal({isOpen, onClose, eventToEdit}: AddEventMo
                 name="title"
                 render={({field}) => (
                   <FormItem>
-                    <FormLabel className="text-[#111620] font-semibold text-[14px]">
+                    <FormLabel className="text-gray-700 font-medium text-[14px]">
                       Title
                     </FormLabel>
                     <FormControl>
                       <Input
                         {...field}
                         placeholder="e.g. Lagos Nights Vol 4"
-                        className="bg-[#F5F5F5] border-transparent h-11 rounded-[10px] focus-visible:ring-1 focus-visible:ring-primary shadow-none text-[14px]"
+                        className="bg-white border border-gray-300 h-11 rounded-[4px] px-3 focus-visible:ring-1 focus-visible:ring-primary focus-visible:border-primary shadow-sm text-[14px] hover:border-gray-400 transition-colors"
                       />
                     </FormControl>
                     <FormMessage />
@@ -189,7 +189,7 @@ export default function AddEventModal({isOpen, onClose, eventToEdit}: AddEventMo
                   name="date"
                   render={({field}) => (
                     <FormItem>
-                      <FormLabel className="text-[#111620] font-semibold text-[14px]">
+                      <FormLabel className="text-gray-700 font-medium text-[14px]">
                         Event Date
                       </FormLabel>
                       <FormControl>
@@ -207,7 +207,7 @@ export default function AddEventModal({isOpen, onClose, eventToEdit}: AddEventMo
                           }}
                           placeholder="Select event date"
                           minDate={new Date()}
-                          buttonClassName="bg-[#F5F5F5] border-transparent h-11 rounded-[10px] focus-visible:ring-1 focus-visible:ring-primary shadow-none text-[14px]"
+                          buttonClassName="bg-white border border-gray-300 h-11 rounded-[4px] px-3 focus-visible:ring-1 focus-visible:ring-primary focus-visible:border-primary shadow-sm text-[14px] hover:border-gray-400 transition-colors"
                         />
                       </FormControl>
                       <FormMessage />
@@ -221,14 +221,14 @@ export default function AddEventModal({isOpen, onClose, eventToEdit}: AddEventMo
                   name="time"
                   render={({field}) => (
                     <FormItem>
-                      <FormLabel className="text-[#111620] font-semibold text-[14px]">
+                      <FormLabel className="text-gray-700 font-medium text-[14px]">
                         Event Time
                       </FormLabel>
                       <FormControl>
                         <Input
                           type="time"
                           {...field}
-                          className="bg-[#F5F5F5] border-transparent h-11 rounded-[10px] focus-visible:ring-1 focus-visible:ring-primary shadow-none text-[14px]"
+                          className="bg-white border border-gray-300 h-11 rounded-[4px] px-3 focus-visible:ring-1 focus-visible:ring-primary focus-visible:border-primary shadow-sm text-[14px] hover:border-gray-400 transition-colors"
                         />
                       </FormControl>
                       <FormMessage />
@@ -240,13 +240,13 @@ export default function AddEventModal({isOpen, onClose, eventToEdit}: AddEventMo
                   name="timezone"
                   render={({field}) => (
                     <FormItem>
-                      <FormLabel className="text-[#111620] font-semibold text-[14px]">
+                      <FormLabel className="text-gray-700 font-medium text-[14px]">
                         Timezone
                       </FormLabel>
                       <FormControl>
                         <select
                           {...field}
-                          className="w-full bg-[#F5F5F5] border-transparent h-11 rounded-[10px] px-3 focus-visible:ring-1 focus-visible:ring-primary text-[14px] text-gray-800 outline-none cursor-pointer"
+                          className="w-full bg-white border border-gray-300 h-11 rounded-[4px] px-3 focus-visible:ring-1 focus-visible:ring-primary focus-visible:border-primary text-[14px] text-gray-800 outline-none cursor-pointer hover:border-gray-400 shadow-sm transition-colors"
                         >
                           {AFRICAN_TIMEZONES.map((tz) => (
                             <option key={tz.code} value={tz.code}>
@@ -271,14 +271,14 @@ export default function AddEventModal({isOpen, onClose, eventToEdit}: AddEventMo
                   name="venue"
                   render={({field}) => (
                     <FormItem>
-                      <FormLabel className="text-[#111620] font-semibold text-[14px]">
+                      <FormLabel className="text-gray-700 font-medium text-[14px]">
                         Venue Name
                       </FormLabel>
                       <FormControl>
                         <Input
                           {...field}
                           placeholder="e.g. O2 Arena"
-                          className="bg-[#F5F5F5] border-transparent h-11 rounded-[10px] focus-visible:ring-1 focus-visible:ring-primary shadow-none text-[14px]"
+                          className="bg-white border border-gray-300 h-11 rounded-[4px] px-3 focus-visible:ring-1 focus-visible:ring-primary focus-visible:border-primary shadow-sm text-[14px] hover:border-gray-400 transition-colors"
                         />
                       </FormControl>
                       <FormMessage />
@@ -290,7 +290,7 @@ export default function AddEventModal({isOpen, onClose, eventToEdit}: AddEventMo
                   name="venueAddress"
                   render={({field}) => (
                     <FormItem>
-                      <FormLabel className="text-[#111620] font-semibold text-[14px]">
+                      <FormLabel className="text-gray-700 font-medium text-[14px]">
                         Venue Address
                       </FormLabel>
                       <FormControl>
@@ -299,7 +299,7 @@ export default function AddEventModal({isOpen, onClose, eventToEdit}: AddEventMo
                           onChange={field.onChange}
                           onSelectTimezone={(tz) => form.setValue('timezone', tz)}
                           placeholder="e.g. Victoria Island, Lagos / Westlands, Nairobi"
-                          className="bg-[#F5F5F5] border-transparent h-11 rounded-[10px] focus-visible:ring-1 focus-visible:ring-primary shadow-none text-[14px]"
+                          className="bg-white border border-gray-300 h-11 rounded-[4px] px-3 focus-visible:ring-1 focus-visible:ring-primary focus-visible:border-primary shadow-sm text-[14px] hover:border-gray-400 transition-colors"
                         />
                       </FormControl>
                       <FormMessage />
@@ -315,7 +315,7 @@ export default function AddEventModal({isOpen, onClose, eventToEdit}: AddEventMo
                   name="capacity"
                   render={({field}) => (
                     <FormItem>
-                      <FormLabel className="text-[#111620] font-semibold text-[14px]">
+                      <FormLabel className="text-gray-700 font-medium text-[14px]">
                         Capacity
                       </FormLabel>
                       <FormControl>
@@ -323,7 +323,7 @@ export default function AddEventModal({isOpen, onClose, eventToEdit}: AddEventMo
                           type="number"
                           {...field}
                           placeholder="e.g. 500"
-                          className="bg-[#F5F5F5] border-transparent h-11 rounded-[10px] focus-visible:ring-1 focus-visible:ring-primary shadow-none text-[14px]"
+                          className="bg-white border border-gray-300 h-11 rounded-[4px] px-3 focus-visible:ring-1 focus-visible:ring-primary focus-visible:border-primary shadow-sm text-[14px] hover:border-gray-400 transition-colors"
                         />
                       </FormControl>
                       <FormMessage />
@@ -335,7 +335,7 @@ export default function AddEventModal({isOpen, onClose, eventToEdit}: AddEventMo
                   name="price"
                   render={({field}) => (
                     <FormItem>
-                      <FormLabel className="text-[#111620] font-semibold text-[14px]">
+                      <FormLabel className="text-gray-700 font-medium text-[14px]">
                         Ticket Price (KES)
                       </FormLabel>
                       <FormControl>
@@ -344,7 +344,7 @@ export default function AddEventModal({isOpen, onClose, eventToEdit}: AddEventMo
                           step="0.01"
                           {...field}
                           placeholder="0.00"
-                          className="bg-[#F5F5F5] border-transparent h-11 rounded-[10px] focus-visible:ring-1 focus-visible:ring-primary shadow-none text-[14px]"
+                          className="bg-white border border-gray-300 h-11 rounded-[4px] px-3 focus-visible:ring-1 focus-visible:ring-primary focus-visible:border-primary shadow-sm text-[14px] hover:border-gray-400 transition-colors"
                         />
                       </FormControl>
                       <FormMessage />
@@ -359,14 +359,14 @@ export default function AddEventModal({isOpen, onClose, eventToEdit}: AddEventMo
                 name="description"
                 render={({field}) => (
                   <FormItem>
-                    <FormLabel className="text-[#111620] font-semibold text-[14px]">
+                    <FormLabel className="text-gray-700 font-medium text-[14px]">
                       Description
                     </FormLabel>
                     <FormControl>
                       <Textarea
                         {...field}
                         placeholder="Provide details about the event..."
-                        className="bg-[#F5F5F5] border-transparent rounded-[10px] min-h-25 resize-none focus-visible:ring-1 focus-visible:ring-primary shadow-none text-[14px]"
+                        className="bg-white border border-gray-300 rounded-[4px] p-3 min-h-25 resize-none focus-visible:ring-1 focus-visible:ring-primary focus-visible:border-primary shadow-sm text-[14px] hover:border-gray-400 transition-colors"
                       />
                     </FormControl>
                     <FormMessage />
@@ -380,7 +380,7 @@ export default function AddEventModal({isOpen, onClose, eventToEdit}: AddEventMo
               <Button
                 type="submit"
                 disabled={isSubmitting}
-                className="bg-primary hover:bg-primary/90 text-white font-bold h-11 px-10 rounded-[10px] transition-all active:scale-[0.98] shadow-sm text-[14px] disabled:opacity-70">
+                className="bg-primary hover:bg-primary/90 text-white font-medium h-11 px-10 rounded-[4px] transition-all active:scale-[0.98] shadow-sm text-[14px] disabled:opacity-70">
                 {isSubmitting ? 'Saving...' : eventToEdit ? 'Save Changes' : 'Add Event'}
               </Button>
             </div>
