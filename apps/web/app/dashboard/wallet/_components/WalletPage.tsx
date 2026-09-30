@@ -447,6 +447,11 @@ export default function WalletPage() {
                               <span className="text-sm font-bold text-[#111620]">
                                 {l.type.replace(/_/g, ' ')}
                               </span>
+                              {l.description && (
+                                <div className="mt-2 p-2 bg-amber-50 border border-amber-100 rounded-md text-[12px] text-amber-800 font-medium leading-snug">
+                                  {l.description}
+                                </div>
+                              )}
                             </td>
                             <td className="py-4 px-6 text-sm text-[#787878] font-mono">
                               {l.referenceId || l.paymentId?.substring(0, 10) || l.transferId?.substring(0, 10) || '—'}

@@ -84,8 +84,28 @@ export default function BookingPage({content}: any) {
     }
     try {
       const timePart = data.eventTime ? `${data.eventTime}:00` : '00:00:00';
-      const formattedDate = new Date(`${data.eventDate}T${timePart}`).toISOString();
+      // Map known timezone abbreviations to UTC offsets for safe ISO string construction.
+      // Using new Date().toISOString() without an explicit offset would parse the string as
+      // local browser time and shift the event by the user's UTC offset — e.g. a client in
+      // Bangladesh (UTC+6) booking a Nairobi event (EAT, UTC+3) would shift the time by 3h.
+      const tzOffsets: Record<string, string> = {
+        'EAT': '+03:00',
+        'Africa/Nairobi': '+03:00',
+        'WAT': '+01:00',
+        'Africa/Lagos': '+01:00',
+        'SAST': '+02:00',
+        'Africa/Johannesburg': '+02:00',
+        'Africa/Accra': '+00:00',
+        'Africa/Dar_es_Salaam': '+03:00',
+        'Africa/Kampala': '+03:00',
+        'Africa/Kigali': '+02:00',
+        'GMT': 'Z',
+        'UTC': 'Z',
+      };
+      const offset = tzOffsets[data.timezone || ''] || '+03:00';
+      const formattedDate = `${data.eventDate}T${timePart}${offset}`;
       
+
       const enrichedDetails = [
         data.eventTime ? `Start Time: ${data.eventTime} (${data.timezone})` : null,
         data.duration ? `Duration: ${data.duration}` : null,

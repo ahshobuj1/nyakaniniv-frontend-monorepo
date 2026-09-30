@@ -8,6 +8,10 @@ COPY . .
 # Install dependencies
 RUN bun install --frozen-lockfile
 
+# Set environment variables for the build
+ARG NEXT_PUBLIC_API_URL=https://api.upbeat.africa
+ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+
 # Build the project using turbo
 RUN bun run build
 
@@ -16,6 +20,7 @@ FROM oven/bun:1.3.5-slim AS runner
 WORKDIR /app
 
 ENV NODE_ENV production
+ENV NEXT_PUBLIC_API_URL https://api.upbeat.africa
 ENV PORT 3000
 
 # Copy necessary standalone files and public folders
