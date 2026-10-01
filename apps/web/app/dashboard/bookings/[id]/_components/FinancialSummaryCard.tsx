@@ -16,7 +16,7 @@ export function FinancialSummaryCard({ booking }: FinancialSummaryCardProps) {
 
   const getPaymentMethodLabel = () => {
     if (!invoice?.transactions?.length) return 'Card / Paystack';
-    const successfulTx = invoice.transactions.find((tx) => tx.status === 'SUCCESS');
+    const successfulTx = invoice.transactions.find((tx) => tx.status === 'SUCCEEDED');
     const activeTx = successfulTx || invoice.transactions[0];
     if (!activeTx) return 'Card / Paystack';
     if (activeTx.channel === 'CASH' || activeTx.gateway === 'MANUAL') return 'Cash on Event';
@@ -33,7 +33,7 @@ export function FinancialSummaryCard({ booking }: FinancialSummaryCardProps) {
 
   const getPaymentDateLabel = () => {
     if (!invoice) return 'Paid';
-    const successfulTx = invoice.transactions?.find((tx) => tx.status === 'SUCCESS');
+    const successfulTx = invoice.transactions?.find((tx) => tx.status === 'SUCCEEDED');
     const dateToUse = successfulTx?.createdAt || invoice.updatedAt || booking.updatedAt;
     return dateToUse
       ? new Date(dateToUse).toLocaleDateString('en-GB', {
