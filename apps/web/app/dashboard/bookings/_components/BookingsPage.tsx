@@ -45,6 +45,7 @@ import LoadingSpinner from '@/components/LoadingSpinner';
 import { ConfirmationDialog } from '@/components/ConfirmationDialog';
 import { DeclineBookingModal } from '@/components/DeclineBookingModal';
 import { normalizeBookingStatus, getBookingStatusBadge, parseBookingEventDetails } from '@/lib/bookingStatusHelper';
+import { formatDateInTz, formatTimeInTz } from '@/lib/timezone';
 import { toast } from 'sonner';
 
 type FilterType = 'All' | 'pending' | 'awaiting_payment' | 'confirmed' | 'completed' | 'canceled';
@@ -237,7 +238,7 @@ export default function BookingsPage() {
 
         {/* Alert Banner */}
         {pendingCount > 0 && (
-          <div className="bg-[#FFF8E6] border border-[#FDE68A] rounded-xl p-4 flex items-center gap-3 text-[#D97706]">
+          <div className="bg-[#FFF8E6] border border-[#FDE68A] rounded-sm p-4 flex items-center gap-3 text-[#D97706]">
             <AlertCircle className="w-5 h-5 shrink-0" />
             <p className="text-[15px]">
               You have{' '}
@@ -352,7 +353,7 @@ export default function BookingsPage() {
         {isBookingsLoading ? (
           <LoadingSpinner />
         ) : (
-          <Card className="border-none shadow-[0_2px_20px_rgba(0,0,0,0.03)] overflow-hidden rounded-2xl bg-white">
+          <Card className="border border-gray-200 shadow-xs overflow-hidden rounded-sm bg-white">
             <CardContent className="p-0">
               <div className="p-4 md:p-4 border-b border-gray-100 flex items-center justify-between">
                 <h2 className="text-[18px] font-bold text-[#111620]">Bookings</h2>
@@ -480,22 +481,23 @@ export default function BookingsPage() {
                             {/* Event Date Column */}
                             <td className="py-5 px-6 text-[14px] text-[#787878]">
                               {(() => {
-                                const parsed = parseBookingEventDetails(booking.eventDetails);
-                                const timeTag = parsed.startTime;
+                                const targetTz = booking.eventTimezone || 'Africa/Nairobi';
+                                const dateFormatted = formatDateInTz(booking.eventDate, targetTz, {
+                                  day: '2-digit',
+                                  month: 'short',
+                                  year: 'numeric',
+                                });
+                                const timeFormatted = formatTimeInTz(booking.eventDate, targetTz);
                                 return (
                                   <div className="flex flex-col gap-1">
                                     <div className="flex items-center gap-1.5 font-medium text-[#111620] w-max text-xs">
                                       <Calendar className="w-3.5 h-3.5 text-gray-400" />
-                                      {new Date(booking.eventDate).toLocaleDateString('en-GB', {
-                                        day: '2-digit',
-                                        month: 'short',
-                                        year: 'numeric',
-                                      })}
+                                      {dateFormatted}
                                     </div>
-                                    {timeTag && (
+                                    {timeFormatted && (
                                       <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-200/60 w-max">
                                         <Clock className="w-3 h-3" />
-                                        {timeTag}
+                                        {timeFormatted}
                                       </div>
                                     )}
                                   </div>
@@ -515,22 +517,22 @@ export default function BookingsPage() {
                                 </span>
                                 {booking.invoice ? (
                                   isInvoicePaid ? (
-                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-green-50 border border-green-200 text-green-700 text-[11px] font-bold">
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-sm bg-green-50 border border-green-200 text-green-700 text-[11px] font-bold">
                                       <CheckCircle2 className="w-3 h-3" />
                                       Paid
                                     </span>
                                   ) : isApprovedCashRequest ? (
-                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-50 border border-amber-200 text-amber-700 text-[11px] font-bold">
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-sm bg-amber-50 border border-amber-200 text-amber-700 text-[11px] font-bold">
                                       <Banknote className="w-3 h-3" />
                                       Cash Approved
                                     </span>
                                   ) : isPendingCashRequest ? (
-                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-50 border border-amber-200 text-amber-700 text-[11px] font-bold">
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-sm bg-amber-50 border border-amber-200 text-amber-700 text-[11px] font-bold">
                                       <Clock className="w-3 h-3" />
                                       Cash Pending
                                     </span>
                                   ) : (
-                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-gray-100 border border-gray-200 text-gray-600 text-[11px] font-medium">
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-sm bg-gray-100 border border-gray-200 text-gray-600 text-[11px] font-medium">
                                       <Clock className="w-3 h-3" />
                                       Unpaid
                                     </span>
@@ -545,13 +547,13 @@ export default function BookingsPage() {
                             <td className="py-5 px-6">
                               <div className="flex flex-col items-start gap-1.5">
                                 <div
-                                  className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-md border text-xs font-semibold uppercase tracking-wider ${badge.badgeClass}`}
+                                  className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-sm border text-xs font-semibold uppercase tracking-wider ${badge.badgeClass}`}
                                 >
                                   <span className={`w-1.5 h-1.5 rounded-full ${badge.dotClass}`} />
                                   {badge.label}
                                 </div>
                                 {isPendingCashRequest && (
-                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-[#FFF8E6] border border-[#FDE68A] text-[#D97706]">
+                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-sm text-[11px] font-bold bg-[#FFF8E6] border border-[#FDE68A] text-[#D97706]">
                                     <Banknote className="w-3 h-3" />
                                     Cash Requested
                                   </span>
@@ -564,7 +566,7 @@ export default function BookingsPage() {
                               <div className="flex items-center justify-end gap-2">
                                 <a
                                   href={`/dashboard/bookings/${booking.id}`}
-                                  className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 hover:text-gray-900 transition-colors"
+                                  className="inline-flex items-center justify-center w-8 h-8 rounded-sm bg-gray-100 text-gray-700 hover:bg-gray-200 hover:text-gray-900 transition-colors"
                                   title="View Booking Details"
                                 >
                                   <Eye className="w-4 h-4" />
@@ -574,13 +576,13 @@ export default function BookingsPage() {
                                   <PopoverTrigger asChild>
                                     <button
                                       type="button"
-                                      className="inline-flex items-center justify-center w-8 h-8 rounded-lg border border-gray-200 bg-white hover:bg-gray-100 text-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer shadow-2xs"
+                                      className="inline-flex items-center justify-center w-8 h-8 rounded-sm border border-gray-200 bg-white hover:bg-gray-100 text-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer shadow-2xs"
                                       title="Open Actions Menu"
                                     >
                                       <MoreVertical className="w-4 h-4" />
                                     </button>
                                   </PopoverTrigger>
-                                  <PopoverContent align="end" sideOffset={6} className="w-56 p-1.5 bg-white border border-gray-200 shadow-xl rounded-xl">
+                                  <PopoverContent align="end" sideOffset={6} className="w-56 p-1.5 bg-white border border-gray-200 shadow-xl rounded-sm">
                                     <div className="px-2.5 py-1.5 border-b border-gray-100 mb-1">
                                       <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Booking Actions</p>
                                       <p className="text-xs font-semibold text-gray-800 truncate">{booking.eventType}</p>
@@ -595,7 +597,7 @@ export default function BookingsPage() {
                                             setAcceptBooking(bookingInfo);
                                             setQuotePrice('');
                                           }}
-                                          className="w-full flex items-center gap-2 px-2.5 py-2 text-xs font-semibold text-emerald-700 hover:bg-emerald-50 rounded-lg transition-colors text-left cursor-pointer"
+                                          className="w-full flex items-center gap-2 px-2.5 py-2 text-xs font-semibold text-emerald-700 hover:bg-emerald-50 rounded-sm transition-colors text-left cursor-pointer"
                                         >
                                           <DollarSign className="w-3.5 h-3.5 shrink-0 text-emerald-600" />
                                           Accept & Quote Price
@@ -603,7 +605,7 @@ export default function BookingsPage() {
                                         <button
                                           type="button"
                                           onClick={() => setDeclineBooking(bookingInfo)}
-                                          className="w-full flex items-center gap-2 px-2.5 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 rounded-lg transition-colors text-left cursor-pointer"
+                                          className="w-full flex items-center gap-2 px-2.5 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 rounded-sm transition-colors text-left cursor-pointer"
                                         >
                                           <XCircle className="w-3.5 h-3.5 shrink-0 text-rose-600" />
                                           Decline Booking
@@ -618,7 +620,7 @@ export default function BookingsPage() {
                                             <button
                                               type="button"
                                               onClick={() => setApproveCashBooking(bookingInfo)}
-                                              className="w-full flex items-center gap-2 px-2.5 py-2 text-xs font-semibold text-amber-700 hover:bg-amber-50 rounded-lg transition-colors text-left cursor-pointer"
+                                              className="w-full flex items-center gap-2 px-2.5 py-2 text-xs font-semibold text-amber-700 hover:bg-amber-50 rounded-sm transition-colors text-left cursor-pointer"
                                             >
                                               <Banknote className="w-3.5 h-3.5 shrink-0 text-amber-600" />
                                               Approve Cash Request
@@ -626,7 +628,7 @@ export default function BookingsPage() {
                                             <button
                                               type="button"
                                               onClick={() => setDeclineCashBooking(bookingInfo)}
-                                              className="w-full flex items-center gap-2 px-2.5 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50 rounded-lg transition-colors text-left cursor-pointer"
+                                              className="w-full flex items-center gap-2 px-2.5 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50 rounded-sm transition-colors text-left cursor-pointer"
                                             >
                                               <XCircle className="w-3.5 h-3.5 shrink-0 text-gray-500" />
                                               Decline Cash Request
@@ -637,7 +639,7 @@ export default function BookingsPage() {
                                             <button
                                               type="button"
                                               onClick={() => setReminderBooking(bookingInfo)}
-                                              className="w-full flex items-center gap-2 px-2.5 py-2 text-xs font-semibold text-gray-800 hover:bg-gray-50 rounded-lg transition-colors text-left cursor-pointer"
+                                              className="w-full flex items-center gap-2 px-2.5 py-2 text-xs font-semibold text-gray-800 hover:bg-gray-50 rounded-sm transition-colors text-left cursor-pointer"
                                             >
                                               <Send className="w-3.5 h-3.5 shrink-0 text-primary" />
                                               Resend Payment Reminder
@@ -645,7 +647,7 @@ export default function BookingsPage() {
                                             <button
                                               type="button"
                                               onClick={() => handleCopyCheckoutLink(booking.id)}
-                                              className="w-full flex items-center gap-2 px-2.5 py-2 text-xs font-semibold text-gray-800 hover:bg-gray-50 rounded-lg transition-colors text-left cursor-pointer"
+                                              className="w-full flex items-center gap-2 px-2.5 py-2 text-xs font-semibold text-gray-800 hover:bg-gray-50 rounded-sm transition-colors text-left cursor-pointer"
                                             >
                                               {copiedBookingId === booking.id ? (
                                                 <Check className="w-3.5 h-3.5 shrink-0 text-green-600" />
@@ -659,7 +661,7 @@ export default function BookingsPage() {
                                         <button
                                           type="button"
                                           onClick={() => setDeclineBooking(bookingInfo)}
-                                          className="w-full flex items-center gap-2 px-2.5 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 rounded-lg transition-colors text-left cursor-pointer"
+                                          className="w-full flex items-center gap-2 px-2.5 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 rounded-sm transition-colors text-left cursor-pointer"
                                         >
                                           <XCircle className="w-3.5 h-3.5 shrink-0 text-rose-600" />
                                           Decline Booking
@@ -676,7 +678,7 @@ export default function BookingsPage() {
                                               setCashPaidBooking(bookingInfo);
                                               setCashConfirmationText('');
                                             }}
-                                            className="w-full flex items-center gap-2 px-2.5 py-2 text-xs font-semibold text-emerald-700 hover:bg-emerald-50 rounded-lg transition-colors text-left cursor-pointer"
+                                            className="w-full flex items-center gap-2 px-2.5 py-2 text-xs font-semibold text-emerald-700 hover:bg-emerald-50 rounded-sm transition-colors text-left cursor-pointer"
                                           >
                                             <Banknote className="w-3.5 h-3.5 shrink-0 text-emerald-600" />
                                             Mark Cash Received (Venue)
@@ -685,7 +687,7 @@ export default function BookingsPage() {
                                         <button
                                           type="button"
                                           onClick={() => setCompleteEscrowBooking(bookingInfo)}
-                                          className="w-full flex items-center gap-2 px-2.5 py-2 text-xs font-semibold text-blue-700 hover:bg-blue-50 rounded-lg transition-colors text-left cursor-pointer"
+                                          className="w-full flex items-center gap-2 px-2.5 py-2 text-xs font-semibold text-blue-700 hover:bg-blue-50 rounded-sm transition-colors text-left cursor-pointer"
                                         >
                                           <CheckCircle2 className="w-3.5 h-3.5 shrink-0 text-blue-600" />
                                           Complete Gig & Release
@@ -696,7 +698,7 @@ export default function BookingsPage() {
                                     <div className="border-t border-gray-100 mt-1 pt-1">
                                       <a
                                         href={`/dashboard/bookings/${booking.id}`}
-                                        className="w-full flex items-center gap-2 px-2.5 py-2 text-xs font-medium text-gray-600 hover:bg-gray-50 rounded-lg transition-colors text-left cursor-pointer"
+                                        className="w-full flex items-center gap-2 px-2.5 py-2 text-xs font-medium text-gray-600 hover:bg-gray-50 rounded-sm transition-colors text-left cursor-pointer"
                                       >
                                         <Eye className="w-3.5 h-3.5 shrink-0 text-gray-400" />
                                         View Full Details
@@ -726,7 +728,7 @@ export default function BookingsPage() {
 
       {/* MODAL 1: Accept Booking & Enter Price Quote */}
       <Dialog open={!!acceptBooking} onOpenChange={(open) => !open && setAcceptBooking(null)}>
-        <DialogContent className="sm:max-w-[450px] bg-white rounded-2xl p-6 border-none shadow-2xl">
+        <DialogContent className="sm:max-w-[450px] bg-white rounded-sm p-6 border border-gray-200 shadow-xl">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold text-gray-900 flex items-center gap-2">
               <DollarSign className="w-5 h-5 text-emerald-600" />
@@ -751,7 +753,7 @@ export default function BookingsPage() {
                 onChange={(e) => setQuotePrice(e.target.value)}
                 required
                 autoFocus
-                className="h-11 rounded-xl"
+                className="h-10 rounded-sm"
               />
             </div>
             <div className="flex justify-end gap-3 pt-3 border-t border-gray-100">
@@ -760,14 +762,14 @@ export default function BookingsPage() {
                 variant="outline"
                 onClick={() => setAcceptBooking(null)}
                 disabled={isUpdating}
-                className="rounded-xl h-10 px-4"
+                className="rounded-sm h-10 px-4"
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
                 disabled={isUpdating || !quotePrice}
-                className="bg-primary hover:bg-primary/90 text-white rounded-xl h-10 px-5 font-bold"
+                className="bg-primary hover:bg-primary/90 text-white rounded-sm h-10 px-5 font-bold"
               >
                 {isUpdating ? 'Generating Invoice...' : 'Confirm & Accept'}
               </Button>
@@ -795,7 +797,7 @@ export default function BookingsPage() {
             <p>
               Are you sure you want to approve cash payment for <strong className="text-gray-900">{approveCashBooking?.clientName}</strong>?
             </p>
-            <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-900 text-xs leading-relaxed">
+            <div className="p-3 bg-amber-50 border border-amber-200 rounded-sm text-amber-900 text-xs leading-relaxed">
               <strong>Notice:</strong> This will confirm the booking on your schedule. You agree to collect exact cash directly from the client at the venue.
             </div>
           </div>
@@ -837,7 +839,7 @@ export default function BookingsPage() {
             <p>
               Has the event for <strong className="text-gray-900">{completeEscrowBooking?.clientName}</strong> been successfully performed?
             </p>
-            <div className="p-3 bg-blue-50 border border-blue-200 rounded-xl text-blue-900 text-xs leading-relaxed">
+            <div className="p-3 bg-blue-50 border border-blue-200 rounded-sm text-blue-900 text-xs leading-relaxed">
               Marking this event as completed will transition the booking to <strong>COMPLETED</strong> and release escrow funds directly to your wallet available balance.
             </div>
           </div>
@@ -859,7 +861,7 @@ export default function BookingsPage() {
           }
         }}
       >
-        <DialogContent className="sm:max-w-[460px] bg-white rounded-2xl p-6 border-none shadow-2xl">
+        <DialogContent className="sm:max-w-[460px] bg-white rounded-sm p-6 border border-gray-200 shadow-xl">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold text-gray-900 flex items-center gap-2">
               <CheckCircle2 className="w-5 h-5 text-emerald-600" />
@@ -870,18 +872,18 @@ export default function BookingsPage() {
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 pt-2">
-            <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-900 text-sm leading-relaxed">
+            <div className="p-3 bg-amber-50 border border-amber-200 rounded-sm text-amber-900 text-sm leading-relaxed">
               <strong>Important:</strong> Marking this payment as received will immediately mark the invoice as <strong>PAID</strong> and transition this booking to <strong>COMPLETED</strong> status.
             </div>
             <p className="text-sm text-gray-600">
-              To prevent accidental completion, please confirm by typing <span className="font-bold text-gray-900 bg-gray-100 px-1.5 py-0.5 rounded border">PAID</span> below:
+              To prevent accidental completion, please confirm by typing <span className="font-bold text-gray-900 bg-gray-100 px-1.5 py-0.5 rounded-sm border">PAID</span> below:
             </p>
             <Input
               type="text"
               placeholder="Type PAID to confirm"
               value={cashConfirmationText}
               onChange={(e) => setCashConfirmationText(e.target.value)}
-              className="h-11 rounded-xl text-center font-bold tracking-wider uppercase text-base"
+              className="h-10 rounded-sm text-center font-bold tracking-wider uppercase text-base"
               autoFocus
             />
             <div className="flex justify-end gap-3 pt-3 border-t border-gray-100">
@@ -893,7 +895,7 @@ export default function BookingsPage() {
                   setCashConfirmationText('');
                 }}
                 disabled={isMarkingPaid}
-                className="rounded-xl h-10 px-4"
+                className="rounded-sm h-10 px-4"
               >
                 Cancel
               </Button>
@@ -901,7 +903,7 @@ export default function BookingsPage() {
                 type="button"
                 onClick={handleConfirmMarkCashPaid}
                 disabled={isMarkingPaid || cashConfirmationText.trim().toUpperCase() !== 'PAID'}
-                className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl h-10 px-5 font-bold shadow-md shadow-emerald-500/20 disabled:opacity-50"
+                className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-sm h-10 px-5 font-bold shadow-xs disabled:opacity-50"
               >
                 {isMarkingPaid ? 'Completing Booking...' : 'Confirm Cash Received'}
               </Button>

@@ -4,37 +4,32 @@ import { Card, CardContent, CardHeader, CardTitle, formatMoney } from '@repo/ui'
 import { CreditCard, FileText } from 'lucide-react';
 import { Booking } from '@repo/store';
 
+import { getInvoicePaymentInfo } from '@/lib/invoiceHelper';
+
 interface FinancialSummaryCardProps {
   booking: Booking;
 }
 
 export function FinancialSummaryCard({ booking }: FinancialSummaryCardProps) {
   const invoice = booking.invoice;
+  const paymentInfo = getInvoicePaymentInfo(invoice);
+  const isPaid = invoice?.status === 'PAID' || booking.paymentStatus === 'PAID';
+
   const amountFormatted = booking.totalAmount
     ? formatMoney(booking.totalAmount, booking.currencyCode || 'KES')
     : 'Pending';
 
   const getPaymentMethodLabel = () => {
-    if (!invoice?.transactions?.length) return 'Card / Paystack';
-    const successfulTx = invoice.transactions.find((tx) => tx.status === 'SUCCEEDED');
-    const activeTx = successfulTx || invoice.transactions[0];
-    if (!activeTx) return 'Card / Paystack';
-    if (activeTx.channel === 'CASH' || activeTx.gateway === 'MANUAL') return 'Cash on Event';
-    const channelName = activeTx.channel
-      ? activeTx.channel.replace(/_/g, ' ')
-      : activeTx.gateway
-        ? activeTx.gateway.replace(/_/g, ' ')
-        : 'Card';
-    const gatewayLabel = activeTx.gateway
-      ? activeTx.gateway.charAt(0).toUpperCase() + activeTx.gateway.slice(1).toLowerCase()
-      : 'Paystack';
-    return `${channelName} (${gatewayLabel})`;
+    if (!isPaid) {
+      const isCash = booking.paymentMethod === 'CASH' || invoice?.method === 'CASH';
+      return isCash ? 'Cash on Arrival (Pending)' : 'Pending Payment';
+    }
+    return paymentInfo.combinedLabel;
   };
 
   const getPaymentDateLabel = () => {
-    if (!invoice) return 'Paid';
-    const successfulTx = invoice.transactions?.find((tx) => tx.status === 'SUCCEEDED');
-    const dateToUse = successfulTx?.createdAt || invoice.updatedAt || booking.updatedAt;
+    if (!isPaid) return 'Pending Payment';
+    const dateToUse = paymentInfo.paidAt || invoice?.updatedAt || booking.updatedAt;
     return dateToUse
       ? new Date(dateToUse).toLocaleDateString('en-GB', {
           day: '2-digit',

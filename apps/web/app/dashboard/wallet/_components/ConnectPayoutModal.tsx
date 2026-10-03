@@ -248,28 +248,39 @@ export default function ConnectPayoutModal({
     }
   };
 
+  /* ─── Section Label ──────────────────────────────────────────────── */
+  const SectionLabel = ({ step, children }: { step: number; children: React.ReactNode }) => (
+    <div className="flex items-center gap-2 mb-2">
+      <span className="flex items-center justify-center w-5 h-5 rounded-sm bg-gray-900 text-white text-[10px] font-bold leading-none">
+        {step}
+      </span>
+      <Label className="text-[11.5px] font-semibold text-gray-700 tracking-wide uppercase">
+        {children}
+      </Label>
+    </div>
+  );
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-xl w-full p-0 bg-white rounded-2xl shadow-2xl border-0 max-h-[92vh] overflow-y-auto">
-        {/* Header */}
-        <div className="px-6 pt-6 pb-4 border-b border-gray-100/60">
+      <DialogContent className="max-w-xl w-full p-0 bg-white rounded-sm shadow-2xl border border-gray-200 max-h-[92vh] overflow-y-auto">
+        {/* ─── Header ────────────────────────────────────────── */}
+        <div className="px-6 pt-6 pb-4 border-b border-gray-100">
           <DialogHeader className="space-y-1 text-left">
-            <DialogTitle className="text-lg font-bold text-gray-900">
+            <DialogTitle className="text-[17px] font-bold text-gray-900 tracking-[-0.01em]">
               Connect Payout Account
             </DialogTitle>
-            <DialogDescription className="text-sm text-gray-500">
+            <DialogDescription className="text-[13px] text-gray-500 leading-relaxed">
               Link a verified bank account or mobile wallet to receive your earnings.
             </DialogDescription>
           </DialogHeader>
         </div>
 
-        <form onSubmit={handleSubmit} className="px-6 pb-6 space-y-5 pt-5">
-          {/* 1. Settlement Network */}
-          <div className="space-y-2.5">
-            <Label className="text-[12px] font-semibold text-gray-600 uppercase tracking-wider">
-              1. Settlement Network
-            </Label>
-            <div className="grid grid-cols-1 gap-2">
+        <form onSubmit={handleSubmit} className="px-6 pb-6 space-y-6 pt-5">
+
+          {/* ─── 1. Settlement Network ──────────────────────── */}
+          <div>
+            <SectionLabel step={1}>Settlement Network</SectionLabel>
+            <div className="space-y-1.5">
               {GATEWAY_OPTIONS.map((gw) => {
                 const isSelected = selectedGateway === gw.id;
                 return (
@@ -277,30 +288,36 @@ export default function ConnectPayoutModal({
                     key={gw.id}
                     type="button"
                     onClick={() => handleGatewayChange(gw.id)}
-                    className={`flex flex-col text-left p-3 rounded-xl border transition-all cursor-pointer ${
+                    className={`relative w-full flex items-center gap-3 p-3 rounded-sm border text-left transition-all duration-150 cursor-pointer overflow-hidden ${
                       isSelected
-                        ? 'border-primary bg-primary/[0.03] shadow-sm ring-1 ring-primary/30'
-                        : 'border-gray-200 bg-white text-gray-900 hover:bg-gray-50'
+                        ? 'border-primary/40 bg-primary/[0.03]'
+                        : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50/50'
                     }`}
                   >
-                    <div className="flex items-center justify-between mb-1.5">
+                    {/* Selected accent bar */}
+                    {isSelected && (
+                      <span className="absolute left-0 top-0 bottom-0 w-[3px] bg-primary rounded-r-full" />
+                    )}
+                    <div className="shrink-0">
                       {renderGatewayBrand(gw.id)}
-                      {isSelected && <CheckCircle2 className="w-4 h-4 text-primary shrink-0" />}
                     </div>
-                    <span className="text-[11px] text-gray-400 line-clamp-1">
-                      {gw.headline}
-                    </span>
+                    <div className="flex-1 min-w-0">
+                      <span className="text-[11px] text-gray-500 leading-none">
+                        {gw.headline}
+                      </span>
+                    </div>
+                    {isSelected && (
+                      <CheckCircle2 className="w-4 h-4 text-primary shrink-0" />
+                    )}
                   </button>
                 );
               })}
             </div>
           </div>
 
-          {/* 2. Settlement Country */}
-          <div className="space-y-2.5">
-            <Label className="text-[12px] font-semibold text-gray-600 uppercase tracking-wider">
-              2. Settlement Country
-            </Label>
+          {/* ─── 2. Settlement Country ──────────────────────── */}
+          <div>
+            <SectionLabel step={2}>Settlement Country</SectionLabel>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
               {SUPPORTED_PAYOUT_COUNTRIES.map((c) => {
                 const isSelected = selectedCountry.code === c.code;
@@ -309,15 +326,15 @@ export default function ConnectPayoutModal({
                     key={c.code}
                     type="button"
                     onClick={() => handleCountryChange(c)}
-                    className={`flex items-center gap-2 p-2 rounded-lg border text-xs font-medium transition-all cursor-pointer ${
+                    className={`flex items-center gap-1.5 px-2.5 py-2 rounded-sm border text-xs font-medium transition-all duration-150 cursor-pointer ${
                       isSelected
-                        ? 'border-primary bg-primary/5 text-primary ring-1 ring-primary/30'
-                        : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
+                        ? 'border-primary/40 bg-primary/[0.04] text-primary'
+                        : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:bg-gray-50/50'
                     }`}
                   >
-                    <span className="text-sm">{c.flag}</span>
+                    <span className="text-sm leading-none">{c.flag}</span>
                     <span className="truncate">{c.name}</span>
-                    <span className="text-[9px] text-gray-400 ml-auto uppercase font-mono">
+                    <span className="text-[9px] text-gray-400 ml-auto uppercase font-mono tracking-tight">
                       {c.currency}
                     </span>
                   </button>
@@ -326,30 +343,37 @@ export default function ConnectPayoutModal({
             </div>
           </div>
 
-          {/* 3. Bank / Mobile Money */}
+          {/* ─── 3. Bank / Mobile Money ─────────────────────── */}
           {selectedGateway !== 'PESAPAL' ? (
-            <div className="space-y-2.5">
-              <Label className="text-[12px] font-semibold text-gray-600 uppercase tracking-wider flex items-center justify-between">
-                <span>3. Select Bank</span>
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <span className="flex items-center justify-center w-5 h-5 rounded-sm bg-gray-900 text-white text-[10px] font-bold leading-none">
+                    3
+                  </span>
+                  <Label className="text-[11.5px] font-semibold text-gray-700 tracking-wide uppercase">
+                    Select Bank
+                  </Label>
+                </div>
                 {isLoadingBanks && (
-                  <span className="text-[10px] text-gray-400 flex items-center gap-1 normal-case tracking-normal">
+                  <span className="text-[10px] text-gray-400 flex items-center gap-1">
                     <Loader2 className="w-3 h-3 animate-spin" /> Loading…
                   </span>
                 )}
-              </Label>
-              <div className="space-y-1.5">
+              </div>
+              <div className="space-y-2">
                 <Input
                   type="text"
                   placeholder="Search bank…"
                   value={bankSearch}
                   onChange={(e) => setBankSearch(e.target.value)}
-                  className="text-xs h-8 border-gray-200 rounded-lg"
+                  className="text-xs h-9 border-gray-200 rounded-sm bg-gray-50/50 focus:bg-white"
                 />
                 <select
                   value={bankCode}
                   onChange={(e) => handleBankChange(e.target.value)}
                   disabled={isLoadingBanks}
-                  className="w-full h-10 px-3 text-sm rounded-xl border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 text-gray-900"
+                  className="w-full h-10 px-3 text-sm rounded-sm border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 text-gray-900 transition-all"
                 >
                   <option value="">— Choose your bank ({filteredBanks.length} available) —</option>
                   {filteredBanks.map((b: any, idx: number) => (
@@ -361,11 +385,9 @@ export default function ConnectPayoutModal({
               </div>
             </div>
           ) : (
-            <div className="space-y-2.5">
-              <Label className="text-[12px] font-semibold text-gray-600 uppercase tracking-wider">
-                3. Mobile Money Provider
-              </Label>
-              <div className="grid grid-cols-2 gap-2">
+            <div>
+              <SectionLabel step={3}>Mobile Money Provider</SectionLabel>
+              <div className="grid grid-cols-2 gap-1.5">
                 {[
                   { code: 'MPESA', name: 'M-Pesa', renderLogo: () => <MpesaLogo size="xs" /> },
                   { code: 'AIRTEL', name: 'Airtel Money', renderLogo: () => <AirtelMoneyLogo size="xs" /> },
@@ -378,12 +400,15 @@ export default function ConnectPayoutModal({
                       key={net.code}
                       type="button"
                       onClick={() => handleBankChange(net.code)}
-                      className={`flex items-center gap-2 p-3 rounded-xl border text-xs font-medium transition-all cursor-pointer ${
+                      className={`relative flex items-center gap-2 p-3 rounded-sm border text-xs font-medium transition-all duration-150 cursor-pointer overflow-hidden ${
                         isSelected
-                          ? 'border-primary bg-primary/5 text-primary ring-1 ring-primary/30'
-                          : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
+                          ? 'border-primary/40 bg-primary/[0.04] text-primary'
+                          : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:bg-gray-50/50'
                       }`}
                     >
+                      {isSelected && (
+                        <span className="absolute left-0 top-0 bottom-0 w-[3px] bg-primary rounded-r-full" />
+                      )}
                       {net.renderLogo()}
                       <span className="truncate">{net.name}</span>
                     </button>
@@ -393,24 +418,24 @@ export default function ConnectPayoutModal({
             </div>
           )}
 
-          {/* 4. Account Number & Verification */}
-          <div className="space-y-2.5">
-            <Label className="text-[12px] font-semibold text-gray-600 uppercase tracking-wider">
-              {selectedGateway === 'PESAPAL' ? '4. Phone Number' : '4. Account Number'}
-            </Label>
+          {/* ─── 4. Account Number & Verification ───────────── */}
+          <div>
+            <SectionLabel step={4}>
+              {selectedGateway === 'PESAPAL' ? 'Phone Number' : 'Account Number'}
+            </SectionLabel>
             <div className="flex gap-2">
               <Input
                 type="text"
                 placeholder={selectedGateway === 'PESAPAL' ? 'e.g. 0712345678' : 'e.g. 0123456789'}
                 value={accountNumber}
                 onChange={(e) => handleAccountChange(e.target.value)}
-                className="h-10 rounded-xl text-sm border-gray-200"
+                className="h-10 rounded-sm text-sm border-gray-200 bg-gray-50/50 focus:bg-white"
               />
               <Button
                 type="button"
                 onClick={handleVerifyAccount}
                 disabled={isValidating || !accountNumber.trim()}
-                className="h-10 px-4 rounded-xl bg-gray-900 hover:bg-black text-white text-sm font-medium shrink-0 transition-all cursor-pointer"
+                className="h-10 px-4 rounded-sm bg-gray-900 hover:bg-gray-800 text-white text-sm font-medium shrink-0 transition-all duration-150 cursor-pointer"
               >
                 {isValidating ? (
                   <>
@@ -425,48 +450,54 @@ export default function ConnectPayoutModal({
                 )}
               </Button>
             </div>
-            <p className="text-[10px] text-gray-400">
+            <p className="text-[10px] text-gray-400 mt-1.5">
               We verify your details directly with the banking network before saving.
             </p>
           </div>
 
-          {/* Verification Success */}
+          {/* ─── Verification Success ───────────────────────── */}
           {isValidated && verifiedAccountName && (
-            <div className="p-4 bg-emerald-50/80 rounded-xl space-y-2 animate-in fade-in zoom-in-95 duration-200">
-              <div className="flex items-start gap-2.5 text-emerald-800">
-                <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
-                <div className="space-y-0.5">
-                  <div className="text-[10px] font-bold uppercase tracking-widest text-emerald-700">
-                    Account Verified
-                  </div>
-                  <div className="text-sm font-bold text-emerald-950">
-                    {verifiedAccountName}
-                  </div>
-                  <div className="text-[11px] text-emerald-700">
-                    {bankName || 'Settlement Account'} •••• {accountNumber.slice(-4)}
+            <div className="relative overflow-hidden rounded-sm border border-emerald-200 bg-emerald-50/60 animate-in fade-in slide-in-from-top-1 duration-200">
+              <span className="absolute left-0 top-0 bottom-0 w-[3px] bg-emerald-500" />
+              <div className="px-4 py-3 pl-5 space-y-2">
+                <div className="flex items-start gap-2.5 text-emerald-800">
+                  <CheckCircle2 className="w-[18px] h-[18px] text-emerald-600 shrink-0 mt-0.5" />
+                  <div className="space-y-0.5">
+                    <div className="text-[10px] font-bold uppercase tracking-widest text-emerald-700">
+                      Account Verified
+                    </div>
+                    <div className="text-sm font-bold text-emerald-950">
+                      {verifiedAccountName}
+                    </div>
+                    <div className="text-[11px] text-emerald-700">
+                      {bankName || 'Settlement Account'} •••• {accountNumber.slice(-4)}
+                    </div>
                   </div>
                 </div>
-              </div>
-              <div className="text-[10px] text-emerald-700/80 border-t border-emerald-200/50 pt-2 flex items-center gap-1.5">
-                <ShieldCheck className="w-3.5 h-3.5 shrink-0" />
-                <span>Payouts will be sent to this verified account.</span>
+                <div className="text-[10px] text-emerald-700/80 border-t border-emerald-200/60 pt-2 flex items-center gap-1.5">
+                  <ShieldCheck className="w-3.5 h-3.5 shrink-0" />
+                  <span>Payouts will be sent to this verified account.</span>
+                </div>
               </div>
             </div>
           )}
 
-          {/* Validation Error */}
+          {/* ─── Validation Error ───────────────────────────── */}
           {validationError && (
-            <div className="p-3 bg-red-50 rounded-xl flex items-start gap-2 text-red-700 text-xs animate-in fade-in duration-200">
-              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-red-600" />
-              <div>
-                <span className="font-bold">Failed: </span>
-                <span>{validationError}</span>
+            <div className="relative overflow-hidden rounded-sm border border-red-200 bg-red-50/60 animate-in fade-in duration-200">
+              <span className="absolute left-0 top-0 bottom-0 w-[3px] bg-red-500" />
+              <div className="flex items-start gap-2 px-4 py-3 pl-5 text-red-700 text-xs">
+                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-red-600" />
+                <div>
+                  <span className="font-bold">Failed: </span>
+                  <span>{validationError}</span>
+                </div>
               </div>
             </div>
           )}
 
-          {/* Actions */}
-          <div className="flex items-center justify-between gap-3 pt-3 border-t border-gray-100">
+          {/* ─── Actions ────────────────────────────────────── */}
+          <div className="flex items-center justify-between gap-3 pt-4 border-t border-gray-100">
             {isConnected && onDisconnect ? (
               <button
                 type="button"
@@ -486,17 +517,17 @@ export default function ConnectPayoutModal({
                 variant="outline"
                 onClick={onClose}
                 disabled={isOnboarding}
-                className="h-10 px-4 rounded-xl text-sm font-medium border-gray-200 text-gray-700 hover:bg-gray-50"
+                className="h-9 px-4 rounded-sm text-sm font-medium border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-gray-800 transition-all duration-150"
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
                 disabled={!isValidated || isOnboarding}
-                className={`h-10 px-5 rounded-xl text-sm font-semibold shadow-sm transition-all ${
+                className={`h-9 px-5 rounded-sm text-sm font-semibold transition-all duration-150 ${
                   isValidated
-                    ? 'bg-primary hover:bg-primary/90 text-white cursor-pointer'
-                    : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                    ? 'bg-primary hover:bg-primary/90 text-white cursor-pointer shadow-sm'
+                    : 'bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200'
                 }`}
               >
                 {isOnboarding ? (

@@ -2,15 +2,15 @@
 /* eslint-disable react-hooks/incompatible-library */
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {useForm} from 'react-hook-form';
 import {zodResolver} from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import {toast} from 'sonner';
 import {Button} from '@repo/ui';
 import {Country, City} from 'country-state-city';
-import {useEffect, useState} from 'react';
 import {Check, ChevronsUpDown, User, Lock, Eye, EyeOff} from 'lucide-react';
+import { POPULAR_WORLD_TIMEZONES, getBrowserTimezone } from '@/lib/timezone';
 import {
   Popover,
   PopoverContent,
@@ -32,6 +32,7 @@ const profileSchema = z.object({
   stageName: z.string().min(1, 'Stage name is required'),
   city: z.string().min(1, 'City is required'),
   country: z.string().min(1, 'Country is required'),
+  timezone: z.string().optional(),
   email: z.string().email('Invalid email address'),
   subdomain: z.string().optional(),
   genres: z.array(z.string()),
@@ -106,6 +107,7 @@ export default function ProfileContent() {
       stageName: '',
       city: '',
       country: '',
+      timezone: 'Africa/Nairobi',
       email: '',
       subdomain: '',
       genres: [],
@@ -156,6 +158,7 @@ export default function ProfileContent() {
         email: user.email || '',
         subdomain: tenant?.subdomain || '',
         country: tenant?.country || '',
+        timezone: tenant?.timezone || getBrowserTimezone(),
         city: tenant?.city || '',
         genres: tenant?.genres || [],
         socialLinks: {
@@ -555,6 +558,24 @@ export default function ProfileContent() {
               )}
             </div>
 
+            <div>
+              <label className={labelClass}>Operating Timezone</label>
+              <select
+                {...register('timezone')}
+                className={inputBaseClass}
+              >
+                {Array.from(new Set(POPULAR_WORLD_TIMEZONES.map(t => t.group))).map(groupName => (
+                  <optgroup key={groupName} label={groupName}>
+                    {POPULAR_WORLD_TIMEZONES.filter(t => t.group === groupName).map(tz => (
+                      <option key={tz.iana} value={tz.iana}>{tz.label}</option>
+                    ))}
+                  </optgroup>
+                ))}
+              </select>
+              <p className="text-gray-400 text-xs mt-1">
+                Client bookings convert seamlessly into this timezone for your calendar and dashboard.
+              </p>
+            </div>
           </div>
         </div>
 

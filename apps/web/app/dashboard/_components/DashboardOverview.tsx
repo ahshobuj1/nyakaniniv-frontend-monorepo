@@ -34,6 +34,7 @@ import { toast } from 'sonner';
 import { ConfirmationDialog } from '@/components/ConfirmationDialog';
 import { DeclineBookingModal } from '@/components/DeclineBookingModal';
 import { parseBookingEventDetails } from '@/lib/bookingStatusHelper';
+import { formatDateInTz, formatTimeInTz } from '@/lib/timezone';
 
 // ==========================================
 // 1. Dummy Data
@@ -557,18 +558,23 @@ export default function DashboardOverview() {
                         </td>
                         <td className="py-5 px-8 text-[14px] text-[#787878]">
                           {(() => {
-                            const parsed = parseBookingEventDetails(booking.eventDetails);
-                            const timeTag = parsed.startTime;
+                            const targetTz = booking.eventTimezone || 'Africa/Nairobi';
+                            const dateFormatted = formatDateInTz(booking.eventDate, targetTz, {
+                              day: '2-digit',
+                              month: 'short',
+                              year: 'numeric',
+                            });
+                            const timeFormatted = formatTimeInTz(booking.eventDate, targetTz);
                             return (
                               <div className="flex flex-col gap-1">
-                                <div className="flex items-center gap-1.5 font-medium text-[#111620] w-max">                           
+                                <div className="flex items-center gap-1.5 font-medium text-[#111620] w-max">
                                   <Calendar className="w-3.5 h-3.5 text-gray-400" />
-                                  {new Date(booking.eventDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+                                  {dateFormatted}
                                 </div>
-                                {timeTag && (
+                                {timeFormatted && (
                                   <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-200/60 w-max">
                                     <Clock className="w-3 h-3" />
-                                    {timeTag}
+                                    {timeFormatted}
                                   </div>
                                 )}
                               </div>

@@ -62,6 +62,7 @@ export interface UpdateTenantProfileRequest {
   stageName?: string;
   country?: string;
   city?: string;
+  timezone?: string;
   genres?: string[];
   bio?: string;
   socialLinks?: Record<string, string>;

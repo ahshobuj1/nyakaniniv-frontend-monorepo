@@ -174,12 +174,12 @@ export interface Booking {
   tenantId?: string;
   clientId?: string;
   eventType?: string;
-  eventDetails?: string;
-  eventDate?: string;
-  eventTimezone?: string;
+  eventDetails?: string | Record<string, any> | null;
+  eventDate?: string | null;
+  eventTimezone?: string | null;
   currencyCode?: string;
   currency?: string;
-  address?: string;
+  address?: string | null;
   status?: BookingStatus;
   paymentStatus?: PaymentStatus;
   payoutStatus?: PayoutStatus;
@@ -187,8 +187,12 @@ export interface Booking {
   grossAmount?: number | string;
   djNetEarning?: number | string;
   paymentMethod?: string;
+  paymentDueAt?: string;
   createdAt?: string;
   updatedAt?: string;
+  confirmedAt?: string | null;
+  completedAt?: string | null;
+  cancelledAt?: string | null;
   deletedAt?: string;
 
   tenant?: Tenant;
@@ -209,23 +213,65 @@ export interface Client {
   bookings?: Booking[];
 }
 
+export interface InvoiceClient {
+  name?: string | null;
+  email?: string | null;
+  phone?: string | null;
+}
+
+export interface InvoiceBooking {
+  id: string;
+  eventType?: string | null;
+  eventDate?: string | null;
+  address?: string | null;
+  client?: InvoiceClient | null;
+}
+
+export interface InvoiceTenantUser {
+  firstName?: string | null;
+  lastName?: string | null;
+  email?: string | null;
+}
+
+export interface InvoiceTenant {
+  stageName?: string | null;
+  city?: string | null;
+  country?: string | null;
+  subdomain?: string | null;
+  user?: InvoiceTenantUser | null;
+}
+
+export interface InvoiceUser {
+  firstName?: string | null;
+  lastName?: string | null;
+  email: string;
+}
+
+export interface InvoicePlan {
+  name?: string | null;
+}
+
 export interface Invoice {
   id: string;
-  userId?: string;
-  tenantId?: string;
-  bookingId?: string;
-  planId?: number;
-  amount?: number | string;
-  currencyCode?: string;
-  status: 'UNPAID' | 'PAID' | 'OVERDUE' | 'CANCELLED';
   type: 'SUBSCRIPTION' | 'BOOKING';
+  status: 'UNPAID' | 'PAID' | 'OVERDUE' | 'CANCELLED';
+  amount: number | string;
+  currencyCode?: string;
   createdAt?: string;
   updatedAt?: string;
+  dueDate?: string | null;
 
-  user?: User;
-  tenant?: Tenant;
-  booking?: Booking;
-  plan?: SubscriptionPlan;
+  // Gateway and Method
+  gateway?: 'PAYSTACK' | 'PESAPAL' | 'FLUTTERWAVE' | 'DPO' | 'CELLULANT' | 'CASH' | 'MANUAL' | string | null;
+  method?: 'CARD' | 'BANK_TRANSFER' | 'MOBILE_MONEY' | 'USSD' | 'CASH' | 'UNKNOWN' | string | null;
+  cardBrand?: string | null;
+  cardLast4?: string | null;
+  paidAt?: string | null;
+
+  user?: InvoiceUser | null;
+  tenant?: InvoiceTenant | null;
+  booking?: InvoiceBooking | null;
+  plan?: InvoicePlan | null;
   transactions?: Transaction[];
 }
 

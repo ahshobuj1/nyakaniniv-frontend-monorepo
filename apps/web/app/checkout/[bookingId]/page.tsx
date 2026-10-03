@@ -40,6 +40,8 @@ import {
 import { Button } from '@repo/ui';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { normalizeBookingStatus, parseBookingEventDetails } from '@/lib/bookingStatusHelper';
+import { LandingHeader } from '@/components/LandingHeader';
+import { DynamicFooter } from '@/app/(landingPage)/_components/DynamicFooter';
 import { toast } from 'sonner';
 import {
   PaystackBrandLogo,
@@ -192,25 +194,27 @@ function CheckoutContent() {
 
   if (error || !booking) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#F8FAFC] p-4 text-[#111620]">
-        <div className="max-w-md w-full p-8 sm:p-10 rounded-3xl bg-white border border-gray-200 text-center space-y-5 shadow-2xl">
-          <div className="w-16 h-16 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mx-auto">
-            <AlertCircle className="w-8 h-8" />
+      <div className="flex flex-col min-h-screen bg-[#f0f0f0] text-gray-900 font-sans">
+        <LandingHeader />
+        <main className="flex-1 flex items-center justify-center p-4 py-16">
+          <div className="max-w-md w-full p-8 rounded-sm bg-white border border-gray-200 text-center space-y-4 shadow-xs">
+            <AlertCircle className="w-12 h-12 text-red-500 mx-auto" />
+            <h2 className="text-xl font-bold text-gray-900">Booking Not Found</h2>
+            <p className="text-gray-500 text-xs leading-relaxed">
+              We could not find the booking details for reference #{bookingId?.slice(0, 8)}. Please verify your link or get in touch with your DJ.
+            </p>
+            <div className="pt-2">
+              <Link
+                href="/"
+                className="inline-flex items-center gap-1.5 h-10 px-5 rounded-sm bg-primary hover:bg-[#d62828] text-white text-xs font-semibold shadow-xs transition-colors"
+              >
+                <Home className="w-3.5 h-3.5" />
+                <span>Back to UpBeat Africa</span>
+              </Link>
+            </div>
           </div>
-          <h2 className="text-2xl font-black text-[#111620]">Booking Not Found</h2>
-          <p className="text-gray-500 text-sm leading-relaxed">
-            We could not find the booking details for reference #{bookingId?.slice(0, 8)}. Please verify your link or get in touch with your DJ.
-          </p>
-          <div className="pt-2">
-            <Link
-              href="/"
-              className="inline-flex items-center gap-2 h-12 px-6 rounded-xl bg-primary hover:bg-[#d62828] text-white text-xs font-bold shadow-lg shadow-primary/25 transition-all"
-            >
-              <Home className="w-4 h-4" />
-              <span>Back to UpBeat Africa</span>
-            </Link>
-          </div>
-        </div>
+        </main>
+        <DynamicFooter />
       </div>
     );
   }
@@ -222,53 +226,43 @@ function CheckoutContent() {
   const referenceCode = `UB-${booking.id?.slice(0, 8)?.toUpperCase()}`;
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900 py-8 px-4 sm:px-6 lg:px-8 font-sans">
-      <div className="max-w-4xl mx-auto space-y-6">
-        {/* Simple Professional Header */}
-        <header className="bg-white border border-gray-200 rounded-xl px-5 py-3.5 shadow-2xs flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
-            <Image
-              src="/auth.logo.png"
-              alt="UpBeat Africa"
-              width={220}
-              height={136}
-              className="h-16 w-auto object-contain"
-            />
-          </Link>
+    <div className="flex flex-col min-h-screen bg-[#f0f0f0] text-gray-900 font-sans">
+      <LandingHeader />
 
-          <div className="flex items-center gap-3">
+      <main className="flex-1 py-8 sm:py-10 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-4xl mx-auto space-y-4">
+          <div className="flex items-center justify-between">
+            <button
+              onClick={() => router.back()}
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-gray-500 hover:text-gray-900 transition-colors cursor-pointer"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span>Back</span>
+            </button>
+
             {subdomain && (
               <a
                 href={getDjWebsiteUrl()}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 text-xs font-semibold text-gray-700 hover:text-primary transition-colors bg-gray-50 hover:bg-gray-100 px-3 py-1.5 rounded-lg border border-gray-200"
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-gray-600 hover:text-primary transition-colors"
                 title={`Visit ${stageName}'s website`}
               >
-                <span>{stageName}</span>
+                <span>Visit {stageName}&apos;s Profile</span>
                 <ExternalLink className="w-3.5 h-3.5 text-gray-400" />
               </a>
             )}
-
-            <Link
-              href="/"
-              className="inline-flex items-center gap-1.5 text-xs font-semibold text-gray-500 hover:text-gray-900 transition-colors px-2 py-1"
-            >
-              <Home className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Home</span>
-            </Link>
           </div>
-        </header>
 
         {/* STATE 0: Booking Declined / Inactive */}
         {isDeclinedOrInactive && (
-          <div className="max-w-md mx-auto bg-white border border-rose-200 rounded-2xl p-8 sm:p-10 shadow-xs text-center space-y-6 my-8">
-            <div className="w-14 h-14 rounded-full bg-rose-50 text-rose-600 border border-rose-200 flex items-center justify-center mx-auto">
+          <div className="max-w-md mx-auto bg-white border border-rose-200 rounded-sm p-8 sm:p-10 shadow-xs text-center space-y-6 my-8">
+            <div className="w-14 h-14 rounded-sm bg-rose-50 text-rose-600 border border-rose-200 flex items-center justify-center mx-auto">
               <AlertCircle className="w-7 h-7" />
             </div>
 
             <div className="space-y-2">
-              <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-xs font-semibold bg-rose-100 text-rose-800">
+              <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-sm text-xs font-semibold bg-rose-100 text-rose-800">
                 Booking {status === 'REJECTED' ? 'Declined' : status === 'CANCELLED' ? 'Cancelled' : 'Expired'}
               </span>
               <h1 className="text-2xl font-bold text-gray-900">
@@ -278,7 +272,7 @@ function CheckoutContent() {
                 This booking request has been {status === 'REJECTED' ? 'declined by the DJ' : status.toLowerCase()}. This checkout link is no longer valid and payments cannot be processed.
               </p>
               {declineReason && (
-                <div className="p-3.5 bg-rose-50/70 border border-rose-100 rounded-xl text-xs text-rose-800 text-left mt-3">
+                <div className="p-3.5 bg-rose-50/70 border border-rose-100 rounded-sm text-xs text-rose-800 text-left mt-3">
                   <span className="font-bold block mb-1">Reason from DJ:</span>
                   <span>{declineReason}</span>
                 </div>
@@ -289,7 +283,7 @@ function CheckoutContent() {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
               <a
                 href={getDjWebsiteUrl()}
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 h-11 px-6 rounded-xl bg-primary hover:bg-[#d62828] text-white font-medium text-sm transition-colors cursor-pointer shadow-xs"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 h-10 px-5 rounded-sm bg-primary hover:bg-[#d62828] text-white font-medium text-xs transition-colors cursor-pointer shadow-xs"
               >
                 <span>Visit DJ Website</span>
                 <ExternalLink className="w-4 h-4" />
@@ -297,7 +291,7 @@ function CheckoutContent() {
 
               <Link
                 href="/"
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 h-11 px-6 rounded-xl bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium text-sm transition-colors shadow-xs"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 h-10 px-5 rounded-sm bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium text-xs transition-colors shadow-xs"
               >
                 <Home className="w-4 h-4 text-gray-500" />
                 <span>UpBeat Africa Home</span>
@@ -308,13 +302,13 @@ function CheckoutContent() {
 
         {/* STATE 1: Cash Payment APPROVED by DJ */}
         {isCashApproved && !isDeclinedOrInactive && (
-          <div className="max-w-md mx-auto bg-white border border-emerald-200 rounded-2xl p-8 sm:p-10 shadow-xs text-center space-y-6 my-8">
-            <div className="w-14 h-14 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200 flex items-center justify-center mx-auto">
+          <div className="max-w-md mx-auto bg-white border border-emerald-200 rounded-sm p-8 sm:p-10 shadow-xs text-center space-y-6 my-8">
+            <div className="w-14 h-14 rounded-sm bg-emerald-50 text-emerald-600 border border-emerald-200 flex items-center justify-center mx-auto">
               <CheckCircle2 className="w-7 h-7" />
             </div>
 
             <div className="space-y-2">
-              <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">
+              <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-sm text-xs font-semibold bg-emerald-100 text-emerald-800">
                 <ShieldCheck className="w-3.5 h-3.5" /> Cash on Arrival Approved
               </span>
               <h1 className="text-2xl font-bold text-gray-900">
@@ -326,13 +320,13 @@ function CheckoutContent() {
             </div>
 
             {/* Booking Summary Box */}
-            <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 text-left text-xs space-y-2.5">
+            <div className="bg-gray-50 border border-gray-200 rounded-sm p-4 text-left text-xs space-y-2.5">
               <div className="flex justify-between items-center text-gray-600">
                 <span className="font-medium text-gray-500">Booking Reference</span>
                 <button
                   type="button"
                   onClick={() => handleCopyCode(referenceCode)}
-                  className="inline-flex items-center gap-1.5 font-mono font-bold text-gray-900 hover:text-primary transition-colors bg-white px-2 py-0.5 rounded border border-gray-200 cursor-pointer"
+                  className="inline-flex items-center gap-1.5 font-mono font-bold text-gray-900 hover:text-primary transition-colors bg-white px-2 py-0.5 rounded-sm border border-gray-200 cursor-pointer"
                   title="Click to copy"
                 >
                   <span>{referenceCode}</span>
@@ -369,7 +363,7 @@ function CheckoutContent() {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
               <a
                 href={getDjWebsiteUrl()}
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 h-11 px-6 rounded-xl bg-primary hover:bg-[#d62828] text-white font-medium text-sm transition-colors cursor-pointer shadow-xs"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 h-10 px-5 rounded-sm bg-primary hover:bg-[#d62828] text-white font-medium text-xs transition-colors cursor-pointer shadow-xs"
               >
                 <span>Visit DJ Website</span>
                 <ExternalLink className="w-4 h-4" />
@@ -377,7 +371,7 @@ function CheckoutContent() {
 
               <Link
                 href="/"
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 h-11 px-6 rounded-xl bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium text-sm transition-colors shadow-xs"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 h-10 px-5 rounded-sm bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium text-xs transition-colors shadow-xs"
               >
                 <Home className="w-4 h-4 text-gray-500" />
                 <span>UpBeat Africa Home</span>
@@ -388,13 +382,13 @@ function CheckoutContent() {
 
         {/* STATE 2: Cash Payment REQUESTED (Pending Approval) */}
         {!isDeclinedOrInactive && !isCashApproved && isCashPending && !overrideOnlinePayment && (
-          <div className="max-w-4xl mx-auto bg-white border border-gray-200 rounded-2xl p-8 sm:p-10 shadow-xs text-center space-y-6 my-8">
-            <div className="w-14 h-14 rounded-full bg-amber-50 text-amber-600 border border-amber-200 flex items-center justify-center mx-auto">
+          <div className="max-w-4xl mx-auto bg-white border border-gray-200 rounded-sm p-8 sm:p-10 shadow-xs text-center space-y-6 my-8">
+            <div className="w-14 h-14 rounded-sm bg-amber-50 text-amber-600 border border-amber-200 flex items-center justify-center mx-auto">
               <Banknote className="w-7 h-7" />
             </div>
 
             <div className="space-y-2">
-              <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-900">
+              <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-sm text-xs font-semibold bg-amber-100 text-amber-900">
                 <Clock className="w-3.5 h-3.5 text-amber-700" /> Pending DJ Review
               </span>
               <h1 className="text-2xl font-bold text-gray-900">
@@ -406,13 +400,13 @@ function CheckoutContent() {
             </div>
 
             {/* Booking Summary Box */}
-            <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 text-left text-xs space-y-2.5">
+            <div className="bg-gray-50 border border-gray-200 rounded-sm p-4 text-left text-xs space-y-2.5">
               <div className="flex justify-between items-center text-gray-600">
                 <span className="font-medium text-gray-500">Booking Reference</span>
                 <button
                   type="button"
                   onClick={() => handleCopyCode(referenceCode)}
-                  className="inline-flex items-center gap-1.5 font-mono font-bold text-gray-900 hover:text-primary transition-colors bg-white px-2 py-0.5 rounded border border-gray-200 cursor-pointer"
+                  className="inline-flex items-center gap-1.5 font-mono font-bold text-gray-900 hover:text-primary transition-colors bg-white px-2 py-0.5 rounded-sm border border-gray-200 cursor-pointer"
                   title="Click to copy"
                 >
                   <span>{referenceCode}</span>
@@ -450,7 +444,7 @@ function CheckoutContent() {
               <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
                 <a
                   href={getDjWebsiteUrl()}
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 h-11 px-6 rounded-xl bg-primary hover:bg-[#d62828] text-white font-medium text-sm transition-colors cursor-pointer shadow-xs"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 h-10 px-5 rounded-sm bg-primary hover:bg-[#d62828] text-white font-medium text-xs transition-colors cursor-pointer shadow-xs"
                 >
                   <span>Visit DJ Website</span>
                   <ExternalLink className="w-4 h-4" />
@@ -458,7 +452,7 @@ function CheckoutContent() {
 
                 <Link
                   href="/"
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 h-11 px-6 rounded-xl bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium text-sm transition-colors shadow-xs"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 h-10 px-5 rounded-sm bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium text-xs transition-colors shadow-xs"
                 >
                   <Home className="w-4 h-4 text-gray-500" />
                   <span>UpBeat Africa Home</span>
@@ -480,8 +474,8 @@ function CheckoutContent() {
 
         {/* STATE 3: Already Paid via Gateway (Simple & Professional) */}
         {!isDeclinedOrInactive && isAlreadyPaid && !isCashApproved && (
-          <div className="max-w-md mx-auto bg-white border border-gray-200 rounded-2xl p-8 sm:p-10 shadow-xs text-center space-y-6 my-8">
-            <div className="w-14 h-14 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200 flex items-center justify-center mx-auto">
+          <div className="max-w-md mx-auto bg-white border border-gray-200 rounded-sm p-8 sm:p-10 shadow-xs text-center space-y-6 my-8">
+            <div className="w-14 h-14 rounded-sm bg-emerald-50 text-emerald-600 border border-emerald-200 flex items-center justify-center mx-auto">
               <CheckCircle2 className="w-7 h-7" />
             </div>
 
@@ -495,13 +489,13 @@ function CheckoutContent() {
             </div>
 
             {/* Booking Summary Box */}
-            <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 text-left text-xs space-y-2.5">
+            <div className="bg-gray-50 border border-gray-200 rounded-sm p-4 text-left text-xs space-y-2.5">
               <div className="flex justify-between items-center text-gray-600">
                 <span className="font-medium text-gray-500">Booking Reference</span>
                 <button
                   type="button"
                   onClick={() => handleCopyCode(referenceCode)}
-                  className="inline-flex items-center gap-1.5 font-mono font-bold text-gray-900 hover:text-primary transition-colors bg-white px-2 py-0.5 rounded border border-gray-200 cursor-pointer"
+                  className="inline-flex items-center gap-1.5 font-mono font-bold text-gray-900 hover:text-primary transition-colors bg-white px-2 py-0.5 rounded-sm border border-gray-200 cursor-pointer"
                   title="Click to copy"
                 >
                   <span>{referenceCode}</span>
@@ -538,7 +532,7 @@ function CheckoutContent() {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
               <a
                 href={getDjWebsiteUrl()}
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 h-11 px-6 rounded-xl bg-primary hover:bg-[#d62828] text-white font-medium text-sm transition-colors cursor-pointer shadow-xs"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 h-10 px-5 rounded-sm bg-primary hover:bg-[#d62828] text-white font-medium text-xs transition-colors cursor-pointer shadow-xs"
               >
                 <span>Visit DJ Website</span>
                 <ExternalLink className="w-4 h-4" />
@@ -546,7 +540,7 @@ function CheckoutContent() {
 
               <Link
                 href="/"
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 h-11 px-6 rounded-xl bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium text-sm transition-colors shadow-xs"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 h-10 px-5 rounded-sm bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium text-xs transition-colors shadow-xs"
               >
                 <Home className="w-4 h-4 text-gray-500" />
                 <span>UpBeat Africa Home</span>
@@ -560,7 +554,7 @@ function CheckoutContent() {
           <div className="space-y-6">
             {/* If cash request was declined by DJ, show clear notice */}
             {isCashDeclined && (
-              <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl flex items-start gap-3.5 text-sm text-amber-950 shadow-2xs">
+              <div className="p-4 bg-amber-50 border border-amber-200 rounded-sm flex items-start gap-3.5 text-sm text-amber-950 shadow-2xs">
                 <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
                 <div className="space-y-0.5">
                   <span className="font-bold block text-amber-900">Cash Payment Request Declined</span>
@@ -583,7 +577,7 @@ function CheckoutContent() {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
               {/* Left Column: Event Summary (5 cols) */}
               <div className="lg:col-span-5 space-y-4">
-                <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-2xs space-y-5">
+                <div className="bg-white border border-gray-200 rounded-sm p-6 shadow-2xs space-y-5">
                   <h2 className="text-base font-bold text-gray-900 border-b border-gray-100 pb-3">
                     Booking Summary
                   </h2>
@@ -641,7 +635,7 @@ function CheckoutContent() {
                   </div>
 
                   {/* Escrow note */}
-                  <div className="bg-gray-50 border border-gray-200/80 rounded-xl p-3 flex items-start gap-2.5 text-xs text-gray-600">
+                  <div className="bg-gray-50 border border-gray-200/80 rounded-sm p-3 flex items-start gap-2.5 text-xs text-gray-600">
                     <ShieldCheck className="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" />
                     <span>Your funds are safely held in Escrow and only released to the DJ after the performance is completed.</span>
                   </div>
@@ -650,7 +644,7 @@ function CheckoutContent() {
 
               {/* Right Column: Payment Method (7 cols) */}
               <div className="lg:col-span-7 space-y-4">
-                <div className="bg-white border border-gray-200 rounded-2xl p-6 sm:p-7 shadow-2xs space-y-5">
+                <div className="bg-white border border-gray-200 rounded-sm p-6 sm:p-7 shadow-2xs space-y-5">
                   <div>
                     <h2 className="text-base font-bold text-gray-900">
                       Select Payment Method
@@ -669,9 +663,9 @@ function CheckoutContent() {
                           key={gw.id}
                           type="button"
                           onClick={() => setSelectedGateway(gw.id)}
-                          className={`w-full text-left p-4 sm:p-5 rounded-2xl border transition-all cursor-pointer ${
+                          className={`w-full text-left p-4 sm:p-5 rounded-sm border transition-all cursor-pointer ${
                             isSelected
-                              ? 'border-primary bg-primary/[0.03] ring-2 ring-primary/20 shadow-xs'
+                              ? 'border-primary bg-primary/[0.03] ring-1 ring-primary/20 shadow-xs'
                               : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50/70'
                           }`}
                         >
@@ -683,7 +677,7 @@ function CheckoutContent() {
                                   {gw.id === 'PESAPAL' && <PesapalBrandLogo />}
                                   {gw.id === 'FLUTTERWAVE' && <FlutterwaveBrandLogo />}
                                 </div>
-                                <span className="text-[10px] font-bold tracking-wider uppercase text-gray-600 bg-gray-100 px-2.5 py-0.5 rounded-full border border-gray-200">
+                                <span className="text-[10px] font-bold tracking-wider uppercase text-gray-600 bg-gray-100 px-2 py-0.5 rounded-sm border border-gray-200">
                                   {gw.badge}
                                 </span>
                               </div>
@@ -712,7 +706,7 @@ function CheckoutContent() {
                     <Button
                       onClick={handleOnlinePayment}
                       disabled={isGeneratingLink}
-                      className="w-full h-12 rounded-xl bg-primary hover:bg-[#d62828] text-white font-semibold text-sm flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-xs"
+                      className="w-full h-11 rounded-sm bg-primary hover:bg-[#d62828] text-white font-semibold text-xs flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-xs"
                     >
                       {isGeneratingLink ? (
                         <>
@@ -751,9 +745,9 @@ function CheckoutContent() {
       {/* Cash on Arrival Request Modal */}
       {cashModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs">
-          <div className="w-full max-w-md rounded-2xl bg-white border border-gray-200 p-6 space-y-4 shadow-xl text-left">
+          <div className="w-full max-w-md rounded-sm bg-white border border-gray-200 p-6 space-y-4 shadow-xl text-left">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+              <div className="w-10 h-10 rounded-sm bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
                 <Banknote className="w-5 h-5" />
               </div>
               <div>
@@ -768,7 +762,7 @@ function CheckoutContent() {
               directly to <strong className="text-gray-900">{stageName}</strong> on event day before the performance begins.
             </p>
 
-            <div className="p-3 bg-amber-50/70 border border-amber-200/80 rounded-xl text-[11px] text-amber-800 leading-relaxed">
+            <div className="p-3 bg-amber-50/70 border border-amber-200/80 rounded-sm text-[11px] text-amber-800 leading-relaxed">
               Note: The DJ must review and approve this request. Once approved, you will receive an email confirmation and your date will be reserved.
             </div>
 
@@ -777,14 +771,14 @@ function CheckoutContent() {
                 variant="outline"
                 onClick={() => setCashModalOpen(false)}
                 disabled={isRequestingCash}
-                className="h-10 rounded-lg border-gray-200 text-gray-700 hover:bg-gray-50 text-xs font-medium px-4 cursor-pointer"
+                className="h-10 rounded-sm border-gray-200 text-gray-700 hover:bg-gray-50 text-xs font-medium px-4 cursor-pointer"
               >
                 Cancel
               </Button>
               <Button
                 onClick={handleRequestCash}
                 disabled={isRequestingCash}
-                className="h-10 rounded-lg bg-primary hover:bg-[#d62828] text-white font-medium text-xs px-4 cursor-pointer flex items-center gap-1.5"
+                className="h-10 rounded-sm bg-primary hover:bg-[#d62828] text-white font-medium text-xs px-4 cursor-pointer flex items-center gap-1.5"
               >
                 {isRequestingCash ? (
                   <>
@@ -799,6 +793,9 @@ function CheckoutContent() {
           </div>
         </div>
       )}
+      </main>
+
+      <DynamicFooter />
     </div>
   );
 }

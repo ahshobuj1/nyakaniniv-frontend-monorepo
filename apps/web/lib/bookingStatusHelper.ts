@@ -150,11 +150,102 @@ export function getBookingStatusBadge(
   }
 }
 
+/**
+ * Returns client-facing UI badge styling and friendly copy for booking manage portal.
+ */
+export function getClientBookingStatusBadge(
+  status?: string | null,
+  eventDate?: string | Date | null
+): StatusBadgeConfig {
+  const canonical = normalizeBookingStatus(status);
+
+  switch (canonical) {
+    case 'PENDING':
+      return {
+        label: 'Under Artist Review',
+        badgeClass: 'bg-amber-50 text-amber-800 border-amber-200/80',
+        dotClass: 'bg-amber-500',
+        description: 'Your booking request is being reviewed by the artist. You will receive an email once accepted with your quotation.',
+      };
+
+    case 'AWAITING_PAYMENT':
+      return {
+        label: 'Accepted • Payment Required',
+        badgeClass: 'bg-orange-50 text-orange-800 border-orange-200/80',
+        dotClass: 'bg-orange-500 animate-pulse',
+        description: 'Great news! The artist has accepted your request. Please complete payment to officially lock in your date.',
+      };
+
+    case 'CONFIRMED': {
+      const upcoming = isBookingUpcoming(canonical, eventDate);
+      return {
+        label: upcoming ? 'Confirmed (Upcoming)' : 'Confirmed & Secured',
+        badgeClass: 'bg-emerald-50 text-emerald-800 border-emerald-200/80',
+        dotClass: 'bg-emerald-500',
+        description: 'Your booking is locked! Payment is held safely in UpBeat Escrow and will only be released after the event ends.',
+      };
+    }
+
+    case 'IN_PROGRESS':
+      return {
+        label: 'Gig In Progress Today',
+        badgeClass: 'bg-purple-50 text-purple-800 border-purple-200/80',
+        dotClass: 'bg-purple-500 animate-pulse',
+        description: 'Your event performance is scheduled for today. Have a fantastic time!',
+      };
+
+    case 'COMPLETED':
+      return {
+        label: 'Event Completed',
+        badgeClass: 'bg-blue-50 text-blue-800 border-blue-200/80',
+        dotClass: 'bg-blue-500',
+        description: 'This booking has successfully concluded. Thank you for booking through UpBeat Africa!',
+      };
+
+    case 'CANCELLED':
+      return {
+        label: 'Booking Cancelled',
+        badgeClass: 'bg-gray-100 text-gray-700 border-gray-200',
+        dotClass: 'bg-gray-400',
+        description: 'This booking has been cancelled. Any refund due under our Escrow policy is handled automatically.',
+      };
+
+    case 'REJECTED':
+      return {
+        label: 'Declined by Artist',
+        badgeClass: 'bg-rose-50 text-rose-800 border-rose-200/80',
+        dotClass: 'bg-rose-500',
+        description: 'The artist was unavailable for this date and was unable to accept this booking request.',
+      };
+
+    case 'EXPIRED':
+      return {
+        label: 'Payment Window Expired',
+        badgeClass: 'bg-stone-100 text-stone-700 border-stone-200',
+        dotClass: 'bg-stone-400',
+        description: 'The 48-hour payment window for this quote has elapsed. Please submit a new booking request.',
+      };
+
+    default:
+      return {
+        label: canonical,
+        badgeClass: 'bg-gray-100 text-gray-700 border-gray-200',
+        dotClass: 'bg-gray-400',
+        description: 'Booking status: ' + canonical,
+      };
+  }
+}
+
 export interface ParsedEventDetails {
   startTime: string;
   duration: string;
   requirements: string;
   otherDetails: string[];
+  cancelledBy?: string;
+  cancellationReason?: string;
+  refundPercent?: number;
+  refundAmount?: number;
+  refundStatus?: string;
 }
 
 /**
@@ -177,6 +268,12 @@ export function parseBookingEventDetails(eventDetails?: any): ParsedEventDetails
 
     if (eventDetails.duration) result.duration = String(eventDetails.duration).trim();
     if (eventDetails.requirements) result.requirements = String(eventDetails.requirements).trim();
+
+    if (eventDetails.cancelledBy) result.cancelledBy = String(eventDetails.cancelledBy);
+    if (eventDetails.cancellationReason) result.cancellationReason = String(eventDetails.cancellationReason);
+    if (eventDetails.refundPercent !== undefined) result.refundPercent = Number(eventDetails.refundPercent);
+    if (eventDetails.refundAmount !== undefined) result.refundAmount = Number(eventDetails.refundAmount);
+    if (eventDetails.refundStatus) result.refundStatus = String(eventDetails.refundStatus);
 
     if (eventDetails.notes) result.otherDetails.push(String(eventDetails.notes).trim());
     return result;
@@ -210,4 +307,114 @@ export function parseBookingEventDetails(eventDetails?: any): ParsedEventDetails
   }
 
   return result;
+}
+
+export interface CancellationRefundPreview {
+  hoursUntilEvent: number | null;
+  daysUntilEvent: number | null;
+  formattedRemainingTime: string;
+  isPaid: boolean;
+  refundPercent: number;
+  refundAmount: number;
+  artistRetentionAmount: number;
+  policyTier: 'FULL_REFUND' | 'PARTIAL_REFUND' | 'NO_REFUND' | 'FREE_CANCELLATION';
+  tierLabel: string;
+  tierDescription: string;
+  badgeClass: string;
+}
+
+export function calculateCancellationPreview(
+  eventDate?: string | Date | null,
+  totalAmount: number = 0,
+  isPaid: boolean = false
+): CancellationRefundPreview {
+  if (!isPaid) {
+    return {
+      hoursUntilEvent: null,
+      daysUntilEvent: null,
+      formattedRemainingTime: 'Unpaid Booking',
+      isPaid: false,
+      refundPercent: 0,
+      refundAmount: 0,
+      artistRetentionAmount: 0,
+      policyTier: 'FREE_CANCELLATION',
+      tierLabel: 'Free Cancellation (Unpaid)',
+      tierDescription: 'This booking has not been paid yet. Cancelling now is free and will immediately release the reserved date with no charges.',
+      badgeClass: 'bg-emerald-50 text-emerald-800 border-emerald-200',
+    };
+  }
+
+  if (!eventDate) {
+    return {
+      hoursUntilEvent: null,
+      daysUntilEvent: null,
+      formattedRemainingTime: 'Date not set',
+      isPaid: true,
+      refundPercent: 100,
+      refundAmount: totalAmount,
+      artistRetentionAmount: 0,
+      policyTier: 'FULL_REFUND',
+      tierLabel: '100% Full Refund',
+      tierDescription: 'Event date is not set. 100% of your payment will be refunded to your original payment method.',
+      badgeClass: 'bg-emerald-50 text-emerald-800 border-emerald-200',
+    };
+  }
+
+  const eventTime = new Date(eventDate).getTime();
+  const now = Date.now();
+  const diffMs = eventTime - now;
+  const hoursUntilEvent = Math.max(0, Math.floor(diffMs / (1000 * 60 * 60)));
+  const daysUntilEvent = Math.floor(hoursUntilEvent / 24);
+  const remHours = hoursUntilEvent % 24;
+
+  const formattedRemainingTime =
+    daysUntilEvent > 0
+      ? `${daysUntilEvent} day${daysUntilEvent > 1 ? 's' : ''}${remHours > 0 ? ` ${remHours} hr${remHours > 1 ? 's' : ''}` : ''} remaining`
+      : `${hoursUntilEvent} hour${hoursUntilEvent > 1 ? 's' : ''} remaining`;
+
+  if (hoursUntilEvent >= 72) {
+    return {
+      hoursUntilEvent,
+      daysUntilEvent,
+      formattedRemainingTime,
+      isPaid: true,
+      refundPercent: 100,
+      refundAmount: totalAmount,
+      artistRetentionAmount: 0,
+      policyTier: 'FULL_REFUND',
+      tierLabel: '100% Full Refund Eligible',
+      tierDescription: `More than 72 hours remaining before event (${formattedRemainingTime}). You will receive a 100% full refund under the UpBeat Escrow Guarantee.`,
+      badgeClass: 'bg-emerald-50 text-emerald-800 border-emerald-200',
+    };
+  } else if (hoursUntilEvent >= 24) {
+    const refundAmount = Math.round((totalAmount * 0.5) * 100) / 100;
+    const retention = Math.round((totalAmount - refundAmount) * 100) / 100;
+    return {
+      hoursUntilEvent,
+      daysUntilEvent,
+      formattedRemainingTime,
+      isPaid: true,
+      refundPercent: 50,
+      refundAmount,
+      artistRetentionAmount: retention,
+      policyTier: 'PARTIAL_REFUND',
+      tierLabel: '50% Partial Refund Eligible',
+      tierDescription: `Between 24 and 72 hours remaining before event (${formattedRemainingTime}). 50% will be refunded to your original payment method, and 50% is retained to compensate the artist for reserving their calendar.`,
+      badgeClass: 'bg-amber-50 text-amber-800 border-amber-200',
+    };
+  } else {
+    return {
+      hoursUntilEvent,
+      daysUntilEvent,
+      formattedRemainingTime,
+      isPaid: true,
+      refundPercent: 0,
+      refundAmount: 0,
+      artistRetentionAmount: totalAmount,
+      policyTier: 'NO_REFUND',
+      tierLabel: 'Non-Refundable (0% Refund)',
+      tierDescription: `Less than 24 hours remaining before event (${formattedRemainingTime}). Due to late notice, 100% of the booking fee is retained to compensate the artist for late cancellation.`,
+      badgeClass: 'bg-rose-50 text-rose-800 border-rose-200',
+    };
+  }
 }

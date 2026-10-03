@@ -103,6 +103,21 @@ export const bookingApi = baseApi.injectEndpoints({
         method: 'GET',
       }),
     }),
+    getClientBooking: builder.query<BaseResponse<Booking>, string>({
+      query: (id) => ({
+        url: `/bookings/v1/client/${id}`,
+        method: 'GET',
+      }),
+      providesTags: (result, error, id) => [{ type: 'Booking', id }, 'Booking'],
+    }),
+    clientCancelBooking: builder.mutation<BaseResponse<{ success: boolean; message: string }>, { id: string; reason?: string }>({
+      query: ({ id, reason }) => ({
+        url: `/bookings/v1/client/${id}/cancel`,
+        method: 'POST',
+        body: { reason },
+      }),
+      invalidatesTags: (result, error, { id }) => [{ type: 'Booking', id }, 'Booking'],
+    }),
   }),
   overrideExisting: false,
 });
@@ -121,4 +136,6 @@ export const {
   useResendPaymentReminderMutation,
   useGetBookingPaymentLinkQuery,
   useLazyGetBookingPaymentLinkQuery,
+  useGetClientBookingQuery,
+  useClientCancelBookingMutation,
 } = bookingApi;

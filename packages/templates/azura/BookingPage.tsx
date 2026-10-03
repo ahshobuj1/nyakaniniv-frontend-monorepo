@@ -17,7 +17,6 @@ const bookingSchema = z.object({
   address: z.string().min(3, 'Event venue or city is required'),
   eventDate: z.string().min(1, 'Please select event date'),
   eventTime: z.string().optional(),
-  timezone: z.string().optional(),
   duration: z.string().optional(),
   eventType: z.string().min(1, 'Please select event category'),
   details: z.string().min(6, 'Please provide some event details or music requests'),
@@ -69,7 +68,6 @@ export default function BookingPage({ content }: any) {
       address: '',
       eventDate: '',
       eventTime: '20:00',
-      timezone: 'EAT',
       duration: '4 Hours (Standard)',
       eventType: '',
       details: '',
@@ -90,21 +88,17 @@ export default function BookingPage({ content }: any) {
     }
     try {
       const timePart = data.eventTime ? `${data.eventTime}:00` : '00:00:00';
-      const tzOffsets: Record<string, string> = {
-        'EAT': '+03:00',
-        'Africa/Nairobi': '+03:00',
-        'WAT': '+01:00',
-        'Africa/Lagos': '+01:00',
-        'SAST': '+02:00',
-        'Africa/Johannesburg': '+02:00',
-        'GMT': 'Z',
-        'UTC': 'Z'
-      };
-      const offset = tzOffsets[data.timezone || ''] || '+03:00';
-      const formattedDate = `${data.eventDate}T${timePart}${offset}`;
+      // Use local timezone to convert to UTC
+      const localDateTime = new Date(`${data.eventDate}T${timePart}`);
+      const formattedDate = localDateTime.toISOString();
+
+      const clientTz = typeof Intl !== 'undefined' ? Intl.DateTimeFormat().resolvedOptions().timeZone : '';
+      const clientFormattedTime = data.eventTime
+        ? localDateTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
+        : '';
 
       const enrichedDetails = [
-        data.eventTime ? `Start Time: ${data.eventTime} (${data.timezone || 'EAT'})` : null,
+        data.eventTime ? `Client Local Time: ${clientFormattedTime}${clientTz ? ` (${clientTz})` : ''}` : null,
         data.duration ? `Duration: ${data.duration}` : null,
         `Requirements: ${data.details}`,
       ]
@@ -118,9 +112,9 @@ export default function BookingPage({ content }: any) {
         clientPhone: data.clientPhone,
         address: data.address,
         eventDate: formattedDate,
+        eventTimezone: clientTz || undefined,
         eventType: data.eventType,
         eventDetails: enrichedDetails,
-        eventTimezone: data.timezone || 'Africa/Nairobi',
       }).unwrap();
 
       if (res?.data?.verificationToken) {
@@ -165,12 +159,12 @@ export default function BookingPage({ content }: any) {
           </p>
         </div>
 
-        {/* Form Card (Sleek, Tailored, Comfortable, Fully Responsive) */}
-        <div className="bg-white p-4 sm:p-7 md:p-8 rounded-xl border border-[#e5e5e5] shadow-xs">
+        {/* Form Card (Sleek, Tailored, Professional) */}
+        <div className="bg-white p-4 sm:p-7 md:p-8 rounded-sm border border-[#e5e5e5] shadow-xs">
           
           {submitStatus && (
             <div
-              className={`mb-5 p-3.5 rounded-lg flex items-start gap-2.5 text-xs sm:text-sm border ${
+              className={`mb-5 p-3.5 rounded-sm flex items-start gap-2.5 text-xs sm:text-sm border ${
                 submitStatus.type === 'success'
                   ? 'bg-emerald-50 text-emerald-950 border-emerald-200'
                   : 'bg-red-50 text-red-950 border-red-200'
@@ -202,7 +196,7 @@ export default function BookingPage({ content }: any) {
                   {...register('eventType')}
                   className={`w-full bg-white border ${
                     errors.eventType ? '!border-red-500' : 'border-[#d4d4d4]'
-                  } rounded-lg pl-3 pr-9 h-10 text-xs sm:text-sm ${
+                  } rounded-sm pl-3 pr-9 h-10 text-xs sm:text-sm ${
                     selectedEventType ? 'text-[#111111] font-medium' : 'text-[#999999]'
                   } outline-none focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)]/20 transition-all cursor-pointer appearance-none`}
                 >
@@ -246,7 +240,7 @@ export default function BookingPage({ content }: any) {
                   minDate={new Date()}
                   buttonClassName={`w-full bg-white border ${
                     errors.eventDate ? '!border-red-500' : '!border-[#d4d4d4]'
-                  } !rounded-lg !px-3 !h-10 text-xs sm:text-sm text-left text-[#111111] hover:!border-[#999999] focus:!border-[var(--primary)] transition-all`}
+                  } !rounded-sm !px-3 !h-10 text-xs sm:text-sm text-left text-[#111111] hover:!border-[#999999] focus:!border-[var(--primary)] transition-all`}
                 />
                 {errors.eventDate && (
                   <span className="text-red-500 text-xs block">{errors.eventDate.message}</span>
@@ -255,29 +249,14 @@ export default function BookingPage({ content }: any) {
 
               <div className="space-y-1">
                 <label className="text-xs font-semibold text-[#111111] uppercase tracking-wide block">
-                  Start Time & Timezone
+                  Start Time
                 </label>
                 <div className="flex gap-2">
                   <input
                     type="time"
                     {...register('eventTime')}
-                    className="flex-1 bg-white border border-[#d4d4d4] rounded-lg px-3 h-10 text-xs sm:text-sm text-[#111111] outline-none focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)]/20 transition-all cursor-pointer"
+                    className="w-full bg-white border border-[#d4d4d4] rounded-sm px-3 h-10 text-xs sm:text-sm text-[#111111] outline-none focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)]/20 transition-all cursor-pointer"
                   />
-                  <div className="relative">
-                    <select
-                      {...register('timezone')}
-                      className="w-24 sm:w-28 bg-white border border-[#d4d4d4] rounded-lg pl-2.5 pr-7 h-10 text-xs sm:text-sm font-medium text-[#111111] outline-none focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)]/20 transition-all cursor-pointer appearance-none"
-                    >
-                      <option value="Africa/Nairobi">EAT</option>
-                      <option value="Africa/Lagos">WAT</option>
-                      <option value="Africa/Johannesburg">SAST</option>
-                      <option value="GMT">GMT</option>
-                      <option value="UTC">UTC</option>
-                    </select>
-                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2 text-neutral-400">
-                      <ChevronDown className="w-3.5 h-3.5 stroke-[2]" />
-                    </div>
-                  </div>
                 </div>
               </div>
             </div>
@@ -293,7 +272,7 @@ export default function BookingPage({ content }: any) {
                 placeholder="Search hotel, club, hall, or street address..."
                 inputClassName={`w-full bg-white border ${
                   errors.address ? '!border-red-500' : 'border-[#d4d4d4]'
-                } rounded-lg px-3 h-10 text-xs sm:text-sm text-[#111111] placeholder:text-[#999999] outline-none focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)]/20 transition-all`}
+                } rounded-sm px-3 h-10 text-xs sm:text-sm text-[#111111] placeholder:text-[#999999] outline-none focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)]/20 transition-all`}
               />
               {errors.address && (
                 <span className="text-red-500 text-xs block">{errors.address.message}</span>
@@ -313,7 +292,7 @@ export default function BookingPage({ content }: any) {
                       key={dur}
                       type="button"
                       onClick={() => setValue('duration', dur)}
-                      className={`h-8 sm:h-8.5 px-3 rounded-lg text-xs font-medium border text-center transition-all cursor-pointer ${
+                      className={`h-8 sm:h-8.5 px-3 rounded-sm text-xs font-medium border text-center transition-all cursor-pointer ${
                         isSelected
                           ? 'border-[var(--primary)] bg-[var(--primary)] text-white shadow-xs'
                           : 'border-[#d8d8d8] bg-[#fafafa] text-[#444444] hover:border-[#999999] hover:bg-[#f0f0f0]'
@@ -337,7 +316,7 @@ export default function BookingPage({ content }: any) {
                 {...register('details')}
                 className={`w-full bg-white border ${
                   errors.details ? 'border-red-500' : 'border-[#d4d4d4]'
-                } rounded-lg p-2.5 sm:p-3 text-xs sm:text-sm text-[#111111] placeholder:text-[#999999] outline-none focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)]/20 transition-all resize-none leading-relaxed`}
+                } rounded-sm p-2.5 sm:p-3 text-xs sm:text-sm text-[#111111] placeholder:text-[#999999] outline-none focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)]/20 transition-all resize-none leading-relaxed`}
               />
               {errors.details && (
                 <span className="text-red-500 text-xs block">{errors.details.message}</span>
@@ -361,7 +340,7 @@ export default function BookingPage({ content }: any) {
                     {...register('fullName')}
                     className={`w-full bg-white border ${
                       errors.fullName ? 'border-red-500' : 'border-[#d4d4d4]'
-                    } rounded-lg px-3 h-10 text-xs sm:text-sm text-[#111111] placeholder:text-[#999999] outline-none focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)]/20 transition-all`}
+                    } rounded-sm px-3 h-10 text-xs sm:text-sm text-[#111111] placeholder:text-[#999999] outline-none focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)]/20 transition-all`}
                   />
                   {errors.fullName && (
                     <span className="text-red-500 text-xs block">{errors.fullName.message}</span>
@@ -378,7 +357,7 @@ export default function BookingPage({ content }: any) {
                     {...register('clientPhone')}
                     className={`w-full bg-white border ${
                       errors.clientPhone ? 'border-red-500' : 'border-[#d4d4d4]'
-                    } rounded-lg px-3 h-10 text-xs sm:text-sm text-[#111111] placeholder:text-[#999999] outline-none focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)]/20 transition-all`}
+                    } rounded-sm px-3 h-10 text-xs sm:text-sm text-[#111111] placeholder:text-[#999999] outline-none focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)]/20 transition-all`}
                   />
                   {errors.clientPhone && (
                     <span className="text-red-500 text-xs block">{errors.clientPhone.message}</span>
@@ -395,7 +374,7 @@ export default function BookingPage({ content }: any) {
                     {...register('email')}
                     className={`w-full bg-white border ${
                       errors.email ? 'border-red-500' : 'border-[#d4d4d4]'
-                    } rounded-lg px-3 h-10 text-xs sm:text-sm text-[#111111] placeholder:text-[#999999] outline-none focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)]/20 transition-all`}
+                    } rounded-sm px-3 h-10 text-xs sm:text-sm text-[#111111] placeholder:text-[#999999] outline-none focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)]/20 transition-all`}
                   />
                   {errors.email && (
                     <span className="text-red-500 text-xs block">{errors.email.message}</span>
@@ -414,7 +393,7 @@ export default function BookingPage({ content }: any) {
             <button
               type="submit"
               disabled={isSubmitting || isInitiating}
-              className="w-full h-10.5 sm:h-11 bg-[var(--primary)] hover:opacity-95 active:scale-[0.99] text-white font-semibold text-sm rounded-lg transition-all shadow-xs flex items-center justify-center gap-2 disabled:opacity-60 cursor-pointer"
+              className="w-full h-10.5 sm:h-11 bg-[var(--primary)] hover:opacity-95 active:scale-[0.99] text-white font-semibold text-sm rounded-sm transition-all shadow-xs flex items-center justify-center gap-2 disabled:opacity-60 cursor-pointer"
             >
               {isSubmitting || isInitiating ? (
                 <>

@@ -17,7 +17,6 @@ const bookingSchema = z.object({
   address: z.string().min(3, 'Event address is required'),
   eventDate: z.string().min(1, 'Event date is required'),
   eventTime: z.string().optional(),
-  timezone: z.string().optional(),
   duration: z.string().optional(),
   eventType: z.string().min(1, 'Event type is required'),
   details: z.string().min(10, 'Please provide some event details'),
@@ -65,7 +64,6 @@ export default function BookingPage({content}: any) {
       address: '',
       eventDate: '',
       eventTime: '',
-      timezone: 'EAT',
       duration: '4 Hours',
       eventType: '',
       details: '',
@@ -84,30 +82,17 @@ export default function BookingPage({content}: any) {
     }
     try {
       const timePart = data.eventTime ? `${data.eventTime}:00` : '00:00:00';
-      // Map known timezone abbreviations to UTC offsets for safe ISO string construction.
-      // Using new Date().toISOString() without an explicit offset would parse the string as
-      // local browser time and shift the event by the user's UTC offset — e.g. a client in
-      // Bangladesh (UTC+6) booking a Nairobi event (EAT, UTC+3) would shift the time by 3h.
-      const tzOffsets: Record<string, string> = {
-        'EAT': '+03:00',
-        'Africa/Nairobi': '+03:00',
-        'WAT': '+01:00',
-        'Africa/Lagos': '+01:00',
-        'SAST': '+02:00',
-        'Africa/Johannesburg': '+02:00',
-        'Africa/Accra': '+00:00',
-        'Africa/Dar_es_Salaam': '+03:00',
-        'Africa/Kampala': '+03:00',
-        'Africa/Kigali': '+02:00',
-        'GMT': 'Z',
-        'UTC': 'Z',
-      };
-      const offset = tzOffsets[data.timezone || ''] || '+03:00';
-      const formattedDate = `${data.eventDate}T${timePart}${offset}`;
+      // Use local timezone to convert to UTC natively
+      const localDateTime = new Date(`${data.eventDate}T${timePart}`);
+      const formattedDate = localDateTime.toISOString();
       
+      const clientTz = typeof Intl !== 'undefined' ? Intl.DateTimeFormat().resolvedOptions().timeZone : '';
+      const clientFormattedTime = data.eventTime
+        ? localDateTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
+        : '';
 
       const enrichedDetails = [
-        data.eventTime ? `Start Time: ${data.eventTime} (${data.timezone})` : null,
+        data.eventTime ? `Client Local Time: ${clientFormattedTime}${clientTz ? ` (${clientTz})` : ''}` : null,
         data.duration ? `Duration: ${data.duration}` : null,
         `Requirements: ${data.details}`,
       ].filter(Boolean).join('\n');
@@ -119,9 +104,9 @@ export default function BookingPage({content}: any) {
         clientPhone: data.clientPhone,
         address: data.address,
         eventDate: formattedDate,
+        eventTimezone: clientTz || undefined,
         eventType: data.eventType,
         eventDetails: enrichedDetails,
-        eventTimezone: data.timezone,
       }).unwrap();
       
       if (res?.data?.verificationToken) {
@@ -227,7 +212,7 @@ export default function BookingPage({content}: any) {
             initial={{opacity: 0, y: 30}}
             animate={{opacity: 1, y: 0}}
             transition={{duration: 0.6, delay: 0.2}}
-            className="bg-white p-[32px] md:p-[48px] rounded-[16px] shadow-[0_4px_24px_rgba(0,0,0,0.04)]">
+            className="bg-white p-[32px] md:p-[48px] rounded-sm shadow-[0_4px_24px_rgba(0,0,0,0.04)] border border-[#e5e5e5]">
             <form
               onSubmit={handleSubmit(onSubmit)}
               className="flex flex-col gap-[20px]"
@@ -237,7 +222,7 @@ export default function BookingPage({content}: any) {
                 <motion.div 
                   initial={{ opacity: 0, y: -10 }} 
                   animate={{ opacity: 1, y: 0 }}
-                  className={`text-[14px] font-medium leading-relaxed p-[16px] rounded-[12px] flex items-start gap-3 ${
+                  className={`text-[14px] font-medium leading-relaxed p-[16px] rounded-sm flex items-start gap-3 ${
                     submitStatus.type === 'success' 
                       ? 'bg-emerald-50 text-emerald-900 border border-emerald-200' 
                       : 'bg-red-50 text-red-900 border border-red-200'
@@ -276,7 +261,7 @@ export default function BookingPage({content}: any) {
                     {...register('fullName')}
                     className={`w-full bg-[#fafafa] border ${
                       errors.fullName ? 'border-red-500' : 'border-[#e5e5e5]'
-                    } rounded-[8px] px-[16px] py-[12px] text-[14px] text-[#111111] placeholder-[#a3a3a3] outline-none focus:border-[var(--primary)] transition-colors`}
+                    } rounded-sm px-[16px] py-[12px] text-[14px] text-[#111111] placeholder-[#a3a3a3] outline-none focus:border-[var(--primary)] transition-colors`}
                   />
                   {errors.fullName && (
                     <span className="text-red-500 text-[12px]">
@@ -295,7 +280,7 @@ export default function BookingPage({content}: any) {
                     {...register('email')}
                     className={`w-full bg-[#fafafa] border ${
                       errors.email ? 'border-red-500' : 'border-[#e5e5e5]'
-                    } rounded-[8px] px-[16px] py-[12px] text-[14px] text-[#111111] placeholder-[#a3a3a3] outline-none focus:border-[var(--primary)] transition-colors`}
+                    } rounded-sm px-[16px] py-[12px] text-[14px] text-[#111111] placeholder-[#a3a3a3] outline-none focus:border-[var(--primary)] transition-colors`}
                   />
                   {errors.email && (
                     <span className="text-red-500 text-[12px]">
@@ -317,7 +302,7 @@ export default function BookingPage({content}: any) {
                     {...register('clientPhone')}
                     className={`w-full bg-[#fafafa] border ${
                       errors.clientPhone ? 'border-red-500' : 'border-[#e5e5e5]'
-                    } rounded-[8px] px-[16px] py-[12px] text-[14px] text-[#111111] placeholder-[#a3a3a3] outline-none focus:border-[var(--primary)] transition-colors`}
+                    } rounded-sm px-[16px] py-[12px] text-[14px] text-[#111111] placeholder-[#a3a3a3] outline-none focus:border-[var(--primary)] transition-colors`}
                   />
                   {errors.clientPhone && (
                     <span className="text-red-500 text-[12px]">
@@ -333,11 +318,10 @@ export default function BookingPage({content}: any) {
                   <AddressAutocomplete
                     value={currentAddress}
                     onChange={(val) => setValue('address', val, { shouldValidate: true })}
-                    onSelectTimezone={(tz) => setValue('timezone', tz)}
                     placeholder="Search venue or address..."
                     inputClassName={`w-full bg-[#fafafa] border ${
                       errors.address ? '!border-red-500' : 'border-[#e5e5e5]'
-                    } rounded-[8px] px-[16px] py-[12px] h-[46px] text-[14px] text-[#111111] placeholder-[#a3a3a3] outline-none focus:border-[var(--primary)]`}
+                    } rounded-sm px-[16px] py-[12px] h-[46px] text-[14px] text-[#111111] placeholder-[#a3a3a3] outline-none focus:border-[var(--primary)]`}
                   />
                   {errors.address && (
                     <span className="text-red-500 text-[12px]">
@@ -369,7 +353,7 @@ export default function BookingPage({content}: any) {
                     minDate={new Date()}
                     buttonClassName={`w-full bg-[#fafafa] border ${
                       errors.eventDate ? '!border-red-500' : 'border-[#e5e5e5]'
-                    } rounded-[8px] px-[16px] py-[12px] h-[46px] text-[14px] text-left`}
+                    } rounded-sm px-[16px] py-[12px] h-[46px] text-[14px] text-left`}
                   />
                   {errors.eventDate && (
                     <span className="text-red-500 text-[12px]">
@@ -387,7 +371,7 @@ export default function BookingPage({content}: any) {
                       {...register('eventType')}
                       className={`w-full bg-[#fafafa] border ${
                         errors.eventType ? 'border-red-500' : 'border-[#e5e5e5]'
-                      } rounded-[8px] px-[16px] py-[12px] text-[14px] text-[#111111] outline-none focus:border-[var(--primary)] transition-colors appearance-none`}>
+                      } rounded-sm px-[16px] py-[12px] text-[14px] text-[#111111] outline-none focus:border-[var(--primary)] transition-colors appearance-none`}>
                       <option value="" disabled hidden>
                         Select event type
                       </option>
@@ -421,8 +405,8 @@ export default function BookingPage({content}: any) {
                 </div>
               </div>
 
-              {/* Row 4: Event Start Time & Timezone & Duration */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-[20px]">
+              {/* Row 4: Event Start Time & Duration */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-[20px]">
                 <div className="flex flex-col gap-[6px]">
                   <label className="text-[13px] font-bold text-[#111111]">
                     Start Time
@@ -430,23 +414,8 @@ export default function BookingPage({content}: any) {
                   <input
                     type="time"
                     {...register('eventTime')}
-                    className="w-full bg-[#fafafa] border border-[#e5e5e5] rounded-[8px] px-[16px] py-[12px] h-[46px] text-[14px] text-[#111111] outline-none focus:border-[var(--primary)] transition-colors"
+                    className="w-full bg-[#fafafa] border border-[#e5e5e5] rounded-sm px-[16px] py-[12px] h-[46px] text-[14px] text-[#111111] outline-none focus:border-[var(--primary)] transition-colors"
                   />
-                </div>
-
-                <div className="flex flex-col gap-[6px]">
-                  <label className="text-[13px] font-bold text-[#111111]">
-                    Timezone
-                  </label>
-                  <select
-                    {...register('timezone')}
-                    className="w-full bg-[#fafafa] border border-[#e5e5e5] rounded-[8px] px-[16px] py-[12px] h-[46px] text-[14px] text-[#111111] outline-none focus:border-[var(--primary)] transition-colors cursor-pointer"
-                  >
-                    <option value="WAT">WAT (Nigeria/West Africa)</option>
-                    <option value="EAT">EAT (Kenya/East Africa)</option>
-                    <option value="GMT">GMT (Ghana)</option>
-                    <option value="SAST">SAST (South Africa)</option>
-                  </select>
                 </div>
 
                 <div className="flex flex-col gap-[6px]">
@@ -455,7 +424,7 @@ export default function BookingPage({content}: any) {
                   </label>
                   <select
                     {...register('duration')}
-                    className="w-full bg-[#fafafa] border border-[#e5e5e5] rounded-[8px] px-[16px] py-[12px] h-[46px] text-[14px] text-[#111111] outline-none focus:border-[var(--primary)] transition-colors cursor-pointer"
+                    className="w-full bg-[#fafafa] border border-[#e5e5e5] rounded-sm px-[16px] py-[12px] h-[46px] text-[14px] text-[#111111] outline-none focus:border-[var(--primary)] transition-colors cursor-pointer"
                   >
                     <option value="1 Hour">1 Hour</option>
                     <option value="2 Hours">2 Hours</option>
@@ -480,7 +449,7 @@ export default function BookingPage({content}: any) {
                   {...register('details')}
                   className={`w-full bg-[#fafafa] border ${
                     errors.details ? 'border-red-500' : 'border-[#e5e5e5]'
-                  } rounded-[8px] px-[16px] py-[12px] text-[14px] text-[#111111] placeholder-[#a3a3a3] outline-none focus:border-[var(--primary)] transition-colors resize-none`}></textarea>
+                  } rounded-sm px-[16px] py-[12px] text-[14px] text-[#111111] placeholder-[#a3a3a3] outline-none focus:border-[var(--primary)] transition-colors resize-none`}></textarea>
                 {errors.details && (
                   <span className="text-red-500 text-[12px]">
                     {errors.details.message}
@@ -494,7 +463,7 @@ export default function BookingPage({content}: any) {
                 disabled={isSubmitting || isInitiating}
                 whileHover={{scale: isSubmitting || isInitiating ? 1 : 1.01}}
                 whileTap={{scale: isSubmitting || isInitiating ? 1 : 0.99}}
-                className="w-full bg-[var(--primary)] hover:opacity-90 text-white py-[15px] rounded-[10px] font-bold text-[16px] transition-all mt-[8px] flex justify-center items-center gap-2 shadow-lg shadow-[var(--primary)]/20 disabled:opacity-70 cursor-pointer">
+                className="w-full bg-[var(--primary)] hover:opacity-90 text-white py-[15px] rounded-sm font-bold text-[16px] transition-all mt-[8px] flex justify-center items-center gap-2 shadow-lg shadow-[var(--primary)]/20 disabled:opacity-70 cursor-pointer">
                 {isSubmitting || isInitiating ? (
                   <>
                     <svg
