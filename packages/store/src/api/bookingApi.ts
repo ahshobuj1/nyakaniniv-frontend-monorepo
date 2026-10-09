@@ -1,4 +1,4 @@
-import { baseApi } from './baseApi';
+import {baseApi} from './baseApi';
 import {
   Booking,
   BaseResponse,
@@ -11,14 +11,20 @@ import {
 
 export const bookingApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
-    initiateBooking: builder.mutation<BaseResponse<InitiateBookingResponse>, CreateBookingRequest>({
+    initiateBooking: builder.mutation<
+      BaseResponse<InitiateBookingResponse>,
+      CreateBookingRequest
+    >({
       query: (body) => ({
         url: '/bookings/v1/initiate',
         method: 'POST',
         body,
       }),
     }),
-    verifyBookingOtp: builder.mutation<BaseResponse<Booking>, VerifyBookingOtpRequest>({
+    verifyBookingOtp: builder.mutation<
+      BaseResponse<Booking>,
+      VerifyBookingOtpRequest
+    >({
       query: (body) => ({
         url: '/bookings/v1/verify-otp',
         method: 'POST',
@@ -26,14 +32,20 @@ export const bookingApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ['Booking'],
     }),
-    resendBookingOtp: builder.mutation<BaseResponse<InitiateBookingResponse>, ResendBookingOtpRequest>({
+    resendBookingOtp: builder.mutation<
+      BaseResponse<InitiateBookingResponse>,
+      ResendBookingOtpRequest
+    >({
       query: (body) => ({
         url: '/bookings/v1/resend-otp',
         method: 'POST',
         body,
       }),
     }),
-    createBooking: builder.mutation<BaseResponse<Booking>, CreateBookingRequest>({
+    createBooking: builder.mutation<
+      BaseResponse<Booking>,
+      CreateBookingRequest
+    >({
       query: (body) => ({
         url: '/bookings/v1/',
         method: 'POST',
@@ -41,10 +53,14 @@ export const bookingApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ['Booking'],
     }),
-    getMyBookings: builder.query<BaseResponse<Booking[]>, void>({
-      query: () => ({
+    getMyBookings: builder.query<
+      BaseResponse<Booking[]> & {meta?: any},
+      Record<string, any> | void
+    >({
+      query: (params) => ({
         url: '/bookings/v1/my-bookings',
         method: 'GET',
+        params: params ? {...params} : undefined,
       }),
       providesTags: ['Booking'],
     }),
@@ -53,11 +69,14 @@ export const bookingApi = baseApi.injectEndpoints({
         url: `/bookings/v1/${id}`,
         method: 'GET',
       }),
-      providesTags: (result, error, id) => [{ type: 'Booking', id }, 'Booking'],
+      providesTags: (result, error, id) => [{type: 'Booking', id}, 'Booking'],
     }),
-    updateBookingStatus: builder.mutation<BaseResponse<{ checkoutUrl?: string }>, UpdateBookingStatusRequest>({
+    updateBookingStatus: builder.mutation<
+      BaseResponse<{checkoutUrl?: string}>,
+      UpdateBookingStatusRequest
+    >({
       query: (body) => {
-        const { id, ...rest } = body;
+        const {id, ...rest} = body;
         return {
           url: `/bookings/v1/${id}/status`,
           method: 'PATCH',
@@ -71,34 +90,55 @@ export const bookingApi = baseApi.injectEndpoints({
         url: `/bookings/v1/${id}/request-cash`,
         method: 'PATCH',
       }),
-      invalidatesTags: (result, error, id) => [{ type: 'Booking', id }, 'Booking'],
+      invalidatesTags: (result, error, id) => [
+        {type: 'Booking', id},
+        'Booking',
+      ],
     }),
-    handleCashRequestDecision: builder.mutation<BaseResponse<Booking>, { id: string; decision: 'approve' | 'reject' }>({
-      query: ({ id, decision }) => ({
+    handleCashRequestDecision: builder.mutation<
+      BaseResponse<Booking>,
+      {id: string; decision: 'approve' | 'reject'}
+    >({
+      query: ({id, decision}) => ({
         url: `/bookings/v1/${id}/cash-decision`,
         method: 'POST',
-        body: { decision },
+        body: {decision},
       }),
-      invalidatesTags: (result, error, { id }) => [{ type: 'Booking', id }, 'Booking'],
+      invalidatesTags: (result, error, {id}) => [
+        {type: 'Booking', id},
+        'Booking',
+      ],
     }),
     markCashAsPaid: builder.mutation<BaseResponse<Booking>, string>({
       query: (id) => ({
         url: `/bookings/v1/${id}/mark-cash-paid`,
         method: 'POST',
       }),
-      invalidatesTags: (result, error, id) => [{ type: 'Booking', id }, 'Booking'],
+      invalidatesTags: (result, error, id) => [
+        {type: 'Booking', id},
+        'Booking',
+      ],
     }),
-    resendPaymentReminder: builder.mutation<BaseResponse<{ success: boolean; message: string }>, string>({
+    resendPaymentReminder: builder.mutation<
+      BaseResponse<{success: boolean; message: string}>,
+      string
+    >({
       query: (id) => ({
         url: `/bookings/v1/${id}/remind-payment`,
         method: 'POST',
       }),
     }),
     getBookingPaymentLink: builder.query<
-      BaseResponse<{ checkoutUrl: string; reference: string; gateway: string; amount: number; currency: string }>,
-      { id: string; gateway?: string }
+      BaseResponse<{
+        checkoutUrl: string;
+        reference: string;
+        gateway: string;
+        amount: number;
+        currency: string;
+      }>,
+      {id: string; gateway?: string}
     >({
-      query: ({ id, gateway }) => ({
+      query: ({id, gateway}) => ({
         url: `/bookings/v1/${id}/payment-link${gateway ? `?gateway=${gateway}` : ''}`,
         method: 'GET',
       }),
@@ -108,15 +148,21 @@ export const bookingApi = baseApi.injectEndpoints({
         url: `/bookings/v1/client/${id}`,
         method: 'GET',
       }),
-      providesTags: (result, error, id) => [{ type: 'Booking', id }, 'Booking'],
+      providesTags: (result, error, id) => [{type: 'Booking', id}, 'Booking'],
     }),
-    clientCancelBooking: builder.mutation<BaseResponse<{ success: boolean; message: string }>, { id: string; reason?: string }>({
-      query: ({ id, reason }) => ({
+    clientCancelBooking: builder.mutation<
+      BaseResponse<{success: boolean; message: string}>,
+      {id: string; reason?: string}
+    >({
+      query: ({id, reason}) => ({
         url: `/bookings/v1/client/${id}/cancel`,
         method: 'POST',
-        body: { reason },
+        body: {reason},
       }),
-      invalidatesTags: (result, error, { id }) => [{ type: 'Booking', id }, 'Booking'],
+      invalidatesTags: (result, error, {id}) => [
+        {type: 'Booking', id},
+        'Booking',
+      ],
     }),
   }),
   overrideExisting: false,

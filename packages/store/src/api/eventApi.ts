@@ -3,11 +3,19 @@ import { Event, BaseResponse, CreateEventRequest, UpdateEventRequest } from '../
 
 export const eventApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
-    getTenantEvents: builder.query<BaseResponse<Event[]>, string>({
-      query: (tenantId) => ({
-        url: `/events/v1/tenant/${tenantId}`,
-        method: 'GET',
-      }),
+    getTenantEvents: builder.query<
+      BaseResponse<Event[]> & { meta?: any },
+      { tenantId: string; params?: Record<string, any> } | string
+    >({
+      query: (arg) => {
+        const tenantId = typeof arg === 'string' ? arg : arg.tenantId;
+        const params = typeof arg === 'string' ? undefined : arg.params;
+        return {
+          url: `/events/v1/tenant/${tenantId}`,
+          method: 'GET',
+          params: params ? { ...params } : undefined,
+        };
+      },
       providesTags: ['Event'],
     }),
     getEventById: builder.query<BaseResponse<Event>, string>({

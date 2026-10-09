@@ -3,11 +3,19 @@ import { MixTape, BaseResponse, CreateMixTapeRequest, UpdateMixTapeRequest, Reor
 
 export const mixTapeApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
-    getTenantMixTapes: builder.query<BaseResponse<MixTape[]>, string>({
-      query: (tenantId) => ({
-        url: `/mixtapes/v1/tenant/${tenantId}`,
-        method: 'GET',
-      }),
+    getTenantMixTapes: builder.query<
+      BaseResponse<MixTape[]> & { meta?: any },
+      { tenantId: string; params?: Record<string, any> } | string
+    >({
+      query: (arg) => {
+        const tenantId = typeof arg === 'string' ? arg : arg.tenantId;
+        const params = typeof arg === 'string' ? undefined : arg.params;
+        return {
+          url: `/mixtapes/v1/tenant/${tenantId}`,
+          method: 'GET',
+          params: params ? { ...params } : undefined,
+        };
+      },
       providesTags: ['MixTape'],
     }),
     createMixTape: builder.mutation<BaseResponse<MixTape>, CreateMixTapeRequest>({

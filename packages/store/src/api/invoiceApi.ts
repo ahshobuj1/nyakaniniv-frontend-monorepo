@@ -5,10 +5,14 @@ export type UnifiedInvoice = Invoice;
 
 export const invoiceApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
-    getMyInvoices: builder.query<PaginatedResponse<UnifiedInvoice>, void>({
-      query: () => ({
+    getMyInvoices: builder.query<
+      PaginatedResponse<UnifiedInvoice> & {meta?: any},
+      Record<string, any> | void
+    >({
+      query: (params) => ({
         url: '/invoices/v1/my-invoices',
         method: 'GET',
+        params: params ? {...params} : undefined,
       }),
       providesTags: ['Invoice'],
     }),

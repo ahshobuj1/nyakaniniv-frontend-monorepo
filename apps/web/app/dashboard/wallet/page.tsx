@@ -1,8 +1,8 @@
 /* eslint-disable */
 'use client';
 
-import React, { useState } from 'react';
-import { Button } from '@repo/ui';
+import React, { useState, useMemo } from 'react';
+import { Button, PaginationControls } from '@repo/ui';
 import { useGetMyWalletQuery, useGetCurrentProfileQuery } from '@repo/store';
 import {
   Wallet,
@@ -124,6 +124,23 @@ export default function WalletDashboardPage() {
   const [withdrawModalOpen, setWithdrawModalOpen] = useState(false);
   const [connectModalOpen, setConnectModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'ledgers' | 'withdrawals'>('ledgers');
+
+  /* ─── Pagination states ───────────────────────────────────────────── */
+  const [ledgerPagination, setLedgerPagination] = useState({ pageIndex: 0, pageSize: 10 });
+  const totalLedgerRows = ledgers.length;
+  const totalLedgerPages = Math.max(1, Math.ceil(totalLedgerRows / ledgerPagination.pageSize));
+  const paginatedLedgers = useMemo(() => {
+    const start = ledgerPagination.pageIndex * ledgerPagination.pageSize;
+    return ledgers.slice(start, start + ledgerPagination.pageSize);
+  }, [ledgers, ledgerPagination.pageIndex, ledgerPagination.pageSize]);
+
+  const [payoutPagination, setPayoutPagination] = useState({ pageIndex: 0, pageSize: 10 });
+  const totalPayoutRows = payoutRequests.length;
+  const totalPayoutPages = Math.max(1, Math.ceil(totalPayoutRows / payoutPagination.pageSize));
+  const paginatedPayouts = useMemo(() => {
+    const start = payoutPagination.pageIndex * payoutPagination.pageSize;
+    return payoutRequests.slice(start, start + payoutPagination.pageSize);
+  }, [payoutRequests, payoutPagination.pageIndex, payoutPagination.pageSize]);
 
   const balancesByCurrency = walletData?.balancesByCurrency || {};
   const currency = wallet?.currency || 'KES';
@@ -440,8 +457,8 @@ export default function WalletDashboardPage() {
                 <tbody className="divide-y divide-gray-50">
                   {isWalletLoading ? (
                     <TableSkeleton rows={5} />
-                  ) : ledgers.length > 0 ? (
-                    ledgers.map((l: any, idx: number) => {
+                  ) : paginatedLedgers.length > 0 ? (
+                    paginatedLedgers.map((l: any, idx: number) => {
                       const isCredit = CREDIT_TYPES.has(l.type);
                       const isDebit = DEBIT_TYPES.has(l.type);
                       const info = LEDGER_LABELS[l.type] || { label: l.type.replace(/_/g, ' '), color: 'slate' };
@@ -501,6 +518,18 @@ export default function WalletDashboardPage() {
                 </tbody>
               </table>
             </div>
+
+            {totalLedgerRows > 10 && (
+              <div className="border-t border-gray-100 bg-white">
+                <PaginationControls
+                  pagination={ledgerPagination}
+                  onPaginationChange={setLedgerPagination}
+                  totalPages={totalLedgerPages}
+                  totalRows={totalLedgerRows}
+                  pageSizeOptions={[10, 20, 30, 50]}
+                />
+              </div>
+            )}
           </div>
         ) : (
           /* ══════════════════════════════════════════════════════════════
@@ -529,8 +558,8 @@ export default function WalletDashboardPage() {
                 <tbody className="divide-y divide-gray-50">
                   {isWalletLoading ? (
                     <TableSkeleton rows={4} />
-                  ) : payoutRequests.length > 0 ? (
-                    payoutRequests.map((p: any, idx: number) => {
+                  ) : paginatedPayouts.length > 0 ? (
+                    paginatedPayouts.map((p: any, idx: number) => {
                       const statusStyle = STATUS_STYLES[p.status] || 'bg-gray-50 text-gray-600';
 
                       return (
@@ -588,6 +617,18 @@ export default function WalletDashboardPage() {
                 </tbody>
               </table>
             </div>
+
+            {totalPayoutRows > 10 && (
+              <div className="border-t border-gray-100 bg-white">
+                <PaginationControls
+                  pagination={payoutPagination}
+                  onPaginationChange={setPayoutPagination}
+                  totalPages={totalPayoutPages}
+                  totalRows={totalPayoutRows}
+                  pageSizeOptions={[10, 20, 30, 50]}
+                />
+              </div>
+            )}
           </div>
         )}
       </div>

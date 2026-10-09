@@ -1,4 +1,4 @@
-export type InvoiceFilterType = 'All' | 'Paid' | 'Unpaid';
+export type InvoiceFilterType = 'All' | 'Paid' | 'Unpaid' | 'Overdue';
 
 export interface InvoicePaymentInfo {
   isPaid: boolean;
