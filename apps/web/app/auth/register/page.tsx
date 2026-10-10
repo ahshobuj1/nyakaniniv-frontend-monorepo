@@ -11,6 +11,7 @@ import Link from 'next/link';
 import {Button} from '@repo/ui';
 import {useRouter} from 'next/navigation';
 import {useRegisterMutation} from '@repo/store';
+import {ApiErrorResponse} from '@/types/api.types';
 
 const signupSchema = z
   .object({
@@ -51,8 +52,9 @@ export default function SignupPage() {
       }).unwrap();
       toast.success(response.message || 'Account created successfully!');
       router.push(`/auth/verify-email?email=${encodeURIComponent(data.email)}`);
-    } catch (error: any) {
-      const errorMsg = error?.data?.error?.message || error?.data?.message || 'Failed to create account.';
+    } catch (error: unknown) {
+      const err = error as ApiErrorResponse;
+      const errorMsg = err?.data?.error?.message || err?.data?.message || 'Failed to create account.';
       toast.error(errorMsg);
     }
   };

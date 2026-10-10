@@ -1,41 +1,49 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import React, {useState} from 'react';
 import {Check, X, Zap} from 'lucide-react';
 import {NumberFlow} from '@repo/ui';
-import {useGetPlansQuery, useGetCurrentProfileQuery, SubscriptionPlan} from '@repo/store';
+import {
+  useGetPlansQuery,
+  useGetCurrentProfileQuery,
+  SubscriptionPlan,
+} from '@repo/store';
 import {useRouter} from 'next/navigation';
 import {toast} from 'sonner';
 import Link from 'next/link';
+import LoadingSpinner from '@/components/LoadingSpinner';
 
 const ALL_FEATURES = [
-  { key: 'CUSTOM_SUBDOMAIN', label: 'Custom Subdomain' },
-  { key: 'BASIC_PROFILE', label: 'Basic DJ Profile' },
-  { key: 'MANUAL_BOOKINGS', label: 'Manual Bookings' },
-  { key: 'ONLINE_PAYMENTS', label: 'Online Payments (Paystack)' },
-  { key: 'AUTOMATED_INVOICING', label: 'Automated Invoicing' },
-  { key: 'MULTIPLE_THEMES', label: 'Multiple Themes' },
-  { key: 'EMAIL_NOTIFICATIONS', label: 'Email Notifications' },
-  { key: 'BASIC_ANALYTICS', label: 'Basic Analytics' },
-  { key: 'ADVANCED_ANALYTICS', label: 'Advanced Analytics' },
-  { key: 'CUSTOM_DOMAIN', label: 'Custom Domain' },
-  { key: 'REMOVE_BRANDING', label: 'Remove Upbeat Branding' },
-  { key: 'PRIORITY_SUPPORT', label: 'Priority Support' },
-  { key: 'MAX_EVENTS', label: 'Events per Month' }
+  {key: 'CUSTOM_SUBDOMAIN', label: 'Custom Subdomain'},
+  {key: 'BASIC_PROFILE', label: 'Basic DJ Profile'},
+  {key: 'MANUAL_BOOKINGS', label: 'Manual Bookings'},
+  {key: 'ONLINE_PAYMENTS', label: 'Online Payments (Paystack)'},
+  {key: 'AUTOMATED_INVOICING', label: 'Automated Invoicing'},
+  {key: 'MULTIPLE_THEMES', label: 'Multiple Themes'},
+  {key: 'EMAIL_NOTIFICATIONS', label: 'Email Notifications'},
+  {key: 'BASIC_ANALYTICS', label: 'Basic Analytics'},
+  {key: 'ADVANCED_ANALYTICS', label: 'Advanced Analytics'},
+  {key: 'CUSTOM_DOMAIN', label: 'Custom Domain'},
+  {key: 'REMOVE_BRANDING', label: 'Remove Upbeat Branding'},
+  {key: 'PRIORITY_SUPPORT', label: 'Priority Support'},
+  {key: 'MAX_EVENTS', label: 'Events per Month'},
 ];
 
 export default function PricingSection() {
   const [frequency, setFrequency] = useState<'monthly' | 'yearly'>('monthly');
-  const { data: plansResponse, isLoading } = useGetPlansQuery();
-  const { data: profileResponse, isLoading: isProfileLoading } = useGetCurrentProfileQuery();
+  const {data: plansResponse, isLoading} = useGetPlansQuery();
+  const {data: profileResponse, isLoading: isProfileLoading} =
+    useGetCurrentProfileQuery();
   const router = useRouter();
 
   const plans = plansResponse?.data || [];
 
   const handleSubscribeClick = () => {
     if (isProfileLoading) return;
-    const isLogged = profileResponse?.data && (profileResponse?.data as any)?.id;
-    
+    const isLogged =
+      profileResponse?.data && (profileResponse?.data as any)?.id;
+
     if (isLogged) {
       router.push('/dashboard/billing');
     } else {
@@ -89,32 +97,38 @@ export default function PricingSection() {
         </div>
 
         {isLoading ? (
-          <div className="flex justify-center items-center py-20">
-            <div className="w-8 h-8 border-4 border-gray-200 border-t-primary rounded-full animate-spin"></div>
-          </div>
+          <LoadingSpinner smallHeight />
         ) : (
           <div className="grid md:grid-cols-3 gap-6 items-start">
             {plans.map((plan: SubscriptionPlan, idx: number) => {
               const isPopular = idx === 1; // Highlight the middle plan
-              const price = frequency === 'monthly' ? Number(plan.priceMonthly) : Number(plan.priceAnnually);
-              
+              const price =
+                frequency === 'monthly'
+                  ? Number(plan.priceMonthly)
+                  : Number(plan.priceAnnually);
+
               let featuresObj: any = {};
               if (typeof plan.features === 'string') {
-                try { featuresObj = JSON.parse(plan.features); } catch(e){}
+                try {
+                  featuresObj = JSON.parse(plan.features);
+                } catch {}
               } else if (plan.features && typeof plan.features === 'object') {
                 featuresObj = plan.features;
               }
 
-              const renderedFeatures = ALL_FEATURES.map(f => {
+              const renderedFeatures = ALL_FEATURES.map((f) => {
                 const val = featuresObj[f.key];
-                const included = val === true || (typeof val === 'number' && val > 0) || val === -1;
+                const included =
+                  val === true ||
+                  (typeof val === 'number' && val > 0) ||
+                  val === -1;
                 let text = f.label;
                 if (f.key === 'MAX_EVENTS') {
                   if (val === -1) text = 'Unlimited Events';
                   else if (val) text = `Up to ${val} Events/month`;
                   else text = 'No Events allowed';
                 }
-                return { name: text, included };
+                return {name: text, included};
               });
 
               return (
@@ -148,8 +162,9 @@ export default function PricingSection() {
                         />
                       </span>
 
-                      
-                      <span className="text-gray-500 ml-1">/{frequency === 'monthly' ? 'month' : 'year'}</span>
+                      <span className="text-gray-500 ml-1">
+                        /{frequency === 'monthly' ? 'month' : 'year'}
+                      </span>
                       {plan.discountPercentage ? (
                         <div className="ml-auto flex items-center">
                           <span className="bg-rose-100 text-rose-600 border border-rose-200 px-2.5 py-1 text-[11px] font-extrabold capitalize tracking-widest rounded-full shadow-sm animate-pulse">
@@ -169,7 +184,9 @@ export default function PricingSection() {
                     </button>
                     <ul className="space-y-3.5">
                       {renderedFeatures.map((feature: any, index: number) => (
-                        <li key={index} className={`flex items-start gap-3 ${feature.included ? '' : 'opacity-50'}`}>
+                        <li
+                          key={index}
+                          className={`flex items-start gap-3 ${feature.included ? '' : 'opacity-50'}`}>
                           {feature.included !== false ? (
                             <span className="bg-emerald-100/50 text-emerald-500 p-0.5 rounded mt-0.5 shrink-0">
                               <Check size={14} strokeWidth={4} />

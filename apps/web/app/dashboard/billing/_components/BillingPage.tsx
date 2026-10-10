@@ -1,13 +1,22 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
-import {useState, useEffect} from 'react';
+import {useState} from 'react';
 import Link from 'next/link';
-import {Zap, Check, X, Calendar, CheckCircle2, CreditCard, ExternalLink, ArrowUpRight} from 'lucide-react';
 import {
-  Card, 
-  CardContent, 
-  Button, 
-  Badge, 
+  Zap,
+  Check,
+  X,
+  Calendar,
+  CheckCircle2,
+  CreditCard,
+  ArrowUpRight,
+} from 'lucide-react';
+import {
+  Card,
+  CardContent,
+  Button,
+  Badge,
   NumberFlow,
   Dialog,
   DialogContent,
@@ -15,7 +24,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger
+  DialogTrigger,
 } from '@repo/ui';
 import {
   useGetPlansQuery,
@@ -25,54 +34,57 @@ import {
   useGetMyInvoicesQuery,
   SubscriptionPlan,
   useGetCurrentProfileQuery,
-  useDisconnectPaystackAccountMutation,
 } from '@repo/store';
 import GatewaySelectionModal from './GatewaySelectionModal';
+import LoadingSpinner from '@/components/LoadingSpinner';
 
 const ALL_FEATURES = [
-  { key: 'CUSTOM_SUBDOMAIN', label: 'Custom Subdomain' },
-  { key: 'BASIC_PROFILE', label: 'Basic DJ Profile' },
-  { key: 'MANUAL_BOOKINGS', label: 'Manual Bookings' },
-  { key: 'ONLINE_PAYMENTS', label: 'Online Payments (Paystack)' },
-  { key: 'AUTOMATED_INVOICING', label: 'Automated Invoicing' },
-  { key: 'MULTIPLE_THEMES', label: 'Multiple Themes' },
-  { key: 'EMAIL_NOTIFICATIONS', label: 'Email Notifications' },
-  { key: 'BASIC_ANALYTICS', label: 'Basic Analytics' },
-  { key: 'ADVANCED_ANALYTICS', label: 'Advanced Analytics' },
-  { key: 'CUSTOM_DOMAIN', label: 'Custom Domain' },
-  { key: 'REMOVE_BRANDING', label: 'Remove Upbeat Branding' },
-  { key: 'PRIORITY_SUPPORT', label: 'Priority Support' },
-  { key: 'MAX_EVENTS', label: 'Events per Month' }
+  {key: 'CUSTOM_SUBDOMAIN', label: 'Custom Subdomain'},
+  {key: 'BASIC_PROFILE', label: 'Basic DJ Profile'},
+  {key: 'MANUAL_BOOKINGS', label: 'Manual Bookings'},
+  {key: 'ONLINE_PAYMENTS', label: 'Online Payments (Paystack)'},
+  {key: 'AUTOMATED_INVOICING', label: 'Automated Invoicing'},
+  {key: 'MULTIPLE_THEMES', label: 'Multiple Themes'},
+  {key: 'EMAIL_NOTIFICATIONS', label: 'Email Notifications'},
+  {key: 'BASIC_ANALYTICS', label: 'Basic Analytics'},
+  {key: 'ADVANCED_ANALYTICS', label: 'Advanced Analytics'},
+  {key: 'CUSTOM_DOMAIN', label: 'Custom Domain'},
+  {key: 'REMOVE_BRANDING', label: 'Remove Upbeat Branding'},
+  {key: 'PRIORITY_SUPPORT', label: 'Priority Support'},
+  {key: 'MAX_EVENTS', label: 'Events per Month'},
 ];
 
-import { toast } from 'sonner';
+import {toast} from 'sonner';
 
 export default function BillingSubscriptionPage() {
   const [frequency, setFrequency] = useState<'monthly' | 'yearly'>('monthly');
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
 
   // Fetch API data
-  const { data: plansResponse, isLoading: isLoadingPlans } = useGetPlansQuery();
-  const { data: subResponse, isLoading: isLoadingSub, refetch: refetchSub } = useGetMySubscriptionQuery();
-  const { data: invoicesResponse, isLoading: isLoadingInvoices } = useGetMyInvoicesQuery();
+  const {data: plansResponse, isLoading: isLoadingPlans} = useGetPlansQuery();
+  const {
+    data: subResponse,
+    isLoading: isLoadingSub,
+    refetch: refetchSub,
+  } = useGetMySubscriptionQuery();
+  const {data: invoicesResponse, isLoading: isLoadingInvoices} =
+    useGetMyInvoicesQuery();
 
-  const { data: profileResponse } = useGetCurrentProfileQuery();
-  const tenant = profileResponse?.data?.tenant;
-  const tenantId = tenant?.id;
-  const tenantCountry = (tenant?.country || '').trim().toLowerCase();
-  const isEastAfrica = ['tanzania', 'tz', 'kenya', 'ke', 'uganda', 'ug', 'rwanda', 'rw'].includes(tenantCountry);
+  const {data: profileResponse} = useGetCurrentProfileQuery();
+  const tenantCountry = (profileResponse?.data?.tenant?.country || '')
+    .trim()
+    .toLowerCase();
 
-  const [subscribe, { isLoading: isSubscribing }] = useSubscribeMutation();
-  const [cancelSubscription, { isLoading: isCanceling }] = useCancelSubscriptionMutation();
-  const [disconnectAccount] = useDisconnectPaystackAccountMutation();
-  const [paystackDisconnectDialogOpen, setPaystackDisconnectDialogOpen] = useState(false);
+  const [subscribe, {isLoading: isSubscribing}] = useSubscribeMutation();
+  const [cancelSubscription, {isLoading: isCanceling}] =
+    useCancelSubscriptionMutation();
 
   const plans = plansResponse?.data || [];
   const activeSubscription = subResponse?.data;
-  
+
   // Filter only subscription invoices
   const billingHistory = (invoicesResponse?.data || []).filter(
-    (inv: any) => inv.type === 'SUBSCRIPTION'
+    (inv: any) => inv.type === 'SUBSCRIPTION',
   );
 
   const [gatewayModalOpen, setGatewayModalOpen] = useState(false);
@@ -97,22 +109,13 @@ export default function BillingSubscriptionPage() {
         window.location.href = result.data.url;
       }
     } catch (error: any) {
-      toast.error(error?.data?.error?.message || error?.data?.message || 'Failed to initiate subscription');
+      toast.error(
+        error?.data?.error?.message ||
+          error?.data?.message ||
+          'Failed to initiate subscription',
+      );
     }
     setGatewayModalOpen(false);
-  };
-
-  const handleDisconnectPaystack = async () => {
-    if (!tenantId) return;
-    try {
-      const res = await disconnectAccount({ tenantId }).unwrap();
-      if (res.success) {
-        toast.success('Successfully removed payout account');
-        setPaystackDisconnectDialogOpen(false);
-      }
-    } catch (error: any) {
-      toast.error(error?.data?.error?.message || error?.data?.message || 'Failed to remove payout account');
-    }
   };
 
   const handleCancel = async () => {
@@ -122,7 +125,11 @@ export default function BillingSubscriptionPage() {
       setCancelDialogOpen(false);
       refetchSub();
     } catch (error: any) {
-      toast.error(error?.data?.error?.message || error?.data?.message || 'Failed to cancel subscription');
+      toast.error(
+        error?.data?.error?.message ||
+          error?.data?.message ||
+          'Failed to cancel subscription',
+      );
     }
   };
 
@@ -139,7 +146,6 @@ export default function BillingSubscriptionPage() {
           </p>
         </div>
 
-
         {/* Shortcut to Wallet & Payouts */}
         <div className="bg-white border border-[#E5E7EB] rounded-2xl p-5 shadow-[0_2px_20px_rgba(0,0,0,0.03)] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3.5">
@@ -151,14 +157,14 @@ export default function BillingSubscriptionPage() {
                 DJ Wallet & Payout Management
               </h4>
               <p className="text-[13px] text-[#787878] mt-0.5">
-                Manage your booking earnings, escrow balances, and bank/mobile money payouts.
+                Manage your booking earnings, escrow balances, and bank/mobile
+                money payouts.
               </p>
             </div>
           </div>
           <Link
             href="/dashboard/wallet"
-            className="inline-flex items-center gap-2 px-4 h-11 rounded-xl bg-[#111620] hover:bg-[#202736] text-white text-sm font-bold transition-all shrink-0 cursor-pointer"
-          >
+            className="inline-flex items-center gap-2 px-4 h-11 rounded-xl bg-[#111620] hover:bg-[#202736] text-white text-sm font-bold transition-all shrink-0 cursor-pointer">
             <span>Open DJ Wallet</span>
             <ArrowUpRight className="w-4 h-4" />
           </Link>
@@ -166,9 +172,7 @@ export default function BillingSubscriptionPage() {
 
         {/* Current Plan & Usage Section */}
         {isLoadingSub ? (
-          <div className="flex justify-center p-8">
-            <div className="w-8 h-8 border-4 border-gray-200 border-t-primary rounded-full animate-spin"></div>
-          </div>
+          <LoadingSpinner smallHeight />
         ) : activeSubscription ? (
           <Card className="border-none shadow-[0_2px_20px_rgba(0,0,0,0.03)] overflow-hidden rounded-2xl bg-white">
             <CardContent className="p-0">
@@ -184,16 +188,22 @@ export default function BillingSubscriptionPage() {
                         {activeSubscription.plan?.name || 'Active Plan'}
                       </h2>
                       <Badge className="bg-primary hover:bg-primary text-white text-[10px] font-bold px-2 py-0.5 rounded uppercase">
-                        {activeSubscription.status === 'active' ? 'ACTIVE' : activeSubscription.status}
+                        {activeSubscription.status === 'active'
+                          ? 'ACTIVE'
+                          : activeSubscription.status}
                       </Badge>
                     </div>
                     <p className="text-[#787878] text-[14px]">
-                      {activeSubscription.periodEnd ? `Renews on ${new Date(activeSubscription.periodEnd).toLocaleDateString('en-GB')}` : 'No renewal date'}
+                      {activeSubscription.periodEnd
+                        ? `Renews on ${new Date(activeSubscription.periodEnd).toLocaleDateString('en-GB')}`
+                        : 'No renewal date'}
                     </p>
                   </div>
                 </div>
                 <div className="flex flex-col md:flex-row items-center gap-3 w-full md:w-auto">
-                  <Dialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
+                  <Dialog
+                    open={cancelDialogOpen}
+                    onOpenChange={setCancelDialogOpen}>
                     <DialogTrigger asChild>
                       <Button
                         variant="secondary"
@@ -206,18 +216,21 @@ export default function BillingSubscriptionPage() {
                       <DialogHeader>
                         <DialogTitle>Cancel Subscription</DialogTitle>
                         <DialogDescription>
-                          Are you sure you want to cancel your subscription? You will lose access to premium features at the end of your billing period.
+                          Are you sure you want to cancel your subscription? You
+                          will lose access to premium features at the end of
+                          your billing period.
                         </DialogDescription>
                       </DialogHeader>
                       <DialogFooter className="mt-4">
-                        <Button variant="outline" onClick={() => setCancelDialogOpen(false)}>
+                        <Button
+                          variant="outline"
+                          onClick={() => setCancelDialogOpen(false)}>
                           Keep Subscription
                         </Button>
-                        <Button 
-                          onClick={handleCancel} 
+                        <Button
+                          onClick={handleCancel}
                           disabled={isCanceling}
-                          className="bg-red-500 hover:bg-red-600 text-white"
-                        >
+                          className="bg-red-500 hover:bg-red-600 text-white">
                           {isCanceling ? 'Canceling...' : 'Yes, Cancel'}
                         </Button>
                       </DialogFooter>
@@ -230,13 +243,16 @@ export default function BillingSubscriptionPage() {
         ) : (
           <Card className="border-none shadow-[0_2px_20px_rgba(0,0,0,0.03)] overflow-hidden rounded-2xl bg-white">
             <CardContent className="p-8 text-center">
-              <h2 className="text-[20px] font-bold text-[#111620] mb-2">No Active Subscription</h2>
-              <p className="text-[#787878] mb-4">Choose a plan below to unlock premium features and grow your DJ business.</p>
+              <h2 className="text-[20px] font-bold text-[#111620] mb-2">
+                No Active Subscription
+              </h2>
+              <p className="text-[#787878] mb-4">
+                Choose a plan below to unlock premium features and grow your DJ
+                business.
+              </p>
             </CardContent>
           </Card>
         )}
-
-        
 
         {/* Pricing/Available Plans Section */}
         <div>
@@ -269,33 +285,39 @@ export default function BillingSubscriptionPage() {
           </div>
 
           {isLoadingPlans ? (
-            <div className="flex justify-center p-10">
-              <div className="w-8 h-8 border-4 border-gray-200 border-t-primary rounded-full animate-spin"></div>
-            </div>
+            <LoadingSpinner smallHeight />
           ) : (
             <div className="grid lg:grid-cols-3 gap-6 items-start">
               {plans.map((plan: SubscriptionPlan, idx: number) => {
                 const isPopular = idx === 1; // Highlight the middle plan
                 const isActivePlan = activeSubscription?.planId === plan.id;
-                const price = frequency === 'monthly' ? Number(plan.priceMonthly) : Number(plan.priceAnnually);
-                
+                const price =
+                  frequency === 'monthly'
+                    ? Number(plan.priceMonthly)
+                    : Number(plan.priceAnnually);
+
                 let featuresObj: any = {};
                 if (typeof plan.features === 'string') {
-                  try { featuresObj = JSON.parse(plan.features); } catch(e){}
+                  try {
+                    featuresObj = JSON.parse(plan.features);
+                  } catch {}
                 } else if (plan.features && typeof plan.features === 'object') {
                   featuresObj = plan.features;
                 }
 
-                const renderedFeatures = ALL_FEATURES.map(f => {
+                const renderedFeatures = ALL_FEATURES.map((f) => {
                   const val = featuresObj[f.key];
-                  const included = val === true || (typeof val === 'number' && val > 0) || val === -1;
+                  const included =
+                    val === true ||
+                    (typeof val === 'number' && val > 0) ||
+                    val === -1;
                   let text = f.label;
                   if (f.key === 'MAX_EVENTS') {
                     if (val === -1) text = 'Unlimited Events';
                     else if (val) text = `Up to ${val} Events/month`;
                     else text = 'No Events allowed';
                   }
-                  return { name: text, included };
+                  return {name: text, included};
                 });
 
                 return (
@@ -305,8 +327,8 @@ export default function BillingSubscriptionPage() {
                       isActivePlan
                         ? 'bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.06)] border-2 border-green-500'
                         : isPopular
-                        ? 'bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.06)] border-2 border-primary'
-                        : 'bg-white rounded-2xl shadow-[0_2px_20px_rgba(0,0,0,0.03)] border-2 border-transparent'
+                          ? 'bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.06)] border-2 border-primary'
+                          : 'bg-white rounded-2xl shadow-[0_2px_20px_rgba(0,0,0,0.03)] border-2 border-transparent'
                     }`}>
                     {isActivePlan ? (
                       <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-green-500 text-white px-3 py-1 text-[11px] font-bold uppercase tracking-wider rounded-full z-10 flex items-center gap-1">
@@ -342,7 +364,7 @@ export default function BillingSubscriptionPage() {
                         {plan.discountPercentage ? (
                           <div className="ml-auto flex items-center">
                             <span className="bg-rose-100 text-rose-600 border border-rose-200 px-2.5 py-1 text-[11px] font-extrabold capitalize tracking-widest rounded-full shadow-sm animate-pulse">
-                             Yearly Save {plan.discountPercentage}%
+                              Yearly Save {plan.discountPercentage}%
                             </span>
                           </div>
                         ) : null}
@@ -351,7 +373,11 @@ export default function BillingSubscriptionPage() {
                       <button
                         onClick={() => {
                           if (activeSubscription) {
-                            toast.info(isActivePlan ? 'You are already subscribed to this plan.' : 'Please cancel your current plan before switching.');
+                            toast.info(
+                              isActivePlan
+                                ? 'You are already subscribed to this plan.'
+                                : 'Please cancel your current plan before switching.',
+                            );
                             return;
                           }
                           handleSubscribeClick(plan.id);
@@ -361,15 +387,21 @@ export default function BillingSubscriptionPage() {
                           isActivePlan
                             ? 'bg-green-50 text-green-600 border border-green-200 cursor-pointer'
                             : isPopular
-                            ? 'bg-primary text-white hover:bg-primary/90 cursor-pointer'
-                            : 'bg-[#E5E7EB] text-[#111620] hover:bg-[#D1D5DB] cursor-pointer'
+                              ? 'bg-primary text-white hover:bg-primary/90 cursor-pointer'
+                              : 'bg-[#E5E7EB] text-[#111620] hover:bg-[#D1D5DB] cursor-pointer'
                         }`}>
-                        {isActivePlan ? 'Already Active' : isSubscribing ? 'Processing...' : 'Subscribe'}
+                        {isActivePlan
+                          ? 'Already Active'
+                          : isSubscribing
+                            ? 'Processing...'
+                            : 'Subscribe'}
                       </button>
 
                       <ul className="space-y-4 grow">
                         {renderedFeatures.map((feature: any, index: number) => (
-                          <li key={index} className={`flex items-start gap-3 ${feature.included ? '' : 'opacity-50'}`}>
+                          <li
+                            key={index}
+                            className={`flex items-start gap-3 ${feature.included ? '' : 'opacity-50'}`}>
                             {feature.included !== false ? (
                               <span className="bg-[#10B981]/10 text-[#10B981] p-0.5 rounded mt-0.5 shrink-0">
                                 <Check size={14} strokeWidth={3} />
@@ -397,8 +429,6 @@ export default function BillingSubscriptionPage() {
             </div>
           )}
         </div>
-
-       
 
         {/* Billing History Table */}
         <Card className="border-none shadow-[0_2px_20px_rgba(0,0,0,0.03)] overflow-hidden rounded-2xl bg-white">
@@ -434,9 +464,7 @@ export default function BillingSubscriptionPage() {
                   {isLoadingInvoices ? (
                     <tr>
                       <td colSpan={5} className="py-10 text-center">
-                        <div className="flex justify-center">
-                          <div className="w-6 h-6 border-2 border-gray-200 border-t-primary rounded-full animate-spin"></div>
-                        </div>
+                        <LoadingSpinner smallHeight />
                       </td>
                     </tr>
                   ) : billingHistory.length > 0 ? (
@@ -445,7 +473,8 @@ export default function BillingSubscriptionPage() {
                         key={item.id}
                         className={`${index % 2 === 0 ? 'bg-[#F9FAFB]' : 'bg-white'} hover:bg-gray-100/50 transition-colors`}>
                         <td className="py-5 px-8 text-[14px] font-bold text-[#111620]">
-                          {item.stripeInvoiceId || item.id.substring(0, 8).toUpperCase()}
+                          {item.stripeInvoiceId ||
+                            item.id.substring(0, 8).toUpperCase()}
                         </td>
                         <td className="py-5 px-8 text-[14px] font-semibold text-[#111620]">
                           {item.plan?.name || 'Subscription'}
@@ -453,7 +482,9 @@ export default function BillingSubscriptionPage() {
                         <td className="py-5 px-8 text-[14px] text-[#787878]">
                           <div className="flex items-center gap-2">
                             <Calendar className="w-3.5 h-3.5 text-[#A1A1AA]" />
-                            {new Date(item.createdAt).toLocaleDateString('en-GB')}
+                            {new Date(item.createdAt).toLocaleDateString(
+                              'en-GB',
+                            )}
                           </div>
                         </td>
                         <td className="py-5 px-8 text-[14px] font-bold text-[#111620]">
@@ -476,7 +507,9 @@ export default function BillingSubscriptionPage() {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={5} className="py-10 text-center text-gray-500">
+                      <td
+                        colSpan={5}
+                        className="py-10 text-center text-gray-500">
                         No billing history found.
                       </td>
                     </tr>
@@ -496,8 +529,14 @@ export default function BillingSubscriptionPage() {
           price={
             selectedPlanId
               ? frequency === 'monthly'
-                ? Number(plans.find((p: any) => p.id === selectedPlanId)?.priceMonthly)
-                : Number(plans.find((p: any) => p.id === selectedPlanId)?.priceAnnually)
+                ? Number(
+                    plans.find((p: any) => p.id === selectedPlanId)
+                      ?.priceMonthly,
+                  )
+                : Number(
+                    plans.find((p: any) => p.id === selectedPlanId)
+                      ?.priceAnnually,
+                  )
               : undefined
           }
           billingCycle={frequency === 'monthly' ? 'monthly' : 'annually'}

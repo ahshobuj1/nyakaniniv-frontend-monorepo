@@ -1,8 +1,9 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import { useParams } from 'next/navigation';
 import { Button, Card, CardContent, CardHeader, CardTitle } from '@repo/ui';
-import { ArrowLeft, Bell, Calendar, CheckCircle2, MessageSquare, Tag } from 'lucide-react';
+import { ArrowLeft, Bell, Calendar, MessageSquare, Tag } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect } from 'react';
 import LoadingSpinner from '@/components/LoadingSpinner';

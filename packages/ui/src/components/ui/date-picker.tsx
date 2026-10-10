@@ -17,7 +17,7 @@ export interface DatePickerProps {
   buttonClassName?: string
   disabled?: boolean | ((date: Date) => boolean)
   minDate?: Date
-  disabledDays?: any
+  disabledDays?: import('react-day-picker').Matcher | import('react-day-picker').Matcher[]
 }
 
 export function DatePicker({

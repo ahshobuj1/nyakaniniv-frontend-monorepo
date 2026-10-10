@@ -251,7 +251,7 @@ export interface ParsedEventDetails {
 /**
  * Safely parses eventDetails whether it is a string, an object/JSON, or undefined.
  */
-export function parseBookingEventDetails(eventDetails?: any): ParsedEventDetails {
+export function parseBookingEventDetails(eventDetails?: unknown): ParsedEventDetails {
   const result: ParsedEventDetails = {
     startTime: '',
     duration: '',
@@ -263,19 +263,20 @@ export function parseBookingEventDetails(eventDetails?: any): ParsedEventDetails
 
   // Case 1: eventDetails is already an object
   if (typeof eventDetails === 'object' && eventDetails !== null) {
-    if (eventDetails.startTime) result.startTime = String(eventDetails.startTime).trim();
-    else if (eventDetails.time) result.startTime = String(eventDetails.time).trim();
+    const details = eventDetails as Record<string, unknown>;
+    if (details.startTime) result.startTime = String(details.startTime).trim();
+    else if (details.time) result.startTime = String(details.time).trim();
 
-    if (eventDetails.duration) result.duration = String(eventDetails.duration).trim();
-    if (eventDetails.requirements) result.requirements = String(eventDetails.requirements).trim();
+    if (details.duration) result.duration = String(details.duration).trim();
+    if (details.requirements) result.requirements = String(details.requirements).trim();
 
-    if (eventDetails.cancelledBy) result.cancelledBy = String(eventDetails.cancelledBy);
-    if (eventDetails.cancellationReason) result.cancellationReason = String(eventDetails.cancellationReason);
-    if (eventDetails.refundPercent !== undefined) result.refundPercent = Number(eventDetails.refundPercent);
-    if (eventDetails.refundAmount !== undefined) result.refundAmount = Number(eventDetails.refundAmount);
-    if (eventDetails.refundStatus) result.refundStatus = String(eventDetails.refundStatus);
+    if (details.cancelledBy) result.cancelledBy = String(details.cancelledBy);
+    if (details.cancellationReason) result.cancellationReason = String(details.cancellationReason);
+    if (details.refundPercent !== undefined) result.refundPercent = Number(details.refundPercent);
+    if (details.refundAmount !== undefined) result.refundAmount = Number(details.refundAmount);
+    if (details.refundStatus) result.refundStatus = String(details.refundStatus);
 
-    if (eventDetails.notes) result.otherDetails.push(String(eventDetails.notes).trim());
+    if (details.notes) result.otherDetails.push(String(details.notes).trim());
     return result;
   }
 

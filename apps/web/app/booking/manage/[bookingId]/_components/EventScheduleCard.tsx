@@ -6,7 +6,7 @@ import {
   MapPin,
   Music,
 } from 'lucide-react';
-import type { ParsedEventDetails } from '@/lib/bookingStatusHelper';
+
 
 interface EventScheduleCardProps {
   formattedDate: string;

@@ -29,6 +29,7 @@ export const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) 
       return;
     }
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsAuthorized(true);
   }, [token, user, allowedRoles, router]);
 

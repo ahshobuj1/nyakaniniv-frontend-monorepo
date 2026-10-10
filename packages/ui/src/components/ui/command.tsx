@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment, react/no-unknown-property, @typescript-eslint/no-empty-object-type */
 "use client"
 
 import * as React from "react"

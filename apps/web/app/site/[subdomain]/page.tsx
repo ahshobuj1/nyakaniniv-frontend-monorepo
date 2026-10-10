@@ -1,5 +1,4 @@
 import PublicProfile from './PublicProfile';
-import { notFound } from 'next/navigation';
 
 export default async function PublicProfilePage({ params }: { params: Promise<{ subdomain: string }> }) {
   const { subdomain } = await params;

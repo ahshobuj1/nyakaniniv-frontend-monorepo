@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Shared types for the Client Booking Manage portal components.
  */
@@ -17,7 +18,7 @@ export interface DjContactInfo {
 
 /** Props shared by most manage-page sub-components. */
 export interface ManageBookingContext {
-  booking: Record<string, any>;
+  booking: any;
   currencyCode: string;
   totalAmount: number;
   formattedDate: string;

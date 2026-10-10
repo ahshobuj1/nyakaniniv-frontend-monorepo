@@ -11,11 +11,10 @@ import {
   Check,
   AlertCircle,
   Banknote,
-  DollarSign,
   ShieldCheck,
 } from 'lucide-react';
 import { Booking } from '@repo/store';
-import { normalizeBookingStatus, isBookingUpcoming } from '@/lib/bookingStatusHelper';
+import { normalizeBookingStatus } from '@/lib/bookingStatusHelper';
 import { toast } from 'sonner';
 
 interface ActionCenterCardProps {

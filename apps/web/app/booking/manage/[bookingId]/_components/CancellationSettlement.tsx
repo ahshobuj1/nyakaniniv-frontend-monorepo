@@ -2,7 +2,6 @@
 
 import {
   Ban,
-  ShieldCheck,
 } from 'lucide-react';
 import type { ManageBookingContext } from './types';
 

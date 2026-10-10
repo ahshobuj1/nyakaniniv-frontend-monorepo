@@ -8,7 +8,7 @@ import OurThemes from './_components/OurTheme';
 import { useGetLandingPageContentQuery } from '@repo/store';
 
 const Home = () => {
-  const { data: response, isLoading } = useGetLandingPageContentQuery();
+  const { data: response } = useGetLandingPageContentQuery();
   const content = response?.data;
 
   // if (isLoading) {

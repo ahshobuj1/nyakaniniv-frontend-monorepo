@@ -53,6 +53,7 @@ export default function SupportPage() {
         subject: '',
         issue: '',
       });
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIssueType('');
     }
   }, [user, reset]);
@@ -80,8 +81,9 @@ export default function SupportPage() {
         issue: '',
       });
       setIssueType('');
-    } catch (err: any) {
-      const msg = err?.data?.message ?? err?.message ?? 'Failed to submit ticket. Please try again.';
+    } catch (err: unknown) {
+      const apiErr = err as { data?: { message?: string }; message?: string };
+      const msg = apiErr?.data?.message ?? apiErr?.message ?? 'Failed to submit ticket. Please try again.';
       toast.error(msg);
     }
   };

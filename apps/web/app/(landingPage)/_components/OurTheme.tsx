@@ -4,13 +4,15 @@ import {useRef} from 'react';
 import Image from 'next/image';
 import {useRouter} from 'next/navigation';
 import {ChevronLeft, ChevronRight} from 'lucide-react';
-import { useGetAllThemesQuery } from '@repo/store';
+import {useGetAllThemesQuery} from '@repo/store';
 import LoadingSpinner from '@/components/LoadingSpinner';
 
 export interface ThemeItem {
-  id: string;
+  id?: string | number;
+  slug?: string;
   name: string;
-  image: string;
+  image?: string;
+  previewImageUrl?: string;
 }
 
 const themeData: ThemeItem[] = [
@@ -39,8 +41,8 @@ const themeData: ThemeItem[] = [
 export default function OurThemes() {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
-  
-  const { data: themesResponse, isLoading } = useGetAllThemesQuery();
+
+  const {data: themesResponse, isLoading} = useGetAllThemesQuery();
   const themes = themesResponse?.data || [];
 
   const handlePreview = (themeId: string) => {
@@ -86,22 +88,30 @@ export default function OurThemes() {
                 <LoadingSpinner smallHeight />
               </div>
             ) : (
-              (themes.length > 0 ? themes : themeData).map((theme: any) => (
-                <div
-                  key={theme.id || theme.slug}
-                  onClick={() => handlePreview(theme.slug || theme.id)}
-                  className="min-w-full md:min-w-[calc(50%-1rem)] snap-center group/card cursor-pointer">
-                  <div className="relative w-full aspect-16/13 bg-white shadow-sm hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] transition-all duration-500 ease-out overflow-hidden transform group-hover/card:-translate-y-2">
-                    <Image
-                      src={theme.previewImageUrl}
-                      alt={theme.name}
-                      width={1000}
-                      height={1000}
-                      className="object-cover object-top transform group-hover/card:scale-[1.03] transition-transform duration-700 ease-out"
-                    />
+              ((themes.length > 0 ? themes : themeData) as ThemeItem[]).map(
+                (theme: ThemeItem) => (
+                  <div
+                    key={theme.id || theme.slug}
+                    onClick={() =>
+                      handlePreview(String(theme.slug || theme.id || ''))
+                    }
+                    className="min-w-full md:min-w-[calc(50%-1rem)] snap-center group/card cursor-pointer">
+                    <div className="relative w-full aspect-16/13 bg-white shadow-sm hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] transition-all duration-500 ease-out overflow-hidden transform group-hover/card:-translate-y-2">
+                      <Image
+                        src={
+                          theme.previewImageUrl ||
+                          theme.image ||
+                          '/theme/Theme1.png'
+                        }
+                        alt={theme.name}
+                        width={1000}
+                        height={1000}
+                        className="object-cover object-top transform group-hover/card:scale-[1.03] transition-transform duration-700 ease-out"
+                      />
+                    </div>
                   </div>
-                </div>
-              ))
+                ),
+              )
             )}
           </div>
 

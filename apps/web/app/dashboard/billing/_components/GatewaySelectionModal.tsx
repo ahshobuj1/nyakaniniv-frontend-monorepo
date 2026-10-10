@@ -30,6 +30,7 @@ export default function GatewaySelectionModal({
 
   useEffect(() => {
     if (isOpen) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSelectedGateway(isEastAfrica ? 'pesapal' : 'paystack');
     }
   }, [isOpen, isEastAfrica]);

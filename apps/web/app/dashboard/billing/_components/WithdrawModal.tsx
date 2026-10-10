@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import React, { useState } from 'react';
@@ -22,7 +23,7 @@ interface WithdrawModalProps {
   tenantId: string;
   availableBalance: number;
   currency: string;
-  connectedAccount: any;
+  connectedAccount?: any;
   onSuccess?: () => void;
 }
 
@@ -88,8 +89,9 @@ export default function WithdrawModal({
       setAmount('');
       onClose();
       if (onSuccess) onSuccess();
-    } catch (err: any) {
-      const msg = err?.data?.message || err?.message || 'Failed to submit withdrawal request';
+    } catch (err: unknown) {
+      const apiErr = err as { data?: { message?: string }; message?: string };
+      const msg = apiErr?.data?.message || apiErr?.message || 'Failed to submit withdrawal request';
       setError(msg);
       toast.error(msg);
     }

@@ -1,9 +1,9 @@
 /* eslint-disable */
 'use client';
 
-import React, { useState, useMemo } from 'react';
-import { Button, PaginationControls } from '@repo/ui';
-import { useGetMyWalletQuery, useGetCurrentProfileQuery } from '@repo/store';
+import React, {useState, useMemo} from 'react';
+import {Button, PaginationControls} from '@repo/ui';
+import {useGetMyWalletQuery, useGetCurrentProfileQuery} from '@repo/store';
 import {
   Wallet,
   Clock,
@@ -24,14 +24,17 @@ import WithdrawModal from './_components/WithdrawModal';
 import ConnectPayoutModal from './_components/ConnectPayoutModal';
 
 /* ─── Helper: Human readable ledger type ────────────────────────────── */
-const LEDGER_LABELS: Record<string, { label: string; color: 'green' | 'red' | 'amber' | 'blue' | 'slate' }> = {
-  BOOKING_CREDIT_PENDING: { label: 'Escrow Credit', color: 'green' },
-  ESCROW_RELEASED: { label: 'Escrow Released', color: 'blue' },
-  WITHDRAWAL_REQUESTED: { label: 'Withdrawal', color: 'red' },
-  WITHDRAWAL_COMPLETED: { label: 'Payout Complete', color: 'green' },
-  WITHDRAWAL_REJECTED: { label: 'Withdrawal Rejected', color: 'amber' },
-  WITHDRAWAL_FAILED_REVERSAL: { label: 'Funds Restored', color: 'green' },
-  REFUND_ADJUSTMENT: { label: 'Refund', color: 'red' },
+const LEDGER_LABELS: Record<
+  string,
+  {label: string; color: 'green' | 'red' | 'amber' | 'blue' | 'slate'}
+> = {
+  BOOKING_CREDIT_PENDING: {label: 'Escrow Credit', color: 'green'},
+  ESCROW_RELEASED: {label: 'Escrow Released', color: 'blue'},
+  WITHDRAWAL_REQUESTED: {label: 'Withdrawal', color: 'red'},
+  WITHDRAWAL_COMPLETED: {label: 'Payout Complete', color: 'green'},
+  WITHDRAWAL_REJECTED: {label: 'Withdrawal Rejected', color: 'amber'},
+  WITHDRAWAL_FAILED_REVERSAL: {label: 'Funds Restored', color: 'green'},
+  REFUND_ADJUSTMENT: {label: 'Refund', color: 'red'},
 };
 
 const CREDIT_TYPES = new Set([
@@ -63,10 +66,14 @@ const STATUS_STYLES: Record<string, string> = {
 /* ─── Helper: Gateway label ─────────────────────────────────────────── */
 function gatewayLabel(gateway?: string) {
   switch (gateway) {
-    case 'PAYSTACK': return 'Paystack';
-    case 'FLUTTERWAVE': return 'Flutterwave';
-    case 'PESAPAL': return 'Pesapal';
-    default: return gateway || 'Bank Transfer';
+    case 'PAYSTACK':
+      return 'Paystack';
+    case 'FLUTTERWAVE':
+      return 'Flutterwave';
+    case 'PESAPAL':
+      return 'Pesapal';
+    default:
+      return gateway || 'Bank Transfer';
   }
 }
 
@@ -84,17 +91,29 @@ function BalanceCardSkeleton() {
   );
 }
 
-function TableSkeleton({ rows = 4 }: { rows?: number }) {
+function TableSkeleton({rows = 4}: {rows?: number}) {
   return (
     <>
-      {Array.from({ length: rows }).map((_, i) => (
+      {Array.from({length: rows}).map((_, i) => (
         <tr key={i} className="animate-pulse">
-          <td className="py-4 px-6"><div className="w-20 h-4 rounded bg-gray-100" /></td>
-          <td className="py-4 px-6"><div className="w-28 h-4 rounded bg-gray-100" /></td>
-          <td className="py-4 px-6"><div className="w-32 h-4 rounded bg-gray-100" /></td>
-          <td className="py-4 px-6"><div className="w-20 h-4 rounded bg-gray-100" /></td>
-          <td className="py-4 px-6"><div className="w-16 h-4 rounded bg-gray-100" /></td>
-          <td className="py-4 px-6"><div className="w-20 h-5 rounded-full bg-gray-100" /></td>
+          <td className="py-4 px-6">
+            <div className="w-20 h-4 rounded bg-gray-100" />
+          </td>
+          <td className="py-4 px-6">
+            <div className="w-28 h-4 rounded bg-gray-100" />
+          </td>
+          <td className="py-4 px-6">
+            <div className="w-32 h-4 rounded bg-gray-100" />
+          </td>
+          <td className="py-4 px-6">
+            <div className="w-20 h-4 rounded bg-gray-100" />
+          </td>
+          <td className="py-4 px-6">
+            <div className="w-16 h-4 rounded bg-gray-100" />
+          </td>
+          <td className="py-4 px-6">
+            <div className="w-20 h-5 rounded-full bg-gray-100" />
+          </td>
         </tr>
       ))}
     </>
@@ -105,13 +124,20 @@ function TableSkeleton({ rows = 4 }: { rows?: number }) {
    Main Page
    ═══════════════════════════════════════════════════════════════════════ */
 export default function WalletDashboardPage() {
-  const { data: profileResponse } = useGetCurrentProfileQuery();
+  const {data: profileResponse} = useGetCurrentProfileQuery();
   const tenant = profileResponse?.data?.tenant;
   const tenantId = tenant?.id || '';
   const tenantCountry = tenant?.country || 'kenya';
-  const stageName = (profileResponse?.data as any)?.stageName || (tenant as any)?.name || 'DJ Account';
+  const stageName =
+    (profileResponse?.data as any)?.stageName ||
+    (tenant as any)?.name ||
+    'DJ Account';
 
-  const { data: walletResponse, isLoading: isWalletLoading, refetch } = useGetMyWalletQuery(tenantId, {
+  const {
+    data: walletResponse,
+    isLoading: isWalletLoading,
+    refetch,
+  } = useGetMyWalletQuery(tenantId, {
     skip: !tenantId,
   });
 
@@ -123,20 +149,34 @@ export default function WalletDashboardPage() {
 
   const [withdrawModalOpen, setWithdrawModalOpen] = useState(false);
   const [connectModalOpen, setConnectModalOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<'ledgers' | 'withdrawals'>('ledgers');
+  const [activeTab, setActiveTab] = useState<'ledgers' | 'withdrawals'>(
+    'ledgers',
+  );
 
   /* ─── Pagination states ───────────────────────────────────────────── */
-  const [ledgerPagination, setLedgerPagination] = useState({ pageIndex: 0, pageSize: 10 });
+  const [ledgerPagination, setLedgerPagination] = useState({
+    pageIndex: 0,
+    pageSize: 10,
+  });
   const totalLedgerRows = ledgers.length;
-  const totalLedgerPages = Math.max(1, Math.ceil(totalLedgerRows / ledgerPagination.pageSize));
+  const totalLedgerPages = Math.max(
+    1,
+    Math.ceil(totalLedgerRows / ledgerPagination.pageSize),
+  );
   const paginatedLedgers = useMemo(() => {
     const start = ledgerPagination.pageIndex * ledgerPagination.pageSize;
     return ledgers.slice(start, start + ledgerPagination.pageSize);
   }, [ledgers, ledgerPagination.pageIndex, ledgerPagination.pageSize]);
 
-  const [payoutPagination, setPayoutPagination] = useState({ pageIndex: 0, pageSize: 10 });
+  const [payoutPagination, setPayoutPagination] = useState({
+    pageIndex: 0,
+    pageSize: 10,
+  });
   const totalPayoutRows = payoutRequests.length;
-  const totalPayoutPages = Math.max(1, Math.ceil(totalPayoutRows / payoutPagination.pageSize));
+  const totalPayoutPages = Math.max(
+    1,
+    Math.ceil(totalPayoutRows / payoutPagination.pageSize),
+  );
   const paginatedPayouts = useMemo(() => {
     const start = payoutPagination.pageIndex * payoutPagination.pageSize;
     return payoutRequests.slice(start, start + payoutPagination.pageSize);
@@ -146,10 +186,22 @@ export default function WalletDashboardPage() {
   const currency = wallet?.currency || 'KES';
   const dynamicBalance = balancesByCurrency[currency] || {};
 
-  const availableBalance = dynamicBalance.availableBalance !== undefined ? dynamicBalance.availableBalance : (wallet?.availableBalance || 0);
-  const pendingBalance = dynamicBalance.pendingBalance !== undefined ? dynamicBalance.pendingBalance : (wallet?.pendingBalance || 0);
-  const totalEarnings = dynamicBalance.totalEarnings !== undefined ? dynamicBalance.totalEarnings : (wallet?.totalEarnings || 0);
-  const totalWithdrawn = dynamicBalance.totalWithdrawn !== undefined ? dynamicBalance.totalWithdrawn : (wallet?.totalWithdrawn || 0);
+  const availableBalance =
+    dynamicBalance.availableBalance !== undefined
+      ? dynamicBalance.availableBalance
+      : wallet?.availableBalance || 0;
+  const pendingBalance =
+    dynamicBalance.pendingBalance !== undefined
+      ? dynamicBalance.pendingBalance
+      : wallet?.pendingBalance || 0;
+  const totalEarnings =
+    dynamicBalance.totalEarnings !== undefined
+      ? dynamicBalance.totalEarnings
+      : wallet?.totalEarnings || 0;
+  const totalWithdrawn =
+    dynamicBalance.totalWithdrawn !== undefined
+      ? dynamicBalance.totalWithdrawn
+      : wallet?.totalWithdrawn || 0;
 
   const isMobile = connectedAccount?.gateway === 'PESAPAL';
 
@@ -164,23 +216,29 @@ export default function WalletDashboardPage() {
   /* ─── Format helpers ─────────────────────────────────────────────── */
   const fmt = (n: number) => {
     const rounded = Math.round(n * 100) / 100;
-    return rounded.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return rounded.toLocaleString(undefined, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
   };
 
   const fmtDate = (iso: string) => {
     const d = new Date(iso);
-    return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+    return d.toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+    });
   };
 
   const fmtTime = (iso: string) => {
     const d = new Date(iso);
-    return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    return d.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
   };
 
   return (
     <div className="w-full min-h-screen p-4 md:p-6 lg:p-8">
       <div className="mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-3 duration-500">
-
         {/* ══════════════════════════════════════════════════════════════
             Header
             ══════════════════════════════════════════════════════════════ */}
@@ -197,16 +255,14 @@ export default function WalletDashboardPage() {
             <button
               type="button"
               onClick={() => refetch()}
-              className="flex items-center justify-center gap-2 px-4 h-10 rounded-sm bg-white hover:bg-gray-50 text-gray-700 text-sm font-medium transition-all cursor-pointer shadow-sm"
-            >
+              className="flex items-center justify-center gap-2 px-4 h-10 rounded-sm bg-white hover:bg-gray-50 text-gray-700 text-sm font-medium transition-all cursor-pointer shadow-sm">
               <RefreshCw className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Sync</span>
             </button>
             <Button
               type="button"
               onClick={handleWithdraw}
-              className="flex-1 sm:flex-none bg-primary hover:bg-primary/90 text-white font-semibold h-10 px-5 rounded-sm shadow-sm flex items-center justify-center gap-2 cursor-pointer transition-all text-sm"
-            >
+              className="flex-1 sm:flex-none bg-primary hover:bg-primary/90 text-white font-semibold h-10 px-5 rounded-sm shadow-sm flex items-center justify-center gap-2 cursor-pointer transition-all text-sm">
               <ArrowDownToLine className="w-4 h-4" />
               Withdraw
             </Button>
@@ -245,8 +301,7 @@ export default function WalletDashboardPage() {
                 <button
                   type="button"
                   onClick={handleWithdraw}
-                  className="mt-4 text-xs font-semibold text-primary hover:text-primary/80 transition-colors flex items-center gap-1 cursor-pointer"
-                >
+                  className="mt-4 text-xs font-semibold text-primary hover:text-primary/80 transition-colors flex items-center gap-1 cursor-pointer">
                   Withdraw <ArrowUpRight className="w-3 h-3" />
                 </button>
               </div>
@@ -325,7 +380,11 @@ export default function WalletDashboardPage() {
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center shrink-0">
                 {connectedAccount ? (
-                  isMobile ? <Smartphone className="w-6 h-6 text-primary" /> : <Building2 className="w-6 h-6 text-primary" />
+                  isMobile ? (
+                    <Smartphone className="w-6 h-6 text-primary" />
+                  ) : (
+                    <Building2 className="w-6 h-6 text-primary" />
+                  )
                 ) : (
                   <CreditCard className="w-6 h-6 text-gray-300" />
                 )}
@@ -356,15 +415,24 @@ export default function WalletDashboardPage() {
                 {connectedAccount ? (
                   <p className="text-sm text-gray-500 mt-0.5 flex items-center gap-1.5 flex-wrap">
                     <span className="font-medium text-gray-700">
-                      {connectedAccount.accountName || (connectedAccount as any).metadata?.accountName || 'Connected Account'}
+                      {connectedAccount.accountName ||
+                        (connectedAccount as any).metadata?.accountName ||
+                        'Connected Account'}
                     </span>
                     <span className="text-gray-300">·</span>
-                    <span>{connectedAccount.bankName || (connectedAccount as any).metadata?.bankName || 'Settlement Bank'}</span>
+                    <span>
+                      {connectedAccount.bankName ||
+                        (connectedAccount as any).metadata?.bankName ||
+                        'Settlement Bank'}
+                    </span>
                     <span className="text-gray-300">·</span>
-                    <span className="font-mono">•••• {connectedAccount.accountId?.slice(-4) || '****'}</span>
+                    <span className="font-mono">
+                      •••• {connectedAccount.accountId?.slice(-4) || '****'}
+                    </span>
                     <span className="text-gray-300">·</span>
                     <span className="uppercase text-[11px] font-semibold text-gray-400">
-                      {(connectedAccount as any).currencyCode || currency} ({(connectedAccount as any).countryCode || 'KE'})
+                      {(connectedAccount as any).currencyCode || currency} (
+                      {(connectedAccount as any).countryCode || 'KE'})
                     </span>
                   </p>
                 ) : (
@@ -382,8 +450,7 @@ export default function WalletDashboardPage() {
                 connectedAccount
                   ? 'bg-gray-50 hover:bg-gray-100 text-gray-700'
                   : 'bg-primary hover:bg-primary/90 text-white shadow-sm'
-              }`}
-            >
+              }`}>
               {connectedAccount ? 'Change Account' : 'Connect Account'}
             </Button>
           </div>
@@ -400,12 +467,14 @@ export default function WalletDashboardPage() {
               activeTab === 'ledgers'
                 ? 'bg-white text-gray-900 shadow-sm'
                 : 'text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            Ledger
-            <span className={`flex items-center justify-center min-w-[20px] h-5 px-1.5 text-[10px] font-bold rounded-full ${
-              activeTab === 'ledgers' ? 'bg-primary text-white' : 'bg-gray-200 text-gray-600'
             }`}>
+            Ledger
+            <span
+              className={`flex items-center justify-center min-w-[20px] h-5 px-1.5 text-[10px] font-bold rounded-full ${
+                activeTab === 'ledgers'
+                  ? 'bg-primary text-white'
+                  : 'bg-gray-200 text-gray-600'
+              }`}>
               {ledgers.length}
             </span>
           </button>
@@ -417,12 +486,14 @@ export default function WalletDashboardPage() {
               activeTab === 'withdrawals'
                 ? 'bg-white text-gray-900 shadow-sm'
                 : 'text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            Payouts
-            <span className={`flex items-center justify-center min-w-[20px] h-5 px-1.5 text-[10px] font-bold rounded-full ${
-              activeTab === 'withdrawals' ? 'bg-primary text-white' : 'bg-gray-200 text-gray-600'
             }`}>
+            Payouts
+            <span
+              className={`flex items-center justify-center min-w-[20px] h-5 px-1.5 text-[10px] font-bold rounded-full ${
+                activeTab === 'withdrawals'
+                  ? 'bg-primary text-white'
+                  : 'bg-gray-200 text-gray-600'
+              }`}>
               {payoutRequests.length}
             </span>
           </button>
@@ -435,9 +506,12 @@ export default function WalletDashboardPage() {
           <div className="rounded-2xl bg-white shadow-[0_1px_3px_rgba(0,0,0,0.04)] overflow-hidden">
             <div className="px-6 py-5 flex items-center justify-between">
               <div>
-                <h2 className="text-base font-bold text-gray-900">Audit Ledger</h2>
+                <h2 className="text-base font-bold text-gray-900">
+                  Audit Ledger
+                </h2>
                 <p className="text-xs text-gray-400 mt-0.5">
-                  Every balance movement — deposits, releases, withdrawals, and reversals.
+                  Every balance movement — deposits, releases, withdrawals, and
+                  reversals.
                 </p>
               </div>
             </div>
@@ -446,12 +520,24 @@ export default function WalletDashboardPage() {
               <table className="w-full min-w-[720px] text-left">
                 <thead>
                   <tr className="border-t border-b border-gray-100 bg-gray-50/50">
-                    <th className="py-3 px-6 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Date</th>
-                    <th className="py-3 px-6 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Type</th>
-                    <th className="py-3 px-6 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Reference</th>
-                    <th className="py-3 px-6 text-[11px] font-semibold text-gray-400 uppercase tracking-wider text-right">Amount</th>
-                    <th className="py-3 px-6 text-[11px] font-semibold text-gray-400 uppercase tracking-wider text-right">Balance After</th>
-                    <th className="py-3 px-6 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Status</th>
+                    <th className="py-3 px-6 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
+                      Date
+                    </th>
+                    <th className="py-3 px-6 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
+                      Type
+                    </th>
+                    <th className="py-3 px-6 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
+                      Reference
+                    </th>
+                    <th className="py-3 px-6 text-[11px] font-semibold text-gray-400 uppercase tracking-wider text-right">
+                      Amount
+                    </th>
+                    <th className="py-3 px-6 text-[11px] font-semibold text-gray-400 uppercase tracking-wider text-right">
+                      Balance After
+                    </th>
+                    <th className="py-3 px-6 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
+                      Status
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50">
@@ -461,32 +547,60 @@ export default function WalletDashboardPage() {
                     paginatedLedgers.map((l: any, idx: number) => {
                       const isCredit = CREDIT_TYPES.has(l.type);
                       const isDebit = DEBIT_TYPES.has(l.type);
-                      const info = LEDGER_LABELS[l.type] || { label: l.type.replace(/_/g, ' '), color: 'slate' };
-                      const statusStyle = STATUS_STYLES[l.status] || 'bg-gray-50 text-gray-600';
+                      const info = LEDGER_LABELS[l.type] || {
+                        label: l.type.replace(/_/g, ' '),
+                        color: 'slate',
+                      };
+                      const statusStyle =
+                        STATUS_STYLES[l.status] || 'bg-gray-50 text-gray-600';
 
                       return (
-                        <tr key={l.id || idx} className="hover:bg-gray-50/50 transition-colors">
+                        <tr
+                          key={l.id || idx}
+                          className="hover:bg-gray-50/50 transition-colors">
                           <td className="py-3.5 px-6">
-                            <div className="text-sm text-gray-700">{fmtDate(l.createdAt)}</div>
-                            <div className="text-[11px] text-gray-400">{fmtTime(l.createdAt)}</div>
+                            <div className="text-sm text-gray-700">
+                              {fmtDate(l.createdAt)}
+                            </div>
+                            <div className="text-[11px] text-gray-400">
+                              {fmtTime(l.createdAt)}
+                            </div>
                           </td>
                           <td className="py-3.5 px-6">
                             <div className="flex items-center gap-2">
-                              <div className={`w-6 h-6 rounded-md flex items-center justify-center shrink-0 ${
-                                isCredit ? 'bg-emerald-50 text-emerald-500' : isDebit ? 'bg-red-50 text-red-500' : 'bg-gray-50 text-gray-400'
-                              }`}>
-                                {isCredit ? <ArrowDown className="w-3.5 h-3.5" /> : isDebit ? <ArrowUp className="w-3.5 h-3.5" /> : <RotateCcw className="w-3.5 h-3.5" />}
+                              <div
+                                className={`w-6 h-6 rounded-md flex items-center justify-center shrink-0 ${
+                                  isCredit
+                                    ? 'bg-emerald-50 text-emerald-500'
+                                    : isDebit
+                                      ? 'bg-red-50 text-red-500'
+                                      : 'bg-gray-50 text-gray-400'
+                                }`}>
+                                {isCredit ? (
+                                  <ArrowDown className="w-3.5 h-3.5" />
+                                ) : isDebit ? (
+                                  <ArrowUp className="w-3.5 h-3.5" />
+                                ) : (
+                                  <RotateCcw className="w-3.5 h-3.5" />
+                                )}
                               </div>
-                              <span className="text-sm font-medium text-gray-800">{info.label}</span>
+                              <span className="text-sm font-medium text-gray-800">
+                                {info.label}
+                              </span>
                             </div>
                           </td>
                           <td className="py-3.5 px-6">
                             <span className="text-xs text-gray-400 font-mono">
-                              {l.referenceId ? (l.referenceId.length > 28 ? l.referenceId.substring(0, 28) + '…' : l.referenceId) : '—'}
+                              {l.referenceId
+                                ? l.referenceId.length > 28
+                                  ? l.referenceId.substring(0, 28) + '…'
+                                  : l.referenceId
+                                : '—'}
                             </span>
                           </td>
                           <td className="py-3.5 px-6 text-right">
-                            <span className={`text-sm font-semibold ${isCredit ? 'text-emerald-600' : isDebit ? 'text-red-600' : 'text-gray-800'}`}>
+                            <span
+                              className={`text-sm font-semibold ${isCredit ? 'text-emerald-600' : isDebit ? 'text-red-600' : 'text-gray-800'}`}>
                               {isCredit ? '+' : isDebit ? '−' : ''}
                               {currency} {fmt(Number(l.amount))}
                             </span>
@@ -497,7 +611,8 @@ export default function WalletDashboardPage() {
                             </span>
                           </td>
                           <td className="py-3.5 px-6">
-                            <span className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wide ${statusStyle}`}>
+                            <span
+                              className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wide ${statusStyle}`}>
                               {l.status || 'COMPLETED'}
                             </span>
                           </td>
@@ -510,7 +625,10 @@ export default function WalletDashboardPage() {
                         <div className="flex flex-col items-center gap-2 text-gray-400">
                           <Wallet className="w-8 h-8 text-gray-200" />
                           <p className="text-sm">No transactions yet</p>
-                          <p className="text-xs">When clients pay for bookings, your earnings will appear here.</p>
+                          <p className="text-xs">
+                            When clients pay for bookings, your earnings will
+                            appear here.
+                          </p>
                         </div>
                       </td>
                     </tr>
@@ -537,7 +655,9 @@ export default function WalletDashboardPage() {
              ══════════════════════════════════════════════════════════════ */
           <div className="rounded-2xl bg-white shadow-[0_1px_3px_rgba(0,0,0,0.04)] overflow-hidden">
             <div className="px-6 py-5">
-              <h2 className="text-base font-bold text-gray-900">Payout Transfers</h2>
+              <h2 className="text-base font-bold text-gray-900">
+                Payout Transfers
+              </h2>
               <p className="text-xs text-gray-400 mt-0.5">
                 History of withdrawals sent to your bank or mobile wallet.
               </p>
@@ -547,12 +667,24 @@ export default function WalletDashboardPage() {
               <table className="w-full min-w-[720px] text-left">
                 <thead>
                   <tr className="border-t border-b border-gray-100 bg-gray-50/50">
-                    <th className="py-3 px-6 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Reference</th>
-                    <th className="py-3 px-6 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Gateway</th>
-                    <th className="py-3 px-6 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Date</th>
-                    <th className="py-3 px-6 text-[11px] font-semibold text-gray-400 uppercase tracking-wider text-right">Amount</th>
-                    <th className="py-3 px-6 text-[11px] font-semibold text-gray-400 uppercase tracking-wider text-right">Fee</th>
-                    <th className="py-3 px-6 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Status</th>
+                    <th className="py-3 px-6 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
+                      Reference
+                    </th>
+                    <th className="py-3 px-6 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
+                      Gateway
+                    </th>
+                    <th className="py-3 px-6 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
+                      Date
+                    </th>
+                    <th className="py-3 px-6 text-[11px] font-semibold text-gray-400 uppercase tracking-wider text-right">
+                      Amount
+                    </th>
+                    <th className="py-3 px-6 text-[11px] font-semibold text-gray-400 uppercase tracking-wider text-right">
+                      Fee
+                    </th>
+                    <th className="py-3 px-6 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
+                      Status
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50">
@@ -560,14 +692,19 @@ export default function WalletDashboardPage() {
                     <TableSkeleton rows={4} />
                   ) : paginatedPayouts.length > 0 ? (
                     paginatedPayouts.map((p: any, idx: number) => {
-                      const statusStyle = STATUS_STYLES[p.status] || 'bg-gray-50 text-gray-600';
+                      const statusStyle =
+                        STATUS_STYLES[p.status] || 'bg-gray-50 text-gray-600';
 
                       return (
-                        <tr key={p.id || idx} className="hover:bg-gray-50/50 transition-colors group">
+                        <tr
+                          key={p.id || idx}
+                          className="hover:bg-gray-50/50 transition-colors group">
                           <td className="py-3.5 px-6">
                             <span className="text-sm font-mono font-medium text-gray-700">
                               {p.transferReference
-                                ? (p.transferReference.length > 24 ? p.transferReference.substring(0, 24) + '…' : p.transferReference)
+                                ? p.transferReference.length > 24
+                                  ? p.transferReference.substring(0, 24) + '…'
+                                  : p.transferReference
                                 : p.id?.substring(0, 10).toUpperCase() || '—'}
                             </span>
                           </td>
@@ -577,8 +714,12 @@ export default function WalletDashboardPage() {
                             </span>
                           </td>
                           <td className="py-3.5 px-6">
-                            <div className="text-sm text-gray-700">{fmtDate(p.createdAt)}</div>
-                            <div className="text-[11px] text-gray-400">{fmtTime(p.createdAt)}</div>
+                            <div className="text-sm text-gray-700">
+                              {fmtDate(p.createdAt)}
+                            </div>
+                            <div className="text-[11px] text-gray-400">
+                              {fmtTime(p.createdAt)}
+                            </div>
                           </td>
                           <td className="py-3.5 px-6 text-right">
                             <span className="text-sm font-semibold text-gray-800">
@@ -587,15 +728,20 @@ export default function WalletDashboardPage() {
                           </td>
                           <td className="py-3.5 px-6 text-right">
                             <span className="text-sm text-gray-400">
-                              {p.fee && Number(p.fee) > 0 ? `${currency} ${fmt(Number(p.fee))}` : 'Free'}
+                              {p.fee && Number(p.fee) > 0
+                                ? `${currency} ${fmt(Number(p.fee))}`
+                                : 'Free'}
                             </span>
                           </td>
                           <td className="py-3.5 px-6">
-                            <span className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wide ${statusStyle}`}>
+                            <span
+                              className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wide ${statusStyle}`}>
                               {p.status}
                             </span>
                             {p.failureReason && (
-                              <p className="text-[10px] text-red-500 mt-1 max-w-[180px] truncate" title={p.failureReason}>
+                              <p
+                                className="text-[10px] text-red-500 mt-1 max-w-[180px] truncate"
+                                title={p.failureReason}>
                                 {p.failureReason}
                               </p>
                             )}
@@ -609,7 +755,9 @@ export default function WalletDashboardPage() {
                         <div className="flex flex-col items-center gap-2 text-gray-400">
                           <ArrowDownToLine className="w-8 h-8 text-gray-200" />
                           <p className="text-sm">No payouts yet</p>
-                          <p className="text-xs">Your withdrawal history will appear here.</p>
+                          <p className="text-xs">
+                            Your withdrawal history will appear here.
+                          </p>
                         </div>
                       </td>
                     </tr>

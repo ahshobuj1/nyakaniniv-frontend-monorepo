@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, react-hooks/set-state-in-effect */
 'use client';
 
 import React, {useState, useRef, useEffect} from 'react';
@@ -56,7 +57,6 @@ interface CreateMixTapeProps {
 
 export default function CreateMixTape({isOpen, onClose, mixtapeToEdit}: CreateMixTapeProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [fileName, setFileName] = useState<string>('');
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -84,7 +84,6 @@ export default function CreateMixTape({isOpen, onClose, mixtapeToEdit}: CreateMi
         order: mixtapeToEdit.order !== null ? mixtapeToEdit.order : '',
       });
       setSelectedFile(null);
-      setFileName('');
       setPreviewUrl(mixtapeToEdit.coverImage || null);
     } else if (isOpen) {
       form.reset({
@@ -93,7 +92,6 @@ export default function CreateMixTape({isOpen, onClose, mixtapeToEdit}: CreateMi
         order: '',
       });
       setSelectedFile(null);
-      setFileName('');
       setPreviewUrl(null);
     }
   }, [mixtapeToEdit, isOpen, form]);
@@ -122,7 +120,6 @@ export default function CreateMixTape({isOpen, onClose, mixtapeToEdit}: CreateMi
       }
 
       setSelectedFile(file);
-      setFileName(file.name);
       const url = URL.createObjectURL(file);
       setPreviewUrl(url);
     }
@@ -131,7 +128,6 @@ export default function CreateMixTape({isOpen, onClose, mixtapeToEdit}: CreateMi
   const handleRemoveImage = (e: React.MouseEvent) => {
     e.stopPropagation();
     setSelectedFile(null);
-    setFileName('');
     setPreviewUrl(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';

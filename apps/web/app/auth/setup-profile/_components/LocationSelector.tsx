@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Check, ChevronsUpDown, Search } from "lucide-react";
+import { Check, ChevronsUpDown } from "lucide-react";
 import { Country, State, City } from "country-state-city";
 import { 
   Button, 
@@ -48,26 +48,7 @@ export function LocationSelector({
     );
   }, [allCountries, countrySearch]);
 
-  const cities = React.useMemo(() => {
-    if (!countryCodeValue) return [];
-    // We check if there are states. If so, we might need a state selector too, 
-    // but the requirement says "Automatically load its states... then cities".
-    // For simplicity, if we select a country, we'll try to find states. 
-    // If there are states, we could just list all cities in the country or add a state selector.
-    // The requirement says: "When a state/province is selected: Automatically load its cities."
-    // This implies a 3-step process if states exist.
-    
-    // Let's check if the country has states
-    const states = State.getStatesOfCountry(countryCodeValue);
-    if (states.length === 0) {
-      return City.getCitiesOfCountry(countryCodeValue) || [];
-    }
-    
-    // If states exist, we should ideally have a state selector. 
-    // But the prompt says "If the selected country has no states... load cities directly".
-    // I'll add a state selector if states exist.
-    return []; // Will handle state logic below if needed
-  }, [countryCodeValue]);
+
 
   // To keep it clean as per "Requirements", I'll implement Country -> State (if exists) -> City.
   const [selectedStateCode, setSelectedStateCode] = React.useState<string>("");

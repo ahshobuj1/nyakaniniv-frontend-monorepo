@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { Bell, CheckCircle2, CircleDot, Info, CreditCard, Calendar } from 'lucide-react';
+import { Bell, CircleDot, Info, CreditCard, Calendar } from 'lucide-react';
 
 function timeAgo(dateString: string) {
   const date = new Date(dateString);
@@ -95,7 +95,7 @@ export function NotificationDropdown() {
                 <Bell className="h-5 w-5 text-gray-300" />
               </div>
               <p className="text-sm font-medium text-gray-600">No notifications yet</p>
-              <p className="text-xs text-gray-400 mt-1">We'll notify you when something arrives.</p>
+              <p className="text-xs text-gray-400 mt-1">We&apos;ll notify you when something arrives.</p>
             </div>
           ) : (
             <div className="flex flex-col">

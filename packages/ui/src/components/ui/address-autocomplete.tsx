@@ -14,8 +14,14 @@ export interface AddressAutocompleteProps {
   inputClassName?: string;
 }
 
-function formatCleanAddress(item: any): string {
-  if (!item.address) return item.display_name;
+interface NominatimItem {
+  name?: string;
+  display_name?: string;
+  address?: Record<string, string | undefined>;
+}
+
+function formatCleanAddress(item: NominatimItem): string {
+  if (!item.address) return item.display_name || '';
 
   const addr = item.address;
   const placeName = item.name || addr.amenity || addr.building || addr.shop || addr.tourism || addr.leisure || '';
@@ -50,7 +56,7 @@ function formatCleanAddress(item: any): string {
   if (parts.length > 4) {
     return `${parts.slice(0, 2).join(', ')}, ${parts[parts.length - 2] || ''}, ${parts[parts.length - 1]}`;
   }
-  return item.display_name;
+  return item.display_name || '';
 }
 
 export function AddressAutocomplete({
@@ -62,7 +68,7 @@ export function AddressAutocomplete({
   inputClassName,
 }: AddressAutocompleteProps) {
   const [query, setQuery] = useState(value);
-  const [suggestions, setSuggestions] = useState<any[]>([]);
+  const [suggestions, setSuggestions] = useState<NominatimItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -115,7 +121,7 @@ export function AddressAutocomplete({
     return () => clearTimeout(timer);
   }, [query]);
 
-  const handleSelect = (item: any) => {
+  const handleSelect = (item: NominatimItem) => {
     const cleanAddress = formatCleanAddress(item);
     setQuery(cleanAddress);
     onChange(cleanAddress);

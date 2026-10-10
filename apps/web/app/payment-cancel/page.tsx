@@ -29,7 +29,7 @@ export default function MainPaymentCancelPage() {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5 pt-2">
             <Link
               href="/"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 h-10 px-5 bg-[var(--primary)] hover:opacity-90 text-white font-bold text-xs rounded-sm transition-opacity shadow-xs"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 h-10 px-5 bg-primary hover:opacity-90 text-white font-bold text-xs rounded-sm transition-opacity shadow-xs"
             >
               <Home className="w-3.5 h-3.5" />
               <span>Back to Home</span>

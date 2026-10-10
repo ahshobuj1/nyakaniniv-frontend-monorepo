@@ -1,6 +1,6 @@
 'use client';
 
-import {Menu, Search, Bell, ChevronsRight} from 'lucide-react';
+import {Menu, Search, ChevronsRight} from 'lucide-react';
 import {useSidebar} from './SidebarContext';
 import {NotificationDropdown} from './NotificationDropdown';
 import {UserDropdown} from '../shared/UserDropdown';

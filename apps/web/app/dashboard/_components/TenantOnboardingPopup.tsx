@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+
 import { User } from 'lucide-react';
 import { toast } from 'sonner';
 import {
@@ -16,9 +16,9 @@ import {
   Label
 } from '@repo/ui';
 import { useGetCurrentProfileQuery, useOnboardTenantMutation } from '@repo/store';
+import { ApiErrorResponse } from '@/types/api.types';
 
 export function TenantOnboardingPopup() {
-  const router = useRouter();
   const [open, setOpen] = useState(false);
   
   const [stageName, setStageName] = useState('');
@@ -32,6 +32,7 @@ export function TenantOnboardingPopup() {
       const user = profileResponse.data;
       // If they are a DJ but don't have a tenant profile
       if (user.role === 'DJ' && !user.tenant) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setOpen(true);
       } else {
         setOpen(false);
@@ -75,8 +76,9 @@ export function TenantOnboardingPopup() {
         window.location.reload();
       }, 500);
       
-    } catch (error: any) {
-      toast.error(error?.data?.error?.message || error?.data?.message || 'Failed to create profile. Subdomain might be taken.');
+    } catch (error: unknown) {
+      const err = error as ApiErrorResponse;
+      toast.error(err?.data?.error?.message || err?.data?.message || 'Failed to create profile. Subdomain might be taken.');
     }
   };
 

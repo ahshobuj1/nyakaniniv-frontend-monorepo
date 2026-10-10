@@ -1,8 +1,9 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import { useParams } from 'next/navigation';
 import { Button, Card, CardContent, CardHeader } from '@repo/ui';
-import { DownloadIcon, ArrowLeft, Receipt, CreditCard, User, Music, Building, CheckCircle2, Globe, Clock } from 'lucide-react';
+import { DownloadIcon, ArrowLeft, Receipt, CreditCard, User, Music, Building, CheckCircle2, Globe } from 'lucide-react';
 import Link from 'next/link';
 import { useDownloadInvoicePdfMutation, useGetInvoiceByIdQuery } from '@repo/store';
 import LoadingSpinner from '@/components/LoadingSpinner';

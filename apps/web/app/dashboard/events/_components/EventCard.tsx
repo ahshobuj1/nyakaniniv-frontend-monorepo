@@ -1,7 +1,6 @@
 import {Event} from '@repo/store';
 import {Button, Card, CardContent} from '@repo/ui';
 import {Calendar, Clock, MapPin, Ticket, Trash2, Users} from 'lucide-react';
-import Image from 'next/image';
 
 interface EventCardProps {
   event: Event;

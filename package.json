@@ -7,6 +7,7 @@
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "check-types": "turbo run check-types",
+    "check:all": "turbo run check-types lint --continue",
     "docker:deploy": "docker build -t ahshobuj/upbeat-africa-frontend:latest . && docker push ahshobuj/upbeat-africa-frontend:latest"
   },
   "devDependencies": {

@@ -237,7 +237,7 @@ export default function LatestMixes({content}: any) {
               <div className="mb-[24px]">
                 <div className="w-full h-[4px] bg-[#e0e0e0] rounded-full relative mb-[10px]">
                   <div
-                    className="absolute top-0 left-0 h-full bg-[var(--primary)] rounded-full pointer-events-none"
+                    className="absolute top-0 left-0 h-full bg-primary rounded-full pointer-events-none"
                     style={{width: `${progress}%`}}
                   />
                   <input
@@ -276,7 +276,7 @@ export default function LatestMixes({content}: any) {
 
                 <button 
                   onClick={togglePlay}
-                  className="w-[56px] h-[56px] rounded-full bg-[var(--primary)] flex items-center justify-center text-white shadow-lg hover:scale-105 transition-transform">
+                  className="w-[56px] h-[56px] rounded-full bg-primary flex items-center justify-center text-white shadow-lg hover:scale-105 transition-transform">
                   {isPlaying ? (
                     <svg
                       width="20"

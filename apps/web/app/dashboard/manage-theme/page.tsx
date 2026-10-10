@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @next/next/no-img-element, react-hooks/set-state-in-effect */
 'use client';
 
 import React, {useState, useEffect, useRef, Suspense} from 'react';
@@ -7,11 +8,8 @@ import {
   ChevronDown,
   Type,
   Palette,
-  Eye,
   Settings2,
   LayoutTemplate,
-  Globe,
-  ExternalLink,
 } from 'lucide-react';
 import TemplateRenderer from '@repo/builder';
 import {templates} from '@repo/templates';
@@ -20,7 +18,6 @@ import {
   useAssignThemeMutation,
   useGetCurrentProfileQuery,
   useUploadTenantMediaMutation,
-  useUpdateTenantProfileMutation,
 } from '@repo/store';
 import { toast } from 'sonner';
 import LoadingSpinner from '@/components/LoadingSpinner';
@@ -117,7 +114,7 @@ function GalleryUploader({
         onChange([...images, res.data.url]);
         toast.success('Image added to gallery');
       }
-    } catch (err: any) {
+    } catch {
       toast.error('Failed to upload image');
     }
   };
@@ -184,7 +181,6 @@ function ManageThemeContent() {
   // Fetch current user config
   const { data: userRes, isLoading: isUserLoading } = useGetCurrentProfileQuery();
   const tenant = userRes?.data?.tenant;
-  const tenantConfig = tenant?.config;
   const subdomain = tenant?.subdomain || 'your-stage-url';
 
   // Content & Theme State
@@ -305,7 +301,6 @@ function ManageThemeContent() {
 
   // APIs
   const [assignTheme, { isLoading: isAssigning }] = useAssignThemeMutation();
-  const [updateTenantProfile] = useUpdateTenantProfileMutation();
 
   const handlePublish = async () => {
     try {

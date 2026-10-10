@@ -16,7 +16,6 @@ import {
 import { useRequestWithdrawalMutation } from '@repo/store';
 import {
   ArrowDownToLine,
-  CheckCircle2,
   AlertCircle,
   Loader2,
   Building2,

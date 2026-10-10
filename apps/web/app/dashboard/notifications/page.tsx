@@ -1,8 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { formatDistanceToNow } from 'date-fns';
-import { Bell, Check, CheckCircle2, CircleDot, Info, CreditCard, Calendar, Filter } from 'lucide-react';
+import { Bell, CheckCircle2, CircleDot, Info, CreditCard, Calendar } from 'lucide-react';
 import { useGetMyNotificationsQuery, useMarkAsReadMutation } from '@repo/store';
 import { Button } from '@repo/ui';
 import LoadingSpinner from '@/components/LoadingSpinner';
@@ -72,8 +71,8 @@ export default function NotificationsPage() {
             <div className="h-16 w-16 rounded-full bg-gray-50 flex items-center justify-center mb-4">
               <Bell className="h-8 w-8 text-gray-300" />
             </div>
-            <h3 className="text-lg font-semibold text-gray-800">You're all caught up!</h3>
-            <p className="text-gray-500 mt-2 max-w-sm">No new notifications to show right now. We'll let you know when something happens.</p>
+            <h3 className="text-lg font-semibold text-gray-800">You&apos;re all caught up!</h3>
+            <p className="text-gray-500 mt-2 max-w-sm">No new notifications to show right now. We&apos;ll let you know when something happens.</p>
           </div>
         ) : (
           <div className="divide-y divide-gray-100">

@@ -6,6 +6,7 @@ import {ArrowLeft, Check, Monitor} from 'lucide-react';
 import TemplateRenderer from '@repo/builder';
 import {templates} from '@repo/templates';
 import {Button} from '@repo/ui';
+import LoadingSpinner from '@/components/LoadingSpinner';
 
 type ViewportSize = 'desktop' | 'tablet' | 'mobile';
 
@@ -129,15 +130,7 @@ function ThemePreviewContent() {
 
 export default function ThemePreviewPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="flex flex-col items-center justify-center min-h-screen bg-slate-50 text-slate-500 gap-4">
-          <div className="w-8 h-8 border-4 border-slate-200 border-t-primary rounded-full animate-spin"></div>
-          <p className="text-sm font-medium animate-pulse">
-            Preparing preview...
-          </p>
-        </div>
-      }>
+    <Suspense fallback={<LoadingSpinner fullScreen />}>
       <ThemePreviewContent />
     </Suspense>
   );

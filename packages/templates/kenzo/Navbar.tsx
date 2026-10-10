@@ -92,7 +92,7 @@ export default function Navbar({content, view, onViewChange}: any) {
             <Link
               href={bookingLink}
               onClick={handleBookingClick}
-              className="bg-[var(--primary)] text-white px-8 py-3 rounded-[12px] font-semibold text-[15px] transition-colors inline-block">
+              className="bg-primary text-white px-8 py-3 rounded-[12px] font-semibold text-[15px] transition-colors inline-block">
               Book Now
             </Link>
           </motion.div>
@@ -161,7 +161,7 @@ export default function Navbar({content, view, onViewChange}: any) {
                     handleBookingClick(e);
                     setIsOpen(false);
                   }}
-                  className="bg-[var(--primary)] text-white px-8 py-3 rounded-[12px] font-semibold text-[16px] flex justify-center w-full">
+                  className="bg-primary text-white px-8 py-3 rounded-[12px] font-semibold text-[16px] flex justify-center w-full">
                   Book Now
                 </Link>
               </motion.div>

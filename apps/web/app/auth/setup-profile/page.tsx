@@ -26,6 +26,7 @@ import {Country, City} from 'country-state-city';
 import {useEffect, useState} from 'react';
 import {useOnboardTenantMutation, useGetCurrentProfileQuery} from '@repo/store';
 import {useRouter} from 'next/navigation';
+import LoadingSpinner from '@/components/LoadingSpinner';
 
 const profileSchema = z.object({
   stageName: z.string().min(1, 'Stage name is required'),
@@ -164,11 +165,7 @@ export default function SetupProfilePage() {
   };
 
   if (isProfileLoading || profileData?.data?.tenant) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
+    return <LoadingSpinner fullScreen />;
   }
 
   return (

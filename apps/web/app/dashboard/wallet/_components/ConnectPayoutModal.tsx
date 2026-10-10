@@ -77,6 +77,20 @@ const GATEWAY_OPTIONS: PayoutGatewayOption[] = [
   },
 ];
 
+/* ─── Section Label ──────────────────────────────────────────────── */
+function SectionLabel({ step, children }: { step: number; children: React.ReactNode }) {
+  return (
+    <div className="flex items-center gap-2 mb-2">
+      <span className="flex items-center justify-center w-5 h-5 rounded-sm bg-gray-900 text-white text-[10px] font-bold leading-none">
+        {step}
+      </span>
+      <Label className="text-[11.5px] font-semibold text-gray-700 tracking-wide uppercase">
+        {children}
+      </Label>
+    </div>
+  );
+}
+
 /* ═══════════════════════════════════════════════════════════════════════
    Component
    ═══════════════════════════════════════════════════════════════════════ */
@@ -248,17 +262,7 @@ export default function ConnectPayoutModal({
     }
   };
 
-  /* ─── Section Label ──────────────────────────────────────────────── */
-  const SectionLabel = ({ step, children }: { step: number; children: React.ReactNode }) => (
-    <div className="flex items-center gap-2 mb-2">
-      <span className="flex items-center justify-center w-5 h-5 rounded-sm bg-gray-900 text-white text-[10px] font-bold leading-none">
-        {step}
-      </span>
-      <Label className="text-[11.5px] font-semibold text-gray-700 tracking-wide uppercase">
-        {children}
-      </Label>
-    </div>
-  );
+
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>

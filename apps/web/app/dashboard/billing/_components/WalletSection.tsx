@@ -1,20 +1,15 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Card, CardContent, Button, Badge } from '@repo/ui';
+import { Card, CardContent, Button } from '@repo/ui';
 import { useGetMyWalletQuery } from '@repo/store';
 import {
   Wallet,
   Clock,
   ArrowDownToLine,
-  CheckCircle2,
-  AlertCircle,
-  ExternalLink,
   ShieldCheck,
   Building2,
   Smartphone,
-  Calendar,
-  Layers,
   TrendingUp,
   Receipt,
   RefreshCw,

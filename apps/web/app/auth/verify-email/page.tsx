@@ -10,6 +10,7 @@ import Link from 'next/link';
 import {Button} from '@repo/ui';
 import {useSearchParams, useRouter} from 'next/navigation';
 import {useVerifyOtpMutation, useResendOtpMutation} from '@repo/store';
+import {ApiErrorResponse} from '@/types/api.types';
 
 const verifySchema = z.object({
   code: z
@@ -94,8 +95,9 @@ export default function VerificationPage() {
       const response = await verifyOtp({ email, otp: data.code }).unwrap();
       toast.success(response.message || 'Verification successful!');
       router.push('/auth/setup-profile');
-    } catch (error: any) {
-      const errorMsg = error?.data?.error?.message || error?.data?.message || 'Failed to verify OTP.';
+    } catch (error: unknown) {
+      const err = error as ApiErrorResponse;
+      const errorMsg = err?.data?.error?.message || err?.data?.message || 'Failed to verify OTP.';
       toast.error(errorMsg);
     }
   };
@@ -108,8 +110,9 @@ export default function VerificationPage() {
     try {
       const response = await resendOtp({ email }).unwrap();
       toast.success(response.message || 'OTP resent successfully!');
-    } catch (error: any) {
-      const errorMsg = error?.data?.error?.message || error?.data?.message || 'Failed to resend OTP.';
+    } catch (error: unknown) {
+      const err = error as ApiErrorResponse;
+      const errorMsg = err?.data?.error?.message || err?.data?.message || 'Failed to resend OTP.';
       toast.error(errorMsg);
     }
   };

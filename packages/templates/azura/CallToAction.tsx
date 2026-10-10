@@ -62,7 +62,7 @@ export default function CallToAction({content}: CtaProps) {
             <motion.button
               whileHover={{scale: 1.05}}
               whileTap={{scale: 0.95}}
-              className="bg-[var(--primary)] text-white px-[36px] py-[14px] rounded-[12px] font-bold text-[18px]">
+              className="bg-primary text-white px-[36px] py-[14px] rounded-[12px] font-bold text-[18px]">
               {buttonText}
             </motion.button>
           </div>

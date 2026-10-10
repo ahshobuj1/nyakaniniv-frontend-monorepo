@@ -29,6 +29,7 @@ import { ConfirmationDialog } from '@/components/ConfirmationDialog';
 import { PaystackBrandLogo, PesapalBrandLogo } from '@/components/payment/PaymentMethodLogos';
 import WithdrawModal from './WithdrawModal';
 import ConnectPayoutModal from './ConnectPayoutModal';
+import LoadingSpinner from '@/components/LoadingSpinner';
 
 export default function WalletPage() {
   const { data: profileResponse } = useGetCurrentProfileQuery();
@@ -419,9 +420,7 @@ export default function WalletPage() {
                     {isWalletLoading ? (
                       <tr>
                         <td colSpan={6} className="py-12 text-center">
-                          <div className="flex justify-center">
-                            <div className="w-6 h-6 border-2 border-gray-200 border-t-primary rounded-full animate-spin"></div>
-                          </div>
+                          <LoadingSpinner smallHeight />
                         </td>
                       </tr>
                     ) : ledgers.length > 0 ? (
@@ -527,9 +526,7 @@ export default function WalletPage() {
                     {isWalletLoading ? (
                       <tr>
                         <td colSpan={6} className="py-12 text-center">
-                          <div className="flex justify-center">
-                            <div className="w-6 h-6 border-2 border-gray-200 border-t-primary rounded-full animate-spin"></div>
-                          </div>
+                          <LoadingSpinner smallHeight />
                         </td>
                       </tr>
                     ) : payoutRequests.length > 0 ? (

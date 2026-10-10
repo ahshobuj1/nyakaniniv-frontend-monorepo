@@ -294,7 +294,7 @@ export default function BookingPage({ content }: any) {
                       onClick={() => setValue('duration', dur)}
                       className={`h-8 sm:h-8.5 px-3 rounded-sm text-xs font-medium border text-center transition-all cursor-pointer ${
                         isSelected
-                          ? 'border-[var(--primary)] bg-[var(--primary)] text-white shadow-xs'
+                          ? 'border-primary bg-primary text-white shadow-xs'
                           : 'border-[#d8d8d8] bg-[#fafafa] text-[#444444] hover:border-[#999999] hover:bg-[#f0f0f0]'
                       }`}
                     >
@@ -393,7 +393,7 @@ export default function BookingPage({ content }: any) {
             <button
               type="submit"
               disabled={isSubmitting || isInitiating}
-              className="w-full h-10.5 sm:h-11 bg-[var(--primary)] hover:opacity-95 active:scale-[0.99] text-white font-semibold text-sm rounded-sm transition-all shadow-xs flex items-center justify-center gap-2 disabled:opacity-60 cursor-pointer"
+              className="w-full h-10.5 sm:h-11 bg-primary hover:opacity-95 active:scale-[0.99] text-white font-semibold text-sm rounded-sm transition-all shadow-xs flex items-center justify-center gap-2 disabled:opacity-60 cursor-pointer"
             >
               {isSubmitting || isInitiating ? (
                 <>

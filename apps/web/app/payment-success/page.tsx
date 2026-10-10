@@ -1,8 +1,8 @@
 'use client';
 
-import React, { Suspense, useState } from 'react';
+import React, {Suspense, useState} from 'react';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
+import {useSearchParams} from 'next/navigation';
 import {
   CheckCircle2,
   ShieldCheck,
@@ -13,34 +13,44 @@ import {
   Copy,
   Check,
   Music,
-  Loader2,
 } from 'lucide-react';
-import { useGetBookingByIdQuery } from '@repo/store';
-import { parseBookingEventDetails } from '@/lib/bookingStatusHelper';
-import { LandingHeader } from '@/components/LandingHeader';
-import { DynamicFooter } from '@/app/(landingPage)/_components/DynamicFooter';
-import { formatDateInTz, formatTimeInTz, getBrowserTimezone } from '@/lib/timezone';
+import {useGetBookingByIdQuery} from '@repo/store';
+import {LandingHeader} from '@/components/LandingHeader';
+import {DynamicFooter} from '@/app/(landingPage)/_components/DynamicFooter';
+import LoadingSpinner from '@/components/LoadingSpinner';
+import {
+  formatDateInTz,
+  formatTimeInTz,
+  getBrowserTimezone,
+} from '@/lib/timezone';
 
 function PaymentSuccessContent() {
   const searchParams = useSearchParams();
   const [copiedRef, setCopiedRef] = useState(false);
 
-  const bookingId = searchParams.get('bookingId') || searchParams.get('id') || undefined;
+  const bookingId =
+    searchParams.get('bookingId') || searchParams.get('id') || undefined;
   const reference =
     searchParams.get('reference') ||
     searchParams.get('trxref') ||
     searchParams.get('OrderTrackingId') ||
     '';
 
-  const { data: bookingResponse, isLoading } = useGetBookingByIdQuery(bookingId as string, {
-    skip: !bookingId,
-  });
+  const {data: bookingResponse, isLoading} = useGetBookingByIdQuery(
+    bookingId as string,
+    {
+      skip: !bookingId,
+    },
+  );
   const booking = bookingResponse?.data;
 
-  const stageName = booking?.tenant?.stageName || booking?.tenant?.user?.firstName || 'DJ';
+  const stageName =
+    booking?.tenant?.stageName || booking?.tenant?.user?.firstName || 'DJ';
   const subdomain = booking?.tenant?.subdomain;
 
-  const referenceCode = reference || (bookingId ? `UB-${bookingId.slice(0, 8).toUpperCase()}` : 'UB-CONFIRMED');
+  const referenceCode =
+    reference ||
+    (bookingId ? `UB-${bookingId.slice(0, 8).toUpperCase()}` : 'UB-CONFIRMED');
 
   const handleCopy = () => {
     if (!referenceCode) return;
@@ -51,7 +61,11 @@ function PaymentSuccessContent() {
 
   const getDjWebsiteUrl = () => {
     if (!subdomain) return '/';
-    if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+    if (
+      typeof window !== 'undefined' &&
+      (window.location.hostname === 'localhost' ||
+        window.location.hostname === '127.0.0.1')
+    ) {
       const port = window.location.port ? `:${window.location.port}` : '';
       return `http://${subdomain}.localhost${port}`;
     }
@@ -67,7 +81,9 @@ function PaymentSuccessContent() {
         year: 'numeric',
       })
     : '';
-  const formattedTime = booking?.eventDate ? formatTimeInTz(booking.eventDate, tz) : '';
+  const formattedTime = booking?.eventDate
+    ? formatTimeInTz(booking.eventDate, tz)
+    : '';
 
   return (
     <div className="flex flex-col min-h-screen bg-[#f0f0f0] text-gray-900 font-sans">
@@ -82,13 +98,17 @@ function PaymentSuccessContent() {
 
           <div className="space-y-1.5">
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-sm text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" /> Escrow Protected • Booking Secured
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" /> Escrow
+              Protected • Booking Secured
             </span>
             <h1 className="text-2xl font-bold text-gray-900 pt-1">
               Payment Successful!
             </h1>
             <p className="text-gray-600 text-xs sm:text-sm leading-relaxed max-w-sm mx-auto">
-              Your payment has been received and safely locked in UpBeat Escrow. {stageName ? `${stageName} has been notified and your date is confirmed.` : 'Your date is officially reserved.'}
+              Your payment has been received and safely locked in UpBeat Escrow.{' '}
+              {stageName
+                ? `${stageName} has been notified and your date is confirmed.`
+                : 'Your date is officially reserved.'}
             </p>
           </div>
 
@@ -100,18 +120,18 @@ function PaymentSuccessContent() {
               type="button"
               onClick={handleCopy}
               className="text-gray-400 hover:text-gray-700 transition-colors ml-1 cursor-pointer"
-              title="Copy reference code"
-            >
-              {copiedRef ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
+              title="Copy reference code">
+              {copiedRef ? (
+                <Check className="w-3 h-3 text-emerald-600" />
+              ) : (
+                <Copy className="w-3 h-3" />
+              )}
             </button>
           </div>
 
           {/* Booking Summary Card */}
           {isLoading ? (
-            <div className="py-4 flex items-center justify-center gap-2 text-xs text-gray-500">
-              <Loader2 className="w-4 h-4 animate-spin text-[var(--primary)]" />
-              <span>Loading booking details...</span>
-            </div>
+            <LoadingSpinner smallHeight />
           ) : booking ? (
             <div className="rounded-sm bg-gray-50/80 border border-gray-200 p-4 text-left text-xs space-y-2.5">
               <div className="flex items-center justify-between border-b border-gray-200/80 pb-2">
@@ -129,8 +149,14 @@ function PaymentSuccessContent() {
                   <div className="flex items-start gap-2">
                     <Calendar className="w-3.5 h-3.5 text-gray-400 shrink-0 mt-0.5" />
                     <div>
-                      <span className="font-medium text-gray-900">{formattedDate}</span>
-                      {formattedTime && <span className="text-gray-500 ml-1.5 font-medium">({formattedTime})</span>}
+                      <span className="font-medium text-gray-900">
+                        {formattedDate}
+                      </span>
+                      {formattedTime && (
+                        <span className="text-gray-500 ml-1.5 font-medium">
+                          ({formattedTime})
+                        </span>
+                      )}
                     </div>
                   </div>
                 )}
@@ -146,7 +172,8 @@ function PaymentSuccessContent() {
               <div className="pt-2 border-t border-gray-200 flex justify-between items-center text-xs">
                 <span className="text-gray-500 font-medium">Amount Paid</span>
                 <span className="font-bold text-sm text-[var(--primary)] font-mono">
-                  {booking.currencyCode || 'KES'} {Number(booking.totalAmount || 0).toLocaleString()}
+                  {booking.currencyCode || 'KES'}{' '}
+                  {Number(booking.totalAmount || 0).toLocaleString()}
                 </span>
               </div>
             </div>
@@ -157,8 +184,7 @@ function PaymentSuccessContent() {
             {bookingId && (
               <Link
                 href={`/booking/manage/${bookingId}`}
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 h-10 px-5 bg-primary hover:opacity-90 text-white font-bold text-xs rounded-sm transition-opacity shadow-xs"
-              >
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 h-10 px-5 bg-primary hover:opacity-90 text-white font-bold text-xs rounded-sm transition-opacity shadow-xs">
                 <ShieldCheck className="w-4 h-4" />
                 <span>View / Manage Booking</span>
               </Link>
@@ -167,16 +193,14 @@ function PaymentSuccessContent() {
             {subdomain ? (
               <a
                 href={getDjWebsiteUrl()}
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 h-10 px-4 bg-white border border-gray-300 hover:bg-gray-50 text-gray-800 font-semibold text-xs rounded-sm transition-colors"
-              >
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 h-10 px-4 bg-white border border-gray-300 hover:bg-gray-50 text-gray-800 font-semibold text-xs rounded-sm transition-colors">
                 <span>Visit {stageName}&apos;s Profile</span>
                 <ExternalLink className="w-3.5 h-3.5 text-gray-400" />
               </a>
             ) : (
               <Link
                 href="/"
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 h-10 px-4 bg-white border border-gray-300 hover:bg-gray-50 text-gray-800 font-semibold text-xs rounded-sm transition-colors"
-              >
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 h-10 px-4 bg-white border border-gray-300 hover:bg-gray-50 text-gray-800 font-semibold text-xs rounded-sm transition-colors">
                 <Home className="w-3.5 h-3.5 text-gray-400" />
                 <span>UpBeat Home</span>
               </Link>
@@ -192,13 +216,7 @@ function PaymentSuccessContent() {
 
 export default function PaymentSuccessPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="min-h-screen flex items-center justify-center bg-[#f0f0f0]">
-          <Loader2 className="w-8 h-8 animate-spin text-[var(--primary)]" />
-        </div>
-      }
-    >
+    <Suspense fallback={<LoadingSpinner fullScreen />}>
       <PaymentSuccessContent />
     </Suspense>
   );

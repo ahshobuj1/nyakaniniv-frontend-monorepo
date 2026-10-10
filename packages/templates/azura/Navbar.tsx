@@ -92,7 +92,7 @@ export default function Nav({content, view, onViewChange, baseUrl}: any) {
             <motion.button
               whileHover={{scale: 1.04}}
               whileTap={{scale: 0.97}}
-              className="bg-[var(--primary)] text-white rounded-[16px] px-[24px] py-[12px] text-[16px] font-semibold shadow-sm hover:shadow-md transition-shadow">
+              className="bg-primary text-white rounded-[16px] px-[24px] py-[12px] text-[16px] font-semibold shadow-sm hover:shadow-md transition-shadow">
               Book Now
             </motion.button>
           </Link>
@@ -155,7 +155,7 @@ export default function Nav({content, view, onViewChange, baseUrl}: any) {
                   href={bookingLink}
                   onClick={handleBookingClick}
                   className="block w-full">
-                  <button className="w-full bg-[var(--primary)] text-white rounded-[16px] px-[24px] py-[14px] text-[16px] font-semibold active:scale-95 transition-transform">
+                  <button className="w-full bg-primary text-white rounded-[16px] px-[24px] py-[14px] text-[16px] font-semibold active:scale-95 transition-transform">
                     Book Now
                   </button>
                 </Link>

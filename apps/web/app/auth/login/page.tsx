@@ -11,6 +11,7 @@ import Link from 'next/link';
 import {Button} from '@repo/ui';
 import {useRouter} from 'next/navigation';
 import {useLoginMutation} from '@repo/store';
+import {ApiErrorResponse} from '@/types/api.types';
 
 const loginSchema = z.object({
   email: z.string().min(1, 'Email is required').email('Invalid email address'),
@@ -37,8 +38,9 @@ export default function LoginPage() {
       const response = await loginApi(data).unwrap();
       toast.success(response.message || 'Successfully logged in!');
       router.push('/dashboard');
-    } catch (error: any) {
-      const errorMsg = error?.data?.error?.message || error?.data?.message || 'Failed to log in. Please check your credentials.';
+    } catch (error: unknown) {
+      const err = error as ApiErrorResponse;
+      const errorMsg = err?.data?.error?.message || err?.data?.message || 'Failed to log in. Please check your credentials.';
       toast.error(errorMsg);
       
       if (errorMsg === 'Please verify your email before logging in') {

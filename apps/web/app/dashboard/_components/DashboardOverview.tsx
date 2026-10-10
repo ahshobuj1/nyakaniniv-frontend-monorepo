@@ -33,7 +33,6 @@ import Link from 'next/link';
 import { toast } from 'sonner';
 import { ConfirmationDialog } from '@/components/ConfirmationDialog';
 import { DeclineBookingModal } from '@/components/DeclineBookingModal';
-import { parseBookingEventDetails } from '@/lib/bookingStatusHelper';
 import { formatDateInTz, formatTimeInTz } from '@/lib/timezone';
 
 // ==========================================
@@ -172,16 +171,7 @@ export default function DashboardOverview() {
     }
   };
 
-  const handleCashDecision = async (decision: 'approve' | 'reject') => {
-    if (!bookingToUpdate) return;
-    try {
-      await handleCash({ id: bookingToUpdate.id, decision }).unwrap();
-      toast.success(`Cash request ${decision}d successfully!`);
-      setBookingToUpdate(null);
-    } catch (error: any) {
-      toast.error(error?.data?.error?.message || error?.data?.message || `Failed to ${decision} cash request`);
-    }
-  };
+
 
   const handleConfirmMarkCashPaid = async () => {
     if (!cashPaidBookingId) return;

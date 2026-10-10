@@ -40,11 +40,12 @@ export function PaystackConnectPopup() {
         // Check session storage so we don't annoy them if they dismissed it in this session
         const hasDismissed = sessionStorage.getItem(`paystackPopupDismissed_${tenantId}`);
         if (!hasDismissed) {
+          // eslint-disable-next-line react-hooks/set-state-in-effect
           setOpen(true);
         }
       }
     }
-  }, [isLoadingProfile, isLoadingStatus, statusResponse, tenantId]);
+  }, [isLoadingProfile, isLoadingStatus, statusResponse, tenantId, profileResponse?.data?.role]);
 
   const handleOpenChange = (newOpen: boolean) => {
     setOpen(newOpen);

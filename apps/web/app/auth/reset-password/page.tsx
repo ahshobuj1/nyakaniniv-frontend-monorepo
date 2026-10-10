@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/incompatible-library */
 'use client';
 
 import { useState, Suspense, useEffect } from 'react';
@@ -11,6 +12,7 @@ import Link from 'next/link';
 import { Button } from '@repo/ui';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useResetPasswordMutation, useResendOtpMutation } from '@repo/store';
+import { ApiErrorResponse, ApiErrorIssue } from '@/types/api.types';
 import LoadingSpinner from '@/components/LoadingSpinner';
 
 const resetPasswordSchema = z
@@ -62,14 +64,15 @@ function ResetPasswordForm() {
 
   const currentEmail = watch('email');
 
-  const getErrorMessage = (error: any, defaultMsg: string) => {
-    const issues = error?.data?.error?.details?.issues;
+  const getErrorMessage = (error: unknown, defaultMsg: string) => {
+    const err = error as ApiErrorResponse;
+    const issues = err?.data?.error?.details?.issues;
     if (Array.isArray(issues) && issues.length > 0) {
-      return issues.map((i: any) => i.message).join(', ');
+      return issues.map((i: ApiErrorIssue) => i.message).join(', ');
     }
     return (
-      error?.data?.error?.message ||
-      error?.data?.message ||
+      err?.data?.error?.message ||
+      err?.data?.message ||
       defaultMsg
     );
   };
@@ -86,7 +89,7 @@ function ResetPasswordForm() {
         response?.message || 'Password has been reset successfully! Please log in.'
       );
       router.push('/auth/login');
-    } catch (error: any) {
+    } catch (error: unknown) {
       const errorMsg = getErrorMessage(
         error,
         'Failed to reset password. Please check your OTP and try again.'
@@ -103,7 +106,7 @@ function ResetPasswordForm() {
     try {
       const response = await resendOtpApi({ email: currentEmail }).unwrap();
       toast.success(response?.message || 'New OTP has been sent to your email!');
-    } catch (error: any) {
+    } catch (error: unknown) {
       const errorMsg = getErrorMessage(error, 'Failed to resend OTP.');
       toast.error(errorMsg);
     }
@@ -169,7 +172,13 @@ function ResetPasswordForm() {
                 className="block text-lg font-semibold text-[#0F0F0F]">
                 Verification Code (OTP)
               </label>
-              
+              <button
+                type="button"
+                onClick={handleResendOtp}
+                disabled={isResending}
+                className="text-xs text-primary font-medium hover:underline disabled:opacity-50">
+                {isResending ? 'Resending...' : 'Resend Code'}
+              </button>
             </div>
             <input
               id="otp"

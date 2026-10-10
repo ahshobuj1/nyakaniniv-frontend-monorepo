@@ -9,6 +9,7 @@ import Link from 'next/link';
 import { Button } from '@repo/ui';
 import { useRouter } from 'next/navigation';
 import { useForgotPasswordMutation } from '@repo/store';
+import { ApiErrorResponse, ApiErrorIssue } from '@/types/api.types';
 
 const forgotPasswordSchema = z.object({
   email: z.string().min(1, 'Email is required').email('Invalid email address'),
@@ -29,14 +30,15 @@ export default function ForgotPasswordPage() {
     defaultValues: { email: '' },
   });
 
-  const getErrorMessage = (error: any, defaultMsg: string) => {
-    const issues = error?.data?.error?.details?.issues;
+  const getErrorMessage = (error: unknown, defaultMsg: string) => {
+    const err = error as ApiErrorResponse;
+    const issues = err?.data?.error?.details?.issues;
     if (Array.isArray(issues) && issues.length > 0) {
-      return issues.map((i: any) => i.message).join(', ');
+      return issues.map((i: ApiErrorIssue) => i.message).join(', ');
     }
     return (
-      error?.data?.error?.message ||
-      error?.data?.message ||
+      err?.data?.error?.message ||
+      err?.data?.message ||
       defaultMsg
     );
   };
@@ -48,7 +50,7 @@ export default function ForgotPasswordPage() {
         response?.message || 'Password reset OTP has been sent to your email.'
       );
       router.push(`/auth/reset-password?email=${encodeURIComponent(data.email)}`);
-    } catch (error: any) {
+    } catch (error: unknown) {
       const errorMsg = getErrorMessage(
         error,
         'Failed to send OTP. Please try again.'

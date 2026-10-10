@@ -15,7 +15,6 @@ import {
   ExternalLink,
   Headphones,
   X,
-  HeadphonesIcon,
   Music,
 } from 'lucide-react';
 import {useSidebar} from './SidebarContext';

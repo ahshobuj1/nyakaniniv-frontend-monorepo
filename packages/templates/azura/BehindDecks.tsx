@@ -73,7 +73,7 @@ export default function BehindDecks({content}: any) {
                   viewport={{once: true}}
                   transition={{delay: 0.1 + i * 0.06}}
                   whileHover={{y: -2}}
-                  className="bg-[var(--primary)]/10 border border-[var(--primary)]/20 rounded-[12px] px-[17px] py-[9px] text-[14px] text-[#0f0f0f] font-medium font-sans">
+                  className="bg-primary/10 border border-[var(--primary)]/20 rounded-[12px] px-[17px] py-[9px] text-[14px] text-[#0f0f0f] font-medium font-sans">
                   {typeof t === 'string' ? t.trim() : t}
                 </motion.span>
               ))}

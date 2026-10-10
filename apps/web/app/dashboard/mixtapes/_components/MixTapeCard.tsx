@@ -1,6 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
-import { Edit, Trash2, Music, Play, Pause, Volume2, VolumeX } from 'lucide-react';
+import { Edit, Trash2, Music, Play, Pause } from 'lucide-react';
 import { Card, CardContent } from '@repo/ui';
 import { MixTape } from '@repo/store';
 import ReactPlayer from 'react-player';

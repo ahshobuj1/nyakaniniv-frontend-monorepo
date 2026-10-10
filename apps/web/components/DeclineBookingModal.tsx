@@ -34,6 +34,7 @@ export function DeclineBookingModal({
   // Reset reason when modal closes or opens
   useEffect(() => {
     if (isOpen) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setReason('');
       setHasSubmittedAttempt(false);
     }
