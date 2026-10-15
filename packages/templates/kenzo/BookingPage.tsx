@@ -463,7 +463,7 @@ export default function BookingPage({content}: any) {
                 disabled={isSubmitting || isInitiating}
                 whileHover={{scale: isSubmitting || isInitiating ? 1 : 1.01}}
                 whileTap={{scale: isSubmitting || isInitiating ? 1 : 0.99}}
-                className="w-full bg-primary hover:opacity-90 text-white py-[15px] rounded-sm font-bold text-[16px] transition-all mt-[8px] flex justify-center items-center gap-2 shadow-lg shadow-[var(--primary)]/20 disabled:opacity-70 cursor-pointer">
+                className="w-full bg-[var(--primary)] hover:opacity-90 text-white py-[15px] rounded-sm font-bold text-[16px] transition-all mt-[8px] flex justify-center items-center gap-2 shadow-lg shadow-[var(--primary)]/20 disabled:opacity-70 cursor-pointer">
                 {isSubmitting || isInitiating ? (
                   <>
                     <svg

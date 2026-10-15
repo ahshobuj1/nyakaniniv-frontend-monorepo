@@ -19,7 +19,7 @@ export default function Contact({content}: {content: Content}) {
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div className="bg-white p-8 rounded-2xl flex flex-col items-center text-center gap-4">
-            <div className="size-12 rounded-full bg-primary/10 flex items-center justify-center">
+            <div className="size-12 rounded-full bg-[var(--primary)]/10 flex items-center justify-center">
               <Mail className="text-[var(--primary)]" />
             </div>
             <h3 className="text-xl font-bold">Email</h3>
@@ -28,7 +28,7 @@ export default function Contact({content}: {content: Content}) {
             </p>
           </div>
           <div className="bg-white p-8 rounded-2xl flex flex-col items-center text-center gap-4">
-            <div className="size-12 rounded-full bg-primary/10 flex items-center justify-center">
+            <div className="size-12 rounded-full bg-[var(--primary)]/10 flex items-center justify-center">
               <Phone className="text-[var(--primary)]" />
             </div>
             <h3 className="text-xl font-bold">Phone</h3>
@@ -37,7 +37,7 @@ export default function Contact({content}: {content: Content}) {
             </p>
           </div>
           <div className="bg-white p-8 rounded-2xl flex flex-col items-center text-center gap-4">
-            <div className="size-12 rounded-full bg-primary/10 flex items-center justify-center">
+            <div className="size-12 rounded-full bg-[var(--primary)]/10 flex items-center justify-center">
               <MapPin className="text-[var(--primary)]" />
             </div>
             <h3 className="text-xl font-bold">Location</h3>

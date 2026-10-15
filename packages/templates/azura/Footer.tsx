@@ -47,7 +47,7 @@ export default function Footer({content}: FooterProps) {
             <div className="flex gap-[12px] mt-2">
               <Link
                 href={content?.instagram || footerData.instagram || '#'}
-                className="w-[40px] h-[40px] rounded-full bg-[#333333] flex items-center justify-center text-white hover:bg-primary transition-colors duration-300">
+                className="w-[40px] h-[40px] rounded-full bg-[#333333] flex items-center justify-center text-white hover:bg-[var(--primary)] transition-colors duration-300">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="18"
@@ -65,7 +65,7 @@ export default function Footer({content}: FooterProps) {
               </Link>
               <Link
                 href={content?.facebook || footerData.facebook || '#'}
-                className="w-[40px] h-[40px] rounded-full bg-[#333333] flex items-center justify-center text-white hover:bg-primary transition-colors duration-300">
+                className="w-[40px] h-[40px] rounded-full bg-[#333333] flex items-center justify-center text-white hover:bg-[var(--primary)] transition-colors duration-300">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="18"
@@ -81,7 +81,7 @@ export default function Footer({content}: FooterProps) {
               </Link>
               <Link
                 href={content?.linkedin || footerData.linkedin || '#'}
-                className="w-[40px] h-[40px] rounded-full bg-[#333333] flex items-center justify-center text-white hover:bg-primary transition-colors duration-300">
+                className="w-[40px] h-[40px] rounded-full bg-[#333333] flex items-center justify-center text-white hover:bg-[var(--primary)] transition-colors duration-300">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="18"

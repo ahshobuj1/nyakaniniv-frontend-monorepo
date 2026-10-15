@@ -65,7 +65,7 @@ export default function Hero({content, onViewChange, view}: HeroProps) {
             <motion.span
               animate={{scale: [1, 1.3, 1], opacity: [1, 0.6, 1]}}
               transition={{duration: 1.6, repeat: Infinity}}
-              className="w-2 h-2 bg-primary rounded-[4px]"
+              className="w-2 h-2 bg-[var(--primary)] rounded-[4px]"
             />
             <span className="text-[14px] text-[#787878] tracking-wide font-sans font-medium">
               AVAILABLE FOR BOOKING
@@ -88,7 +88,7 @@ export default function Hero({content, onViewChange, view}: HeroProps) {
                   boxShadow: '0 10px 30px rgba(var(--primary-rgb),0.35)',
                 }}
                 whileTap={{scale: 0.97}}
-                className="bg-primary text-white px-5 md:px-8 py-[16px] rounded-[16px] text-base lg:text-[18px] font-semibold">
+                className="bg-[var(--primary)] text-white px-5 md:px-8 py-[16px] rounded-[16px] text-base lg:text-[18px] font-semibold">
                 Book The DJ
               </motion.button>
             </Link>
