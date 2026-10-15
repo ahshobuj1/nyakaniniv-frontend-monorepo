@@ -95,7 +95,7 @@ export default function Hero({content, onViewChange, view}: HeroProps) {
               <motion.button
                 whileHover={{scale: 1.03}}
                 whileTap={{scale: 0.97}}
-                className="bg-primary text-white px-8 py-3.5 rounded-[12px] text-[16px] font-semibold transition-shadow">
+                className="bg-[var(--primary)] text-white px-8 py-3.5 rounded-[12px] text-[16px] font-semibold transition-shadow">
                 Book The DJ
               </motion.button>
             </Link>

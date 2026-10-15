@@ -1,0 +1,24 @@
+{
+  "default_branch": "main",
+  "branches": [
+    "dev",
+    "first-phase-completed",
+    "main",
+    "origin",
+    "starter-template"
+  ],
+  "parent": {
+    "dev": "main",
+    "first-phase-completed": "main",
+    "main": null,
+    "origin": "main",
+    "starter-template": "main"
+  },
+  "order": [
+    "main",
+    "dev",
+    "first-phase-completed",
+    "origin",
+    "starter-template"
+  ]
+}
