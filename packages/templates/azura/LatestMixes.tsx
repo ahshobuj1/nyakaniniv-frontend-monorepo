@@ -27,7 +27,7 @@ function MixCard({img, title, genre, time, delay, onPlay, isPlaying}: any) {
         />
         <motion.div
           whileHover={{scale: 1.1}}
-          className="absolute bottom-[16px] right-[16px] size-[50px] md:size-[66px] rounded-full bg-primary flex items-center justify-center shadow-lg">
+          className="absolute bottom-[16px] right-[16px] size-[50px] md:size-[66px] rounded-full bg-[var(--primary)] flex items-center justify-center shadow-lg">
           {isPlaying ? (
             <Pause className="size-[20px] md:size-[26px] text-white fill-white" />
           ) : (
@@ -239,7 +239,7 @@ export default function LatestMixes({content}: any) {
 
           <div className="flex-1 flex flex-col gap-[10px] w-full">
             <div className="flex items-center gap-[12px]">
-              <span className="bg-primary text-white text-[14px] px-[8px] py-[4px] rounded-[4px] font-medium font-sans">
+              <span className="bg-[var(--primary)] text-white text-[14px] px-[8px] py-[4px] rounded-[4px] font-medium font-sans">
                 {isPlaying ? 'NOW PLAYING' : 'PAUSED'}
               </span>
               <span className="text-[#787878] text-[16px] font-sans">
@@ -255,7 +255,7 @@ export default function LatestMixes({content}: any) {
               </span>
               <div className="flex-1 h-[8px] bg-[#ddd] rounded-[12px] relative">
                 <div
-                  className="absolute top-0 left-0 h-full bg-primary rounded-[16px] pointer-events-none"
+                  className="absolute top-0 left-0 h-full bg-[var(--primary)] rounded-[16px] pointer-events-none"
                   style={{ width: `${progress}%` }}
                 />
                 <input
@@ -282,7 +282,7 @@ export default function LatestMixes({content}: any) {
               onClick={togglePlay}
               whileHover={{scale: 1.08}}
               whileTap={{scale: 0.95}}
-              className="size-[50px] md:size-[66px] rounded-full bg-primary flex items-center justify-center shadow-lg">
+              className="size-[50px] md:size-[66px] rounded-full bg-[var(--primary)] flex items-center justify-center shadow-lg">
               {isPlaying ? (
                 <Pause className="size-[20px] md:size-[26px] text-white fill-white" />
               ) : (
