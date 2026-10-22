@@ -2,22 +2,23 @@
 'use client';
 
 import React, {useState} from 'react';
-import {useParams, useRouter} from 'next/navigation';
-import Link from 'next/link';
+import {useParams, useRouter, useSearchParams} from 'next/navigation';
+import {useSelector} from 'react-redux';
 import {
-  useGetClientBookingQuery,
+  useGetBookingPortalDetailsQuery,
   useClientCancelBookingMutation,
 } from '@repo/store';
+import type {RootState} from '@repo/store';
 import {
   AlertCircle,
   ArrowLeft,
   ExternalLink,
   ShieldCheck,
-  CreditCard,
-  Banknote,
   FileText,
   Copy,
   Check,
+  ShieldAlert,
+  HelpCircle,
 } from 'lucide-react';
 import {toast} from 'sonner';
 import LoadingSpinner from '@/components/LoadingSpinner';
@@ -27,7 +28,6 @@ import {
   getClientBookingStatusBadge,
   normalizeBookingStatus,
   parseBookingEventDetails,
-  calculateCancellationPreview,
 } from '@/lib/bookingStatusHelper';
 import {
   formatDateInTz,
@@ -40,28 +40,120 @@ import {
   EventScheduleCard,
   DjContactCard,
   CancelBookingModal,
+  BookingAccessModal,
+  DirectPaymentCard,
+  QuoteNegotiationCard,
+  BookingMessageThread,
+  PostEventCard,
 } from './_components';
-import type {DjContactInfo} from './_components';
+import type {DjContactInfo, ClientContactInfo} from './_components/types';
 
 export default function ManageBookingPage() {
   const params = useParams();
+  const searchParams = useSearchParams();
   const router = useRouter();
   const bookingId = params?.bookingId as string;
+  const initialRef =
+    searchParams.get('ref') || searchParams.get('orderReference') || '';
 
-  const {data, isLoading, isError} = useGetClientBookingQuery(bookingId, {
-    skip: !bookingId,
-  });
+  // Auth inspection: Check if logged in as DJ or Admin via Redux
+  const {user, token: reduxAuthToken} = useSelector(
+    (state: RootState) => state.auth,
+  );
+  const isDjUser = user?.role === 'DJ';
+  const isAdminUser = user?.role === 'ADMIN';
+  const isPrivilegedUser = Boolean(reduxAuthToken && (isDjUser || isAdminUser));
+  const viewerRole: 'CLIENT' | 'DJ' | 'ADMIN' = isAdminUser
+    ? 'ADMIN'
+    : isDjUser
+      ? 'DJ'
+      : 'CLIENT';
+
+  // Read client booking access token from URL or storage
+  const [clientAccessToken, setClientAccessToken] = useState<string | null>(
+    () => {
+      if (typeof window !== 'undefined') {
+        const urlToken =
+          searchParams.get('token') || searchParams.get('access_token');
+        if (urlToken) {
+          sessionStorage.setItem('booking_access_token', urlToken);
+          localStorage.setItem('booking_access_token', urlToken);
+          return urlToken;
+        }
+        return (
+          sessionStorage.getItem('booking_access_token') ||
+          localStorage.getItem('booking_access_token')
+        );
+      }
+      return null;
+    },
+  );
+
+  const [copiedRef, setCopiedRef] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+
+  // If user is DJ or Admin, they use their Redux token; otherwise use clientAccessToken
+  const hasValidAuth = isPrivilegedUser || Boolean(clientAccessToken);
+
+  const {data, isLoading, isFetching, isError, error, refetch} =
+    useGetBookingPortalDetailsQuery(bookingId, {
+      skip: !bookingId || !hasValidAuth,
+    });
 
   const [cancelBooking, {isLoading: isCanceling}] =
     useClientCancelBookingMutation();
-  const [showCancelModal, setShowCancelModal] = useState(false);
-  const [copiedRef, setCopiedRef] = useState(false);
 
-  if (isLoading) {
+  const isAuthError =
+    (error as any)?.status === 401 || (error as any)?.status === 403;
+
+  const handleAccessSuccess = (newAccessToken?: string) => {
+    const token =
+      newAccessToken ||
+      (typeof window !== 'undefined'
+        ? sessionStorage.getItem('booking_access_token') ||
+          localStorage.getItem('booking_access_token')
+        : null);
+    if (token) {
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem('booking_access_token', token);
+        localStorage.setItem('booking_access_token', token);
+      }
+      setClientAccessToken(token);
+    }
+  };
+
+  const booking = data?.data;
+
+  // Determine if client needs to authenticate with OTP (unauthenticated or invalid session)
+  const isGated =
+    !isPrivilegedUser && (!hasValidAuth || (isAuthError && !booking));
+
+  // 1. Render gate modal if not authenticated as DJ/Admin and client token is missing or invalid
+  if (isGated) {
+    return (
+      <div className="flex flex-col min-h-screen bg-[#f0f0f0]">
+        <LandingHeader />
+        <main className="flex-1 flex items-center justify-center p-4 py-16">
+          <BookingAccessModal
+            key={initialRef || 'modal'}
+            bookingId={bookingId}
+            defaultOrderReference={initialRef}
+            isOpen={true}
+            onSuccess={handleAccessSuccess}
+          />
+        </main>
+        <DynamicFooter />
+      </div>
+    );
+  }
+
+  // 2. Loading state while query is fetching
+  if (isLoading || (isFetching && !booking)) {
     return <LoadingSpinner fullScreen />;
   }
 
-  if (isError || !data?.data) {
+  // 3. If other non-auth error (e.g. 404), show booking not found
+  if (isError && !booking) {
     return (
       <div className="flex flex-col min-h-screen bg-[#f0f0f0]">
         <LandingHeader />
@@ -89,7 +181,10 @@ export default function ManageBookingPage() {
     );
   }
 
-  const booking = data.data;
+  if (!booking) {
+    return <LoadingSpinner fullScreen />;
+  }
+
   const canonicalStatus = normalizeBookingStatus(booking.status);
   const statusBadge = getClientBookingStatusBadge(
     canonicalStatus,
@@ -159,7 +254,8 @@ export default function ManageBookingPage() {
   const displayTime =
     formattedTime || parsedDetails.startTime || 'Time on Schedule';
 
-  const referenceCode = `UB-${booking.id.slice(0, 8).toUpperCase()}`;
+  const referenceCode =
+    booking.orderReference || `UB-${booking.id.slice(0, 8).toUpperCase()}`;
 
   const handleCopyRef = () => {
     if (typeof navigator !== 'undefined') {
@@ -175,6 +271,7 @@ export default function ManageBookingPage() {
       const res = await cancelBooking({id: bookingId, reason}).unwrap();
       toast.success(res?.message || 'Booking cancelled successfully');
       setShowCancelModal(false);
+      refetch();
     } catch (err: any) {
       toast.error(err?.data?.message || 'Failed to cancel booking');
     }
@@ -188,26 +285,81 @@ export default function ManageBookingPage() {
 
   const totalAmountNumber = Number(booking.totalAmount || 0);
   const currencyCode = booking.currencyCode || 'KES';
-  const isAwaitingPayment = canonicalStatus === 'AWAITING_PAYMENT';
-  const isPaid =
-    booking.paymentStatus === 'PAID' ||
-    booking.paymentStatus === 'REFUND_PENDING' ||
-    booking.paymentStatus === 'PARTIALLY_REFUNDED' ||
-    booking.invoice?.status === 'PAID';
+  const isPaid = booking.directPaymentStatus === 'DJ_CONFIRMED';
 
-  const cancellationPreview = calculateCancellationPreview(
-    booking.eventDate,
-    totalAmountNumber,
-    isPaid,
-  );
+  const clientContact: ClientContactInfo = {
+    name: booking.client?.name || 'Client',
+    email: booking.client?.email,
+    phone: booking.client?.phone,
+  };
+
+  const getPortalTitle = () => {
+    if (viewerRole === 'DJ') {
+      return `${booking.eventType || 'Event Performance'} for ${booking.client?.name || 'Client'}`;
+    }
+    if (viewerRole === 'ADMIN') {
+      return `${booking.eventType || 'Event Performance'} • ${djStageName} & ${booking.client?.name || 'Client'}`;
+    }
+    return `${booking.eventType || 'Event Performance'} with ${djStageName}`;
+  };
 
   return (
     <div className="flex flex-col min-h-screen bg-[#f0f0f0] text-gray-900 font-sans">
       <LandingHeader />
 
-      <main className="flex-1 py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
+      <main className="flex-1 py-6 sm:py-10 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto space-y-4">
-          {/* Back Navigation & Breadcrumb */}
+          {/* Top Role Banners for Privileged Users */}
+          {/* {viewerRole === 'DJ' && (
+            <div className="bg-primary/10 border border-primary/20 p-3.5 sm:p-4 rounded-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-primary/20 rounded-sm text-primary">
+                  <Headphones className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-gray-900">
+                    DJ Workspace Perspective
+                  </p>
+                  <p className="text-[11px] text-gray-600 mt-0.5">
+                    You are viewing this portal from your DJ perspective. You can test interactions, revise quotes, or reply to messages.
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => router.push(`/dashboard/bookings/${booking.id}`)}
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-primary text-white text-xs font-bold rounded-sm hover:opacity-90 transition-opacity shrink-0 cursor-pointer shadow-xs">
+                <span>Open in DJ Dashboard</span>
+                <ExternalLink className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )} */}
+
+          {viewerRole === 'ADMIN' && (
+            <div className="bg-amber-500/10 border border-amber-500/20 p-3.5 sm:p-4 rounded-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-amber-500/20 rounded-sm text-amber-800">
+                  <ShieldAlert className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-gray-900">
+                    Administrative Audit & Proof Review Mode
+                  </p>
+                  <p className="text-[11px] text-gray-600 mt-0.5">
+                    Full audit access enabled. You can inspect all quotation
+                    proposals, price agreements, and chat logs as evidence.
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => router.push('/admin/bookings')}
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-gray-900 text-white text-xs font-bold rounded-sm hover:bg-black transition-colors shrink-0 cursor-pointer shadow-xs">
+                <span>Back to Admin Panel</span>
+                <ExternalLink className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )}
+
+          {/* Navigation Bar */}
           <div className="flex items-center justify-between">
             <button
               onClick={() => router.back()}
@@ -228,30 +380,41 @@ export default function ManageBookingPage() {
             )}
           </div>
 
-          {/* Main Booking Card */}
-          <div className="bg-white border border-gray-200 rounded-sm shadow-xs overflow-hidden">
-            {/* Header */}
-            <div className="p-6 sm:p-7 border-b border-gray-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white">
+          {/* Hero Header Card */}
+          <div className="bg-white border border-gray-200 rounded-sm p-6 sm:p-7 shadow-xs">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <div>
-                <span className="text-[11px] font-bold uppercase tracking-wider text-primary block mb-1">
-                  Client Booking Portal
-                </span>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-primary">
+                    {viewerRole === 'ADMIN'
+                      ? 'Admin Inspection Portal'
+                      : viewerRole === 'DJ'
+                        ? 'DJ Booking Portal'
+                        : 'Client Booking Portal'}
+                  </span>
+                  <span className="text-gray-300">•</span>
+                  <span className="text-[10px] font-medium text-gray-500 uppercase">
+                    Order Ref
+                  </span>
+                </div>
                 <h1 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight">
-                  {booking.eventType || 'Event Performance'} with {djStageName}
+                  {getPortalTitle()}
                 </h1>
-                <div className="flex items-center gap-2 mt-1.5">
-                  <span className="text-xs text-gray-400">Reference:</span>
+                <div className="flex items-center gap-2 mt-2">
                   <button
                     onClick={handleCopyRef}
-                    className="inline-flex items-center gap-1 font-mono text-xs font-bold text-gray-700 bg-gray-50 hover:bg-gray-100 px-2 py-0.5 rounded-sm border border-gray-200 transition-colors cursor-pointer"
+                    className="inline-flex items-center gap-1.5 font-mono text-xs font-bold text-gray-700 bg-gray-50 hover:bg-gray-100 px-2.5 py-1 rounded-sm border border-gray-200 transition-colors cursor-pointer"
                     title="Click to copy reference">
                     <span>{referenceCode}</span>
                     {copiedRef ? (
-                      <Check className="w-3 h-3 text-emerald-600" />
+                      <Check className="w-3.5 h-3.5 text-emerald-600" />
                     ) : (
-                      <Copy className="w-3 h-3 text-gray-400" />
+                      <Copy className="w-3.5 h-3.5 text-gray-400" />
                     )}
                   </button>
+                  <span className="text-xs text-gray-400">
+                    Use this reference to track or verify your booking anytime.
+                  </span>
                 </div>
               </div>
 
@@ -263,9 +426,13 @@ export default function ManageBookingPage() {
                 {statusBadge.label}
               </div>
             </div>
+          </div>
 
-            <div className="p-6 sm:p-7 space-y-6">
-              {/* Cancellation & Refund Settlement Card if Cancelled */}
+          {/* 2-Column Responsive Layout */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            {/* Left Column: Negotiation, Payment, Messages, Settlement (8 cols) */}
+            <div className="lg:col-span-8 space-y-6">
+              {/* Status / Settlement Notification */}
               {canonicalStatus === 'CANCELLED' ? (
                 <CancellationSettlement
                   booking={booking}
@@ -276,9 +443,10 @@ export default function ManageBookingPage() {
                   djStageName={djStageName}
                 />
               ) : (
-                /* Friendly Status Box */
-                <div className="p-4 rounded-sm bg-gray-50 border border-gray-200/80 flex items-start gap-3 text-xs leading-relaxed">
-                  <ShieldCheck className="w-4 h-4 text-gray-500 mt-0.5 shrink-0" />
+                <div className="p-4 rounded-sm bg-white border border-gray-200 flex items-start gap-3.5 text-xs leading-relaxed shadow-xs">
+                  <div className="p-2 bg-primary/10 rounded-sm text-primary shrink-0 mt-0.5">
+                    <ShieldCheck className="w-4 h-4" />
+                  </div>
                   <div>
                     <p className="font-bold text-gray-900">
                       {statusBadge.label}
@@ -290,45 +458,55 @@ export default function ManageBookingPage() {
                 </div>
               )}
 
-              {/* Quotation Prompt if Awaiting Payment */}
-              {isAwaitingPayment && (
-                <div className="p-4 rounded-sm bg-orange-50/80 border border-orange-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                  <div>
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-orange-800 block">
-                      Quotation Ready
-                    </span>
-                    <p className="text-sm font-bold text-gray-900 mt-0.5">
-                      Total Due:{' '}
-                      <span className="text-[var(--primary)] font-mono">
-                        {currencyCode} {totalAmountNumber.toLocaleString()}
-                      </span>
-                    </p>
-                    <p className="text-xs text-gray-600 mt-0.5">
-                      Pay online to lock in your date with 100% Escrow
-                      Protection.
-                    </p>
-                  </div>
+              {/* Quotation & Price Negotiation Card */}
+              <QuoteNegotiationCard
+                booking={booking}
+                currencyCode={currencyCode}
+                quotes={(booking as any).quotes || []}
+                agreement={(booking as any).agreement}
+                viewerRole={viewerRole}
+                clientName={booking.client?.name || 'Client'}
+                clientEmail={booking.client?.email}
+                djStageName={djStageName}
+                djEmail={djEmail}
+                onQuoteUpdated={refetch}
+              />
 
-                  <div className="flex gap-2 w-full sm:w-auto">
-                    <Link
-                      href={`/checkout/${booking.id}`}
-                      className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-primary hover:opacity-90 text-white text-xs font-bold rounded-sm shadow-xs transition-opacity">
-                      <CreditCard className="w-3.5 h-3.5" />
-                      <span>Proceed to Payment</span>
-                    </Link>
+              {/* Direct Artist Payment Card */}
+              <DirectPaymentCard
+                booking={booking}
+                currencyCode={currencyCode}
+                totalAmount={totalAmountNumber}
+                djStageName={djStageName}
+                formattedDate={formattedDate}
+                displayTime={displayTime}
+                onPaymentReported={refetch}
+              />
 
-                    <Link
-                      href={`/checkout/${booking.id}?requestCash=true`}
-                      className="inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 text-xs font-semibold rounded-sm transition-colors">
-                      <Banknote className="w-3.5 h-3.5 text-gray-500" />
-                      <span>Cash</span>
-                    </Link>
-                  </div>
-                </div>
-              )}
+              {/* Asynchronous Message Thread */}
+              <BookingMessageThread
+                bookingId={booking.id}
+                messages={(booking as any).messages || []}
+                clientName={booking.client?.name || 'Client'}
+                clientEmail={booking.client?.email}
+                djStageName={djStageName}
+                djEmail={djEmail}
+                viewerRole={viewerRole}
+                onMessageSent={refetch}
+              />
 
-              {/* Grid: Event Schedule & DJ Contacts */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Post-Event Actions & Reviews */}
+              <PostEventCard
+                booking={booking}
+                review={(booking as any).review}
+                onActionComplete={refetch}
+              />
+            </div>
+
+            {/* Right Column: Schedule, Counterparty Contacts, Event Notes, Policies (4 cols) */}
+            <div className="lg:col-span-4 space-y-6">
+              {/* Event Schedule & Location */}
+              <div className="bg-white border border-gray-200 rounded-sm p-5 sm:p-6 shadow-xs">
                 <EventScheduleCard
                   formattedDate={formattedDate}
                   displayTime={displayTime}
@@ -336,98 +514,61 @@ export default function ManageBookingPage() {
                   eventType={booking.eventType}
                   duration={parsedDetails.duration}
                 />
+              </div>
 
-                <DjContactCard contact={djContact} />
+              {/* Contact Card (Adapts to DJ or Client view) */}
+              <div className="bg-white border border-gray-200 rounded-sm p-5 sm:p-6 shadow-xs">
+                <DjContactCard
+                  contact={djContact}
+                  clientContact={clientContact}
+                  viewerRole={viewerRole}
+                />
               </div>
 
               {/* Event Notes / Requirements */}
               {(parsedDetails.requirements ||
                 parsedDetails.otherDetails.length > 0) && (
-                <div className="p-4 bg-gray-50/70 rounded-sm border border-gray-200/80 text-xs space-y-1.5">
-                  <div className="flex items-center gap-1.5 font-bold text-gray-700">
+                <div className="bg-white border border-gray-200 rounded-sm p-5 sm:p-6 shadow-xs text-xs space-y-2">
+                  <div className="flex items-center gap-1.5 font-bold text-gray-800">
                     <FileText className="w-3.5 h-3.5 text-gray-500" />
                     <span>Requirements & Event Notes</span>
                   </div>
                   {parsedDetails.requirements && (
-                    <p className="text-gray-600 leading-relaxed">
+                    <p className="text-gray-600 leading-relaxed bg-gray-50 p-2.5 rounded-sm border border-gray-100">
                       {parsedDetails.requirements}
                     </p>
                   )}
                   {parsedDetails.otherDetails.map((detail, idx) => (
-                    <p key={idx} className="text-gray-600 leading-relaxed">
+                    <p
+                      key={idx}
+                      className="text-gray-600 leading-relaxed bg-gray-50 p-2.5 rounded-sm border border-gray-100">
                       {detail}
                     </p>
                   ))}
                 </div>
               )}
 
-              {/* Quotation & Pricing Summary if amount set */}
-              {totalAmountNumber > 0 && (
-                <div className="p-4 bg-gray-50/70 rounded-sm border border-gray-200/80 text-xs space-y-2">
-                  <div className="flex justify-between items-center text-gray-600">
-                    <span>Performance Fee</span>
-                    <span className="font-semibold font-mono text-gray-900">
-                      {currencyCode} {totalAmountNumber.toLocaleString()}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center text-gray-600">
-                    <span className="flex items-center gap-1">
-                      <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                      UpBeat Escrow Protection
-                    </span>
-                    <span className="font-semibold text-emerald-700">
-                      Included
-                    </span>
-                  </div>
-                  <div className="pt-2 border-t border-gray-200 flex justify-between items-center text-sm font-bold text-gray-900">
-                    <span>Total Amount</span>
-                    <span className="text-[var(--primary)] font-mono">
-                      {currencyCode} {totalAmountNumber.toLocaleString()}
-                    </span>
-                  </div>
+              {/* Cancellation & Booking Policy Card */}
+              <div className="bg-white border border-gray-200 rounded-sm p-5 sm:p-6 shadow-xs text-xs space-y-3">
+                <div className="flex items-center gap-1.5 font-bold text-gray-800">
+                  <HelpCircle className="w-3.5 h-3.5 text-gray-500" />
+                  <span>Booking Policy & Support</span>
                 </div>
-              )}
-
-              {/* Cancellation Policy Banner */}
-              <div className="p-4 bg-amber-50/80 rounded-sm border border-amber-200/70 text-xs text-amber-950 space-y-1.5">
-                <p className="font-bold flex items-center gap-1.5 text-amber-900">
-                  <ShieldCheck className="w-4 h-4 text-amber-700" /> UpBeat
-                  Escrow Cancellation Policy
+                <p className="text-gray-500 text-[11px] leading-relaxed">
+                  Need to make changes or have questions about performance
+                  schedules? You can message {djStageName} directly or cancel
+                  your booking request below.
                 </p>
-                <ul className="list-disc pl-5 space-y-0.5 text-amber-900/90 text-[11px] leading-relaxed">
-                  <li>
-                    <strong>72+ hours before event:</strong> 100% full refund to
-                    original payment method.
-                  </li>
-                  <li>
-                    <strong>24–72 hours before event:</strong> 50% partial
-                    refund (50% compensates artist for reserved schedule).
-                  </li>
-                  <li>
-                    <strong>Less than 24 hours:</strong> Non-refundable due to
-                    reserved date commitment.
-                  </li>
-                </ul>
-              </div>
 
-              {/* Actions Footer */}
-              <div className="pt-4 flex flex-col sm:flex-row justify-end gap-3 border-t border-gray-100">
                 {canCancel && (
-                  <button
-                    type="button"
-                    onClick={() => setShowCancelModal(true)}
-                    className="px-4 py-2 bg-white border border-red-200 text-red-600 hover:bg-red-50 rounded-sm text-xs font-semibold transition-colors cursor-pointer">
-                    Request Cancellation
-                  </button>
-                )}
-
-                {isAwaitingPayment && (
-                  <Link
-                    href={`/checkout/${booking.id}`}
-                    className="px-5 py-2.5 bg-primary hover:opacity-90 text-white rounded-sm text-xs font-bold transition-opacity flex items-center justify-center gap-2">
-                    <CreditCard className="w-4 h-4" />
-                    <span>Proceed to Payment</span>
-                  </Link>
+                  <div className="pt-2 border-t border-gray-100">
+                    <button
+                      type="button"
+                      onClick={() => setShowCancelModal(true)}
+                      className="w-full py-2 bg-white border border-rose-200 text-rose-600 hover:bg-rose-50 rounded-sm text-xs font-semibold transition-colors cursor-pointer text-center">
+                      Cancel Booking
+                    </button>
+                  </div>
                 )}
               </div>
             </div>
@@ -445,7 +586,8 @@ export default function ManageBookingPage() {
         totalAmount={totalAmountNumber}
         formattedDate={formattedDate}
         displayTime={displayTime}
-        cancellationPreview={cancellationPreview}
+        djStageName={djStageName}
+        isConfirmedBooking={canonicalStatus === 'CONFIRMED'}
         onClose={() => setShowCancelModal(false)}
         onConfirm={handleConfirmCancel}
       />

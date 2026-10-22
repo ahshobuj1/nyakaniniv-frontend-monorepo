@@ -50,9 +50,11 @@ export interface Tenant {
   logoUrl?: string;
   bio?: string;
   timezone?: string;
+  currencyCode?: string;
   isActive?: boolean;
   socialLinks?: any;
   config?: any;
+  directPaymentInstructions?: Record<string, any> | null;
   stripeAccountId?: string;
   activePlanId?: number;
   subscriptionStatus?: 'active' | 'past_due' | 'canceled';
@@ -66,6 +68,7 @@ export interface Tenant {
   bookings?: Booking[];
   clients?: Client[];
   invoices?: Invoice[];
+  bookingReviews?: BookingReview[];
 }
 
 export interface SubscriptionPlan {
@@ -133,6 +136,7 @@ export interface Event {
 
 export type BookingStatus =
   | 'PENDING'
+  | 'ACCEPTED'
   | 'AWAITING_PAYMENT'
   | 'CONFIRMED'
   | 'IN_PROGRESS'
@@ -148,6 +152,79 @@ export type BookingStatus =
   | 'canceled'
   | 'rejected'
   | string;
+
+export type DirectPaymentStatus =
+  | 'UNREPORTED'
+  | 'CLIENT_REPORTED'
+  | 'DJ_CONFIRMED'
+  | string;
+
+export interface BookingQuote {
+  id: string;
+  bookingId: string;
+  version: number;
+  amount: number | string;
+  currency: string;
+  proposedBy: 'DJ' | 'CLIENT' | string;
+  status: 'PROPOSED' | 'ACCEPTED' | 'REJECTED' | 'SUPERSEDED' | string;
+  notes?: string | null;
+  message?: string | null;
+  createdAt?: string;
+  acceptedAt?: string | null;
+}
+
+export interface BookingMessage {
+  id: string;
+  bookingId: string;
+  senderType: 'DJ' | 'CLIENT' | string;
+  senderId?: string | null;
+  content: string;
+  createdAt: string;
+}
+
+export interface BookingAgreement {
+  id: string;
+  bookingId: string;
+  quoteId?: string | null;
+  agreedAmount: number | string;
+  currency: string;
+  termsSnapshot?: Record<string, any> | null;
+  acceptedByParty?: string | null;
+  acceptedBy?: string | null;
+  clientAcceptedAt?: string | null;
+  djAcceptedAt?: string | null;
+  createdAt: string;
+}
+
+export interface BookingAuditEvent {
+  id: string;
+  bookingId: string;
+  actorType: string;
+  actorId?: string | null;
+  eventType: string;
+  metadata?: Record<string, any> | null;
+  createdAt: string;
+}
+
+export interface BookingReview {
+  id: string;
+  bookingId: string;
+  tenantId?: string | null;
+  rating: number;
+  reviewText?: string | null;
+  comment?: string | null;
+  clientName?: string | null;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface DjScheduleData {
+  today: Booking[];
+  tomorrow: Booking[];
+  upcoming: Booking[];
+  past: Booking[];
+  needsAction: Booking[];
+}
 
 export type PaymentStatus =
   | 'UNPAID'
@@ -173,6 +250,8 @@ export interface Booking {
   id: string;
   tenantId?: string;
   clientId?: string;
+  orderReference?: string;
+  directPaymentStatus?: DirectPaymentStatus;
   eventType?: string;
   eventDetails?: string | Record<string, any> | null;
   eventDate?: string | null;
@@ -193,11 +272,20 @@ export interface Booking {
   confirmedAt?: string | null;
   completedAt?: string | null;
   cancelledAt?: string | null;
+  completionRequestedAt?: string | null;
+  completionConfirmedAt?: string | null;
+  issueReportedAt?: string | null;
+  issueDescription?: string | null;
   deletedAt?: string;
 
   tenant?: Tenant;
   client?: Client;
   invoice?: Invoice;
+  quotes?: BookingQuote[];
+  messages?: BookingMessage[];
+  agreement?: BookingAgreement | null;
+  review?: BookingReview | null;
+  paymentInstructions?: Record<string, any> | null;
 }
 
 export interface Client {

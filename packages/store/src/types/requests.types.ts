@@ -63,6 +63,7 @@ export interface UpdateTenantProfileRequest {
   country?: string;
   city?: string;
   timezone?: string;
+  currencyCode?: string;
   genres?: string[];
   bio?: string;
   socialLinks?: Record<string, string>;
@@ -145,6 +146,93 @@ export interface UpdateBookingStatusRequest {
   currencyCode?: string;
   cashBooking?: boolean;
   reason?: string;
+}
+
+// --- Booking Portal & Direct Payment Requests ---
+export interface RequestBookingAccessOtpRequest {
+  orderReference: string;
+  email?: string;
+}
+
+export interface VerifyBookingAccessOtpRequest {
+  sessionToken?: string;
+  orderReference?: string;
+  otp: string;
+}
+
+export interface ResendBookingAccessOtpRequest {
+  sessionToken?: string;
+  orderReference?: string;
+}
+
+export interface BookingAccessResponse {
+  token?: string;
+  bookingAccessToken?: string;
+  bookingId: string;
+  orderReference: string;
+}
+
+export interface SendBookingMessageRequest {
+  id?: string;
+  bookingId?: string;
+  content: string;
+}
+
+export interface ProposeQuoteRequest {
+  id?: string;
+  bookingId?: string;
+  amount: number;
+  currency?: string;
+  notes?: string;
+  message?: string;
+}
+
+export interface AcceptQuoteRequest {
+  id?: string;
+  bookingId?: string;
+  quoteId: string;
+}
+
+export interface RejectQuoteRequest {
+  id?: string;
+  bookingId?: string;
+  quoteId: string;
+  reason?: string;
+}
+
+export interface ReportDirectPaymentRequest {
+  id: string;
+  method: string;
+  reference?: string;
+  notes?: string;
+}
+
+export interface ReportIssueRequest {
+  id: string;
+  description?: string;
+  issueDescription?: string;
+}
+
+export interface SubmitReviewRequest {
+  id?: string;
+  bookingId?: string;
+  rating: number;
+  reviewText?: string;
+  comment?: string;
+}
+
+export interface UpdatePaymentInstructionsRequest {
+  enabled?: boolean;
+  isEnabled?: boolean;
+  method?: string;
+  displayName?: string;
+  accountNumber?: string;
+  accountName?: string;
+  bankName?: string;
+  mobileMoneyProvider?: string;
+  mobileMoneyNumber?: string;
+  instructions?: string;
+  notes?: string;
 }
 
 // --- Subscription Requests ---

@@ -1,5 +1,5 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import type { RootState } from '../store';
+import {createApi, fetchBaseQuery} from '@reduxjs/toolkit/query/react';
+import type {RootState} from '../store';
 
 declare const process: {
   env: {
@@ -9,18 +9,34 @@ declare const process: {
   };
 };
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'production' ? 'https://api.upbeat.africa' : 'http://localhost:3030');
+const BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL ||
+  (process.env.NODE_ENV === 'production'
+    ? 'https://api.upbeat.africa'
+    : 'http://localhost:3030');
 
 // console.log(process.env.NEXT_PUBLIC_API_URL)
 
 const baseQuery = fetchBaseQuery({
   baseUrl: BASE_URL,
   credentials: 'include',
-  prepareHeaders: (headers, { getState }) => {
+  prepareHeaders: (headers, {getState}) => {
     // Attach token from Redux state
     const token = (getState() as RootState).auth.token;
     if (token) {
       headers.set('authorization', `Bearer ${token}`);
+    }
+
+    if (typeof window !== 'undefined') {
+      const bookingToken =
+        sessionStorage.getItem('booking_access_token') ||
+        localStorage.getItem('booking_access_token');
+      if (bookingToken) {
+        headers.set('x-booking-access-token', bookingToken);
+        if (!token) {
+          headers.set('authorization', `Bearer ${bookingToken}`);
+        }
+      }
     }
     return headers;
   },
@@ -43,9 +59,21 @@ export const baseApi = createApi({
     return result;
   },
   tagTypes: [
-    'Auth', 'User', 'Tenant', 'Theme', 'Event', 'MixTape', 
-    'Booking', 'Subscription', 'Invoice', 'PaystackConnect', 
-    'Client', 'Ticket', 'Notification', 'LandingPage', 'Wallet'
+    'Auth',
+    'User',
+    'Tenant',
+    'Theme',
+    'Event',
+    'MixTape',
+    'Booking',
+    'Subscription',
+    'Invoice',
+    'PaystackConnect',
+    'Client',
+    'Ticket',
+    'Notification',
+    'LandingPage',
+    'Wallet',
   ],
   endpoints: () => ({}), // Endpoints are injected in separate files
 });

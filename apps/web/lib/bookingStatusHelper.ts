@@ -5,6 +5,7 @@
 
 export type CanonicalBookingStatus =
   | 'PENDING'
+  | 'ACCEPTED'
   | 'AWAITING_PAYMENT'
   | 'CONFIRMED'
   | 'IN_PROGRESS'
@@ -14,6 +15,11 @@ export type CanonicalBookingStatus =
   | 'EXPIRED'
   | 'NO_SHOW'
   | 'DISPUTED';
+
+export type DirectPaymentStatusType =
+  | 'UNREPORTED'
+  | 'CLIENT_REPORTED'
+  | 'DJ_CONFIRMED';
 
 export interface StatusBadgeConfig {
   label: string;
@@ -32,11 +38,12 @@ export function normalizeBookingStatus(status?: string | null): CanonicalBooking
   switch (clean) {
     case 'PENDING':
       return 'PENDING';
+    case 'ACCEPTED':
+      return 'ACCEPTED';
     case 'AWAITING_PAYMENT':
     case 'PAYMENT_PENDING':
     case 'WAITING_PAYMENT':
       return 'AWAITING_PAYMENT';
-    case 'ACCEPTED':
     case 'CONFIRMED':
     case 'PAID':
       return 'CONFIRMED';
@@ -63,11 +70,11 @@ export function normalizeBookingStatus(status?: string | null): CanonicalBooking
 }
 
 /**
- * Checks if a booking is considered "Upcoming" (Confirmed with future event date).
+ * Checks if a booking is considered "Upcoming" (Confirmed or Accepted with future event date).
  */
 export function isBookingUpcoming(status?: string | null, eventDate?: string | Date | null): boolean {
   const normalized = normalizeBookingStatus(status);
-  if (normalized !== 'CONFIRMED') return false;
+  if (normalized !== 'CONFIRMED' && normalized !== 'ACCEPTED') return false;
   if (!eventDate) return true;
   return new Date(eventDate).getTime() > Date.now();
 }
@@ -87,15 +94,23 @@ export function getBookingStatusBadge(
         label: 'New Request',
         badgeClass: 'bg-amber-50 text-amber-700 border-amber-200/60',
         dotClass: 'bg-amber-500',
-        description: 'New booking awaiting your review and approval',
+        description: 'New booking awaiting your review and quote acceptance',
+      };
+
+    case 'ACCEPTED':
+      return {
+        label: 'Accepted',
+        badgeClass: 'bg-sky-50 text-sky-700 border-sky-200/60',
+        dotClass: 'bg-sky-500',
+        description: 'Accepted by you. Finalizing quote negotiation and direct payment arrangements.',
       };
 
     case 'AWAITING_PAYMENT':
       return {
-        label: 'Awaiting Payment',
+        label: 'Awaiting Agreement',
         badgeClass: 'bg-orange-50 text-orange-700 border-orange-200/60',
-        dotClass: 'bg-orange-500 animate-pulse',
-        description: 'Approved by you. Client has received the payment link and must pay to lock the date.',
+        dotClass: 'bg-orange-500',
+        description: 'Quote proposed. Awaiting client review and direct payment.',
       };
 
     case 'CONFIRMED': {
@@ -104,7 +119,7 @@ export function getBookingStatusBadge(
         label: upcoming ? 'Confirmed (Upcoming)' : 'Confirmed',
         badgeClass: 'bg-emerald-50 text-emerald-700 border-emerald-200/60',
         dotClass: 'bg-emerald-500',
-        description: 'Payment secured in escrow or cash confirmed. The date is officially booked.',
+        description: 'Direct payment confirmed by you. The date is locked on your schedule.',
       };
     }
 
@@ -121,7 +136,7 @@ export function getBookingStatusBadge(
         label: 'Completed',
         badgeClass: 'bg-blue-50 text-blue-700 border-blue-200/60',
         dotClass: 'bg-blue-500',
-        description: 'Gig completed successfully. Escrow funds have been released into your wallet.',
+        description: 'Gig completed successfully. Client review recorded.',
       };
 
     case 'CANCELLED':
@@ -138,6 +153,14 @@ export function getBookingStatusBadge(
         badgeClass: 'bg-rose-50 text-rose-700 border-rose-200/60',
         dotClass: 'bg-rose-500',
         description: 'You declined this booking request.',
+      };
+
+    case 'DISPUTED':
+      return {
+        label: 'Issue Reported',
+        badgeClass: 'bg-rose-50 text-rose-700 border-rose-200/60',
+        dotClass: 'bg-rose-500',
+        description: 'A client issue or dispute has been reported.',
       };
 
     default:
@@ -165,24 +188,32 @@ export function getClientBookingStatusBadge(
         label: 'Under Artist Review',
         badgeClass: 'bg-amber-50 text-amber-800 border-amber-200/80',
         dotClass: 'bg-amber-500',
-        description: 'Your booking request is being reviewed by the artist. You will receive an email once accepted with your quotation.',
+        description: 'Your booking request is being reviewed by the artist. You will receive an email once accepted with the proposed quotation.',
+      };
+
+    case 'ACCEPTED':
+      return {
+        label: 'Booking Accepted',
+        badgeClass: 'bg-sky-50 text-sky-800 border-sky-200/80',
+        dotClass: 'bg-sky-500',
+        description: 'The artist has accepted your booking. Review the quote and event details.',
       };
 
     case 'AWAITING_PAYMENT':
       return {
-        label: 'Accepted • Payment Required',
+        label: 'Quotation Ready',
         badgeClass: 'bg-orange-50 text-orange-800 border-orange-200/80',
-        dotClass: 'bg-orange-500 animate-pulse',
-        description: 'Great news! The artist has accepted your request. Please complete payment to officially lock in your date.',
+        dotClass: 'bg-orange-500',
+        description: 'The artist has prepared a quotation. Review the agreed terms and event details.',
       };
 
     case 'CONFIRMED': {
       const upcoming = isBookingUpcoming(canonical, eventDate);
       return {
-        label: upcoming ? 'Confirmed (Upcoming)' : 'Confirmed & Secured',
+        label: upcoming ? 'Confirmed (Upcoming)' : 'Confirmed',
         badgeClass: 'bg-emerald-50 text-emerald-800 border-emerald-200/80',
         dotClass: 'bg-emerald-500',
-        description: 'Your booking is locked! Payment is held safely in UpBeat Escrow and will only be released after the event ends.',
+        description: 'Your booking is confirmed with the artist. Event terms and schedule are finalized.',
       };
     }
 
@@ -199,7 +230,7 @@ export function getClientBookingStatusBadge(
         label: 'Event Completed',
         badgeClass: 'bg-blue-50 text-blue-800 border-blue-200/80',
         dotClass: 'bg-blue-500',
-        description: 'This booking has successfully concluded. Thank you for booking through UpBeat Africa!',
+        description: 'This booking has successfully concluded. Leave a review below!',
       };
 
     case 'CANCELLED':
@@ -207,7 +238,7 @@ export function getClientBookingStatusBadge(
         label: 'Booking Cancelled',
         badgeClass: 'bg-gray-100 text-gray-700 border-gray-200',
         dotClass: 'bg-gray-400',
-        description: 'This booking has been cancelled. Any refund due under our Escrow policy is handled automatically.',
+        description: 'This booking has been cancelled.',
       };
 
     case 'REJECTED':
@@ -218,12 +249,20 @@ export function getClientBookingStatusBadge(
         description: 'The artist was unavailable for this date and was unable to accept this booking request.',
       };
 
+    case 'DISPUTED':
+      return {
+        label: 'Issue Reported',
+        badgeClass: 'bg-rose-50 text-rose-800 border-rose-200/80',
+        dotClass: 'bg-rose-500',
+        description: 'An issue has been flagged for this booking. The artist has been notified.',
+      };
+
     case 'EXPIRED':
       return {
-        label: 'Payment Window Expired',
+        label: 'Expired',
         badgeClass: 'bg-stone-100 text-stone-700 border-stone-200',
         dotClass: 'bg-stone-400',
-        description: 'The 48-hour payment window for this quote has elapsed. Please submit a new booking request.',
+        description: 'This booking request is no longer active.',
       };
 
     default:
@@ -232,6 +271,38 @@ export function getClientBookingStatusBadge(
         badgeClass: 'bg-gray-100 text-gray-700 border-gray-200',
         dotClass: 'bg-gray-400',
         description: 'Booking status: ' + canonical,
+      };
+  }
+}
+
+/**
+ * Direct Payment Status Badge Config (Informational Only - never gateway verified)
+ */
+export function getDirectPaymentStatusBadge(
+  status?: DirectPaymentStatusType | string | null
+): StatusBadgeConfig {
+  switch (status) {
+    case 'CLIENT_REPORTED':
+      return {
+        label: 'Payment Reported by Client',
+        badgeClass: 'bg-amber-50 text-amber-800 border-amber-200',
+        dotClass: 'bg-amber-500',
+        description: 'Client reported sending direct payment. Awaiting DJ confirmation.',
+      };
+    case 'DJ_CONFIRMED':
+      return {
+        label: 'Direct Payment Confirmed',
+        badgeClass: 'bg-emerald-50 text-emerald-800 border-emerald-200',
+        dotClass: 'bg-emerald-500',
+        description: 'DJ confirmed direct payment received outside UpBeat Africa.',
+      };
+    case 'UNREPORTED':
+    default:
+      return {
+        label: 'Direct Arrangement',
+        badgeClass: 'bg-gray-100 text-gray-700 border-gray-200',
+        dotClass: 'bg-gray-400',
+        description: 'Payment terms and settlement are handled directly between client and artist.',
       };
   }
 }

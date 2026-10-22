@@ -13,11 +13,10 @@ import { ConfirmationDialog } from '@/components/ConfirmationDialog';
 import { DeclineBookingModal } from '@/components/DeclineBookingModal';
 import {
   useGetBookingByIdQuery,
-  useDownloadInvoicePdfMutation,
   useUpdateBookingStatusMutation,
-  useHandleCashRequestDecisionMutation,
-  useMarkCashAsPaidMutation,
-  useResendPaymentReminderMutation,
+  useConfirmDirectPaymentMutation,
+  useRequestCompletionMutation,
+  useConfirmCompletionMutation,
 } from '@repo/store';
 
 import { BookingHeader } from './_components/BookingHeader';
@@ -26,56 +25,36 @@ import { FinancialSummaryCard } from './_components/FinancialSummaryCard';
 import { ActionCenterCard } from './_components/ActionCenterCard';
 import { ClientInfoCard } from './_components/ClientInfoCard';
 import { AcceptBookingModal } from './_components/AcceptBookingModal';
-import { ConfirmCashPaymentModal } from './_components/ConfirmCashPaymentModal';
+import { QuoteNegotiationCard } from '@/app/booking/manage/[bookingId]/_components/QuoteNegotiationCard';
+import { BookingMessageThread } from '@/app/booking/manage/[bookingId]/_components/BookingMessageThread';
 
 export default function BookingDetailsPage() {
   const params = useParams();
   const id = params.id as string;
 
   // Data fetching
-  const { data: bookingResponse, isLoading: loading, error: fetchError } = useGetBookingByIdQuery(id);
+  const { data: bookingResponse, isLoading: loading, error: fetchError, refetch } = useGetBookingByIdQuery(id);
   const booking = bookingResponse?.data;
   const error = fetchError
     ? (fetchError as any).data?.message || (fetchError as any).message || 'Failed to fetch booking'
     : null;
 
   // Mutations
-  const [downloadInvoicePdf, { isLoading: downloading }] = useDownloadInvoicePdfMutation();
   const [updateStatus, { isLoading: updatingStatus }] = useUpdateBookingStatusMutation();
-  const [handleCash, { isLoading: handlingCash }] = useHandleCashRequestDecisionMutation();
-  const [markPaid, { isLoading: markingPaid }] = useMarkCashAsPaidMutation();
-  const [resendReminder, { isLoading: isSendingReminder }] = useResendPaymentReminderMutation();
+  const [confirmDirectPayment, { isLoading: confirmingPayment }] = useConfirmDirectPaymentMutation();
+  const [requestCompletion, { isLoading: requestingCompletion }] = useRequestCompletionMutation();
+  const [confirmCompletion, { isLoading: confirmingCompletion }] = useConfirmCompletionMutation();
 
   // Modals state
   const [isAcceptModalOpen, setIsAcceptModalOpen] = useState(false);
   const [acceptAmountInput, setAcceptAmountInput] = useState('');
   const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
-  const [isCashConfirmModalOpen, setIsCashConfirmModalOpen] = useState(false);
-  const [cashConfirmationText, setCashConfirmationText] = useState('');
-  const [isApproveCashModalOpen, setIsApproveCashModalOpen] = useState(false);
-  const [isRejectCashModalOpen, setIsRejectCashModalOpen] = useState(false);
+  const [isConfirmPaymentModalOpen, setIsConfirmPaymentModalOpen] = useState(false);
+  const [isRequestCompletionModalOpen, setIsRequestCompletionModalOpen] = useState(false);
   const [isCompleteEventModalOpen, setIsCompleteEventModalOpen] = useState(false);
-  const [isResendReminderModalOpen, setIsResendReminderModalOpen] = useState(false);
 
-  const isActionLoading = updatingStatus || handlingCash || markingPaid;
-
-  const handleDownloadInvoice = async (invoiceId: string) => {
-    try {
-      const blob = await downloadInvoicePdf(invoiceId).unwrap();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `invoice-${invoiceId}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-      toast.success('Invoice downloaded successfully');
-    } catch (err) {
-      console.error(err);
-      toast.error('Could not download invoice. Please try again.');
-    }
-  };
+  const isActionLoading =
+    updatingStatus || confirmingPayment || requestingCompletion || confirmingCompletion;
 
   const handleAcceptSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -87,13 +66,14 @@ export default function BookingDetailsPage() {
     try {
       await updateStatus({
         id,
-        status: 'AWAITING_PAYMENT',
+        status: 'ACCEPTED',
         totalAmount: amountNum,
-        currencyCode: booking?.currencyCode || 'KES'
+        currencyCode: booking?.currencyCode || 'KES',
       }).unwrap();
-      toast.success('Booking accepted! Client has been emailed the payment checkout link.');
+      toast.success('Booking accepted! Client has been emailed your quotation.');
       setIsAcceptModalOpen(false);
       setAcceptAmountInput('');
+      refetch();
     } catch (err: any) {
       toast.error(err?.data?.error?.message || err?.data?.message || 'Failed to accept booking');
     }
@@ -108,63 +88,42 @@ export default function BookingDetailsPage() {
       }).unwrap();
       toast.success('Booking declined and reason emailed to client');
       setIsRejectModalOpen(false);
+      refetch();
     } catch (err: any) {
       toast.error(err?.data?.error?.message || err?.data?.message || 'Failed to decline booking');
     }
   };
 
-  const handleConfirmResendReminder = async () => {
+  const handleConfirmDirectPaymentReceived = async () => {
     try {
-      await resendReminder(id).unwrap();
-      toast.success('Payment reminder email sent to client successfully!');
-      setIsResendReminderModalOpen(false);
+      await confirmDirectPayment(id).unwrap();
+      toast.success('Direct payment marked as received in your records.');
+      setIsConfirmPaymentModalOpen(false);
+      refetch();
     } catch (err: any) {
-      toast.error(err?.data?.error?.message || err?.data?.message || 'Failed to send payment reminder');
+      toast.error(err?.data?.error?.message || err?.data?.message || 'Failed to confirm direct payment');
     }
   };
 
-  const handleConfirmApproveCash = async () => {
+  const handleSendRequestCompletion = async () => {
     try {
-      await handleCash({ id, decision: 'approve' }).unwrap();
-      toast.success('Cash payment approved! Client has been emailed event confirmation.');
-      setIsApproveCashModalOpen(false);
+      await requestCompletion(id).unwrap();
+      toast.success('Completion confirmation requested from client.');
+      setIsRequestCompletionModalOpen(false);
+      refetch();
     } catch (err: any) {
-      toast.error(err?.data?.error?.message || err?.data?.message || 'Failed to approve cash request');
-    }
-  };
-
-  const handleConfirmRejectCash = async () => {
-    try {
-      await handleCash({ id, decision: 'reject' }).unwrap();
-      toast.success('Cash request declined. Client has been emailed online checkout link.');
-      setIsRejectCashModalOpen(false);
-    } catch (err: any) {
-      toast.error(err?.data?.error?.message || err?.data?.message || 'Failed to decline cash request');
+      toast.error(err?.data?.error?.message || err?.data?.message || 'Failed to request completion');
     }
   };
 
   const handleConfirmCompleteEvent = async () => {
     try {
-      await updateStatus({ id, status: 'COMPLETED' }).unwrap();
-      toast.success('Event marked as completed! Funds released to wallet.');
+      await confirmCompletion(id).unwrap();
+      toast.success('Event marked as completed!');
       setIsCompleteEventModalOpen(false);
+      refetch();
     } catch (err: any) {
       toast.error(err?.data?.error?.message || err?.data?.message || 'Failed to complete event');
-    }
-  };
-
-  const handleCashPaidConfirm = async () => {
-    if (cashConfirmationText.trim().toUpperCase() !== 'PAID') {
-      toast.error('Please type PAID to confirm');
-      return;
-    }
-    try {
-      await markPaid(id).unwrap();
-      toast.success('Payment marked as paid via Cash and booking completed!');
-      setIsCashConfirmModalOpen(false);
-      setCashConfirmationText('');
-    } catch (err: any) {
-      toast.error(err?.data?.error?.message || err?.data?.message || 'Failed to mark payment as paid');
     }
   };
 
@@ -196,16 +155,38 @@ export default function BookingDetailsPage() {
       {/* Top Header */}
       <BookingHeader
         booking={booking}
-        downloading={downloading}
-        onDownloadInvoice={handleDownloadInvoice}
+        downloading={false}
+        onDownloadInvoice={() => {}}
       />
 
       {/* Main Grid Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Column: Event & Financial Information */}
+        {/* Left Column: Negotiation, Event & Financial Information */}
         <div className="lg:col-span-2 space-y-6">
+          <QuoteNegotiationCard
+            booking={booking}
+            currencyCode={booking.currencyCode || 'KES'}
+            quotes={(booking as any).quotes || []}
+            agreement={(booking as any).agreement}
+            viewerRole="DJ"
+            clientName={booking.client?.name || 'Client'}
+            clientEmail={booking.client?.email}
+            djStageName={(booking as any).tenant?.stageName || (booking as any).dj?.user?.name || (booking as any).dj?.stageName || 'DJ'}
+            djEmail={(booking as any).tenant?.user?.email || (booking as any).dj?.user?.email}
+            onQuoteUpdated={refetch}
+          />
           <EventInfoCard booking={booking} />
           <FinancialSummaryCard booking={booking} />
+          <BookingMessageThread
+            bookingId={booking.id}
+            messages={(booking as any).messages || []}
+            clientName={booking.client?.name || 'Client'}
+            clientEmail={booking.client?.email}
+            djStageName={(booking as any).tenant?.stageName || (booking as any).dj?.user?.name || (booking as any).dj?.stageName || 'DJ'}
+            djEmail={(booking as any).tenant?.user?.email || (booking as any).dj?.user?.email}
+            viewerRole="DJ"
+            onMessageSent={refetch}
+          />
         </div>
 
         {/* Right Column: Actions & Client Information */}
@@ -215,12 +196,9 @@ export default function BookingDetailsPage() {
             isActionLoading={isActionLoading}
             onOpenAcceptModal={() => setIsAcceptModalOpen(true)}
             onOpenRejectModal={() => setIsRejectModalOpen(true)}
-            onApproveCash={() => setIsApproveCashModalOpen(true)}
-            onRejectCash={() => setIsRejectCashModalOpen(true)}
-            onOpenCashConfirmModal={() => setIsCashConfirmModalOpen(true)}
+            onConfirmDirectPayment={() => setIsConfirmPaymentModalOpen(true)}
+            onRequestCompletion={() => setIsRequestCompletionModalOpen(true)}
             onCompleteEvent={() => setIsCompleteEventModalOpen(true)}
-            onResendReminder={async () => setIsResendReminderModalOpen(true)}
-            isReminderLoading={isSendingReminder}
           />
 
           <ClientInfoCard booking={booking} />
@@ -247,101 +225,70 @@ export default function BookingDetailsPage() {
         onConfirm={handleRejectConfirm}
       />
 
-      {/* Confirm Approve Cash */}
+      {/* Confirm Direct Payment Dialog */}
       <ConfirmationDialog
-        isOpen={isApproveCashModalOpen}
-        title="Approve Cash on Event Day"
+        isOpen={isConfirmPaymentModalOpen}
+        title="Mark Direct Payment Received"
         description={
-          <div className="space-y-2 text-sm text-gray-600">
+          <div className="space-y-2.5 text-sm text-gray-600">
             <p>
-              Are you sure you want to approve cash payment for <strong className="text-gray-900">{booking.client?.name || 'the client'}</strong>?
+              Confirm that you have received direct payment outside the platform from{' '}
+              <strong className="text-gray-900">{booking.client?.name || 'the client'}</strong>?
             </p>
-            <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-900 text-xs leading-relaxed">
-              <strong>Notice:</strong> This will confirm the booking on your schedule. You agree to collect exact cash directly from the client at the venue.
+            <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-900 text-xs leading-relaxed">
+              <strong>Record Keeping:</strong> This updates the settlement status to <strong>Payment Confirmed</strong> in your records. All direct settlements (cash, wire, or mobile money) are arranged directly between you and the client.
             </div>
           </div>
         }
-        confirmText="Approve Cash Payment"
+        confirmText="Mark Payment as Received"
         cancelText="Cancel"
-        confirmButtonClassName="bg-amber-600 hover:bg-amber-700 shadow-md shadow-amber-500/20"
-        isLoading={handlingCash}
-        onConfirm={handleConfirmApproveCash}
-        onCancel={() => setIsApproveCashModalOpen(false)}
+        confirmButtonClassName="bg-emerald-600 hover:bg-emerald-700 shadow-md shadow-emerald-500/20"
+        isLoading={confirmingPayment}
+        onConfirm={handleConfirmDirectPaymentReceived}
+        onCancel={() => setIsConfirmPaymentModalOpen(false)}
       />
 
-      {/* Confirm Decline Cash */}
+      {/* Request Completion Dialog */}
       <ConfirmationDialog
-        isOpen={isRejectCashModalOpen}
-        title="Decline Cash Request"
+        isOpen={isRequestCompletionModalOpen}
+        title="Request Client Completion Confirmation"
         description={
           <div className="space-y-2 text-sm text-gray-600">
             <p>
-              Decline cash payment request for <strong className="text-gray-900">{booking.client?.name || 'the client'}</strong>?
-            </p>
-            <p className="text-xs text-gray-500">
-              The booking will remain awaiting payment, and the client will be sent the official online payment link to pay via card or mobile money.
+              Send an email request to{' '}
+              <strong className="text-gray-900">{booking.client?.name || 'the client'}</strong> asking them to confirm that the performance has concluded and leave a review?
             </p>
           </div>
         }
-        confirmText="Decline & Demand Online Pay"
-        cancelText="Cancel"
-        isLoading={handlingCash}
-        onConfirm={handleConfirmRejectCash}
-        onCancel={() => setIsRejectCashModalOpen(false)}
-      />
-
-      {/* Confirm Complete Event & Escrow Release */}
-      <ConfirmationDialog
-        isOpen={isCompleteEventModalOpen}
-        title="Complete Gig & Release Escrow"
-        description={
-          <div className="space-y-2 text-sm text-gray-600">
-            <p>
-              Has the event for <strong className="text-gray-900">{booking.client?.name || 'the client'}</strong> been successfully completed?
-            </p>
-            <div className="p-3 bg-blue-50 border border-blue-200 rounded-xl text-blue-900 text-xs leading-relaxed">
-              Marking this event as completed will transition the booking to <strong>COMPLETED</strong> and release escrow funds directly to your wallet available balance.
-            </div>
-          </div>
-        }
-        confirmText="Complete & Release Funds"
+        confirmText="Send Request"
         cancelText="Cancel"
         confirmButtonClassName="bg-blue-600 hover:bg-blue-700 shadow-md shadow-blue-500/20"
-        isLoading={updatingStatus}
-        onConfirm={handleConfirmCompleteEvent}
-        onCancel={() => setIsCompleteEventModalOpen(false)}
+        isLoading={requestingCompletion}
+        onConfirm={handleSendRequestCompletion}
+        onCancel={() => setIsRequestCompletionModalOpen(false)}
       />
 
-      {/* Confirm Resend Payment Reminder */}
+      {/* Mark Completed Dialog */}
       <ConfirmationDialog
-        isOpen={isResendReminderModalOpen}
-        title="Send Payment Reminder"
+        isOpen={isCompleteEventModalOpen}
+        title="Mark Gig Completed"
         description={
           <div className="space-y-2 text-sm text-gray-600">
             <p>
-              Are you sure you want to resend the payment reminder email to{' '}
-              <strong className="text-gray-900">{booking.client?.name || 'the client'}</strong> (
-              <span className="text-gray-800 font-medium">{booking.client?.email}</span>)?
+              Has the performance for{' '}
+              <strong className="text-gray-900">{booking.client?.name || 'the client'}</strong> concluded?
             </p>
             <p className="text-xs text-gray-500">
-              This will email an invoice and direct payment checkout link to the client.
+              The booking status will update to <strong>COMPLETED</strong> and the client will be invited to leave a review.
             </p>
           </div>
         }
-        confirmText="Send Reminder"
+        confirmText="Mark Completed"
         cancelText="Cancel"
-        isLoading={isSendingReminder}
-        onConfirm={handleConfirmResendReminder}
-        onCancel={() => setIsResendReminderModalOpen(false)}
-      />
-
-      <ConfirmCashPaymentModal
-        isOpen={isCashConfirmModalOpen}
-        onOpenChange={setIsCashConfirmModalOpen}
-        confirmationText={cashConfirmationText}
-        onConfirmationTextChange={setCashConfirmationText}
-        onConfirm={handleCashPaidConfirm}
-        isLoading={markingPaid}
+        confirmButtonClassName="bg-[#111827] hover:bg-black"
+        isLoading={confirmingCompletion}
+        onConfirm={handleConfirmCompleteEvent}
+        onCancel={() => setIsCompleteEventModalOpen(false)}
       />
     </div>
   );

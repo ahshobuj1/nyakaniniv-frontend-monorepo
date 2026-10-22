@@ -7,7 +7,6 @@ import {ProtectedRoute} from '@/components/ProtectedRoute';
 import {UserRole} from '@repo/store';
 
 import {TenantOnboardingPopup} from './_components/TenantOnboardingPopup';
-import {PaystackConnectPopup} from './_components/PaystackConnectPopup';
 
 export default function DashboardLayout({
   children,
@@ -28,7 +27,6 @@ export default function DashboardLayout({
         </div>
 
         <TenantOnboardingPopup />
-        <PaystackConnectPopup />
       </SidebarProvider>
     </ProtectedRoute>
   );

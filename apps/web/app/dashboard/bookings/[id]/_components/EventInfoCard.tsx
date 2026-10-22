@@ -2,26 +2,32 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@repo/ui';
 import { Music, Clock, MapPin } from 'lucide-react';
-import { Booking } from '@repo/store';
+import { Booking, useGetCurrentProfileQuery } from '@repo/store';
 import { parseBookingEventDetails } from '@/lib/bookingStatusHelper';
+import { formatDateInTz, formatTimeInTz, getBrowserTimezone } from '@/lib/timezone';
 
 interface EventInfoCardProps {
   booking: Booking;
 }
 
 export function EventInfoCard({ booking }: EventInfoCardProps) {
+  const { data: profileResponse } = useGetCurrentProfileQuery();
+  const djTimezone = profileResponse?.data?.tenant?.timezone || getBrowserTimezone();
+
   const parsed = parseBookingEventDetails(booking.eventDetails);
   const startTime = parsed.startTime;
   const duration = parsed.duration;
   const requirements = parsed.requirements || parsed.otherDetails.join('\n').trim();
   const eventDateFormatted = booking.eventDate
-    ? new Date(booking.eventDate).toLocaleDateString('en-GB', {
+    ? formatDateInTz(booking.eventDate, djTimezone, {
         weekday: 'short',
         day: '2-digit',
         month: 'short',
         year: 'numeric',
       })
     : 'N/A';
+  const djTimeFormatted = booking.eventDate ? formatTimeInTz(booking.eventDate, djTimezone) : (startTime || '');
+  const isDifferentZone = booking.eventTimezone && booking.eventTimezone !== djTimezone;
 
   return (
     <Card className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
@@ -47,10 +53,17 @@ export function EventInfoCard({ booking }: EventInfoCardProps) {
                 Date & Time
               </p>
               <p className="font-semibold text-[#111827]">{eventDateFormatted}</p>
-              {startTime && (
-                <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-amber-50 text-amber-800 text-[12px] font-bold border border-amber-200 mt-1">
-                  <Clock className="w-3.5 h-3.5" />
-                  {startTime}
+              {djTimeFormatted && (
+                <div className="flex flex-col gap-1 mt-1">
+                  <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-amber-50 text-amber-800 text-[12px] font-bold border border-amber-200 w-max">
+                    <Clock className="w-3.5 h-3.5" />
+                    {djTimeFormatted}
+                  </div>
+                  {isDifferentZone && (
+                    <span className="text-[11px] text-gray-500 font-medium">
+                      Client: {startTime || formatTimeInTz(booking.eventDate, booking.eventTimezone || undefined)} ({booking.eventTimezone})
+                    </span>
+                  )}
                 </div>
               )}
             </div>

@@ -25,21 +25,20 @@ export function AcceptBookingModal({
 }: AcceptBookingModalProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[450px] bg-white rounded-2xl p-6 border-none shadow-2xl">
+      <DialogContent className="sm:max-w-[480px] bg-white rounded-2xl p-6 border-none shadow-2xl">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold text-gray-900 flex items-center gap-2">
             <Banknote className="w-5 h-5 text-emerald-500" />
-            Accept Booking Request
+            Accept Booking & Propose Quote
           </DialogTitle>
         </DialogHeader>
         <form onSubmit={onSubmit} className="space-y-4 pt-2">
-          <p className="text-sm text-gray-600">
-            Set the total price for this event. An official invoice with a secure online payment
-            link will be sent to <strong>{booking.client?.email || 'the client'}</strong>.
+          <p className="text-sm text-gray-600 leading-relaxed">
+            Accept this booking by proposing your fee for this performance. The client will be notified immediately to review your quotation and event details.
           </p>
           <div className="space-y-2">
             <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">
-              Total Amount ({booking.currencyCode || 'KES'})
+              Proposed Fee ({booking.currencyCode || 'KES'})
             </label>
             <Input
               type="number"
@@ -53,6 +52,11 @@ export function AcceptBookingModal({
               className="h-11 rounded-xl"
             />
           </div>
+
+          <div className="p-3 bg-gray-50 border border-gray-200 rounded-xl text-xs text-gray-600 leading-snug">
+            <strong>Platform Terms:</strong> UpBeat Africa is a booking coordination platform and does not process or deduct fees from your performance payments. All financial arrangements are handled directly between you and the client.
+          </div>
+
           <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
             <Button
               type="button"
@@ -68,7 +72,7 @@ export function AcceptBookingModal({
               disabled={isLoading || !amountInput}
               className="bg-primary hover:bg-primary/90 text-white rounded-xl h-10 px-5 font-bold"
             >
-              {isLoading ? 'Generating Invoice...' : 'Confirm & Accept'}
+              {isLoading ? 'Accepting Booking...' : 'Confirm & Accept Booking'}
             </Button>
           </div>
         </form>

@@ -121,7 +121,7 @@ export default function DashboardOverview() {
     if (!completeBookingId) return;
     try {
       await updateStatus({ id: completeBookingId, status: 'completed' as any }).unwrap();
-      toast.success('Booking marked as completed! Escrow funds released into wallet.');
+      toast.success('Booking marked as completed successfully!');
       setCompleteBookingId(null);
     } catch (error: any) {
       toast.error(error?.data?.error?.message || error?.data?.message || 'Failed to complete booking');
@@ -181,7 +181,7 @@ export default function DashboardOverview() {
     }
     try {
       await markPaid(cashPaidBookingId).unwrap();
-      toast.success('Payment marked as paid via Cash and booking completed!');
+      toast.success('Direct payment confirmed successfully!');
       setCashPaidBookingId(null);
       setCashConfirmationText('');
       setBookingToUpdate(null);
@@ -194,6 +194,8 @@ export default function DashboardOverview() {
   const { data: profileResponse } = useGetCurrentProfileQuery();
   const subdomain = profileResponse?.data?.tenant?.subdomain || 'demo';
   const stageName = profileResponse?.data?.tenant?.stageName || 'DJ';
+  const djTimezone = profileResponse?.data?.tenant?.timezone || (typeof window !== 'undefined' ? Intl.DateTimeFormat().resolvedOptions().timeZone : 'Africa/Nairobi');
+  const djCurrency = profileResponse?.data?.tenant?.currencyCode || 'KES';
 
   const { data: analyticsResponse, error: analyticsError } = useGetTenantAnalyticsQuery();
   const { data: chartsResponse, error: chartsError } = useGetTenantChartsQuery();
@@ -548,13 +550,14 @@ export default function DashboardOverview() {
                         </td>
                         <td className="py-5 px-8 text-[14px] text-[#787878]">
                           {(() => {
-                            const targetTz = booking.eventTimezone || 'Africa/Nairobi';
+                            const targetTz = djTimezone;
                             const dateFormatted = formatDateInTz(booking.eventDate, targetTz, {
                               day: '2-digit',
                               month: 'short',
                               year: 'numeric',
                             });
                             const timeFormatted = formatTimeInTz(booking.eventDate, targetTz);
+                            const isDifferentZone = booking.eventTimezone && booking.eventTimezone !== targetTz;
                             return (
                               <div className="flex flex-col gap-1">
                                 <div className="flex items-center gap-1.5 font-medium text-[#111620] w-max">
@@ -567,6 +570,11 @@ export default function DashboardOverview() {
                                     {timeFormatted}
                                   </div>
                                 )}
+                                {isDifferentZone && (
+                                  <span className="text-[10px] text-gray-400" title={`Client local time in ${booking.eventTimezone}`}>
+                                    Client: {formatTimeInTz(booking.eventDate, booking.eventTimezone || undefined)} ({booking.eventTimezone})
+                                  </span>
+                                )}
                               </div>
                             );
                           })()}
@@ -576,7 +584,7 @@ export default function DashboardOverview() {
                         <td className="py-5 px-8 text-[14px]">
                           <div className="flex flex-col items-start gap-1.5">
                             <span className="font-semibold text-[#111620]">
-                              {booking.totalAmount ? `KES ${Number(booking.totalAmount).toLocaleString()}` : '-'}
+                              {booking.totalAmount ? `${booking.currencyCode || djCurrency} ${Number(booking.totalAmount).toLocaleString()}` : '-'}
                             </span>
                             {booking.invoice ? (
                               isInvoicePaid ? (
@@ -709,7 +717,7 @@ export default function DashboardOverview() {
                   className="bg-[#F5F5F5] border-transparent h-11 rounded-[10px] focus-visible:ring-1 focus-visible:ring-primary shadow-none"
                 />
                 <p className="text-[12px] text-gray-500">
-                  Accepting this booking will generate an invoice for the client. An email will send to the client with the invoice and payment link.
+                  Accepting this booking sets your agreed performance fee. The client will be emailed your quotation and booking portal access with direct settlement instructions.
                 </p>
               </div>
             )}
@@ -897,16 +905,16 @@ export default function DashboardOverview() {
       {/* Complete Event Confirmation Dialog */}
       <ConfirmationDialog
         isOpen={!!completeBookingId}
-        title="Complete Gig & Release Escrow"
+        title="Complete Gig"
         description={
           <div className="space-y-2 text-sm text-gray-600">
-            <p>Has this event been successfully completed?</p>
+            <p>Has this event performance been successfully completed?</p>
             <div className="p-3 bg-blue-50 border border-blue-200 rounded-xl text-blue-900 text-xs leading-relaxed">
-              Marking this event as completed will transition the booking to <strong>COMPLETED</strong> and release escrow funds directly to your wallet available balance.
+              Marking this event as completed will transition the booking status to <strong>COMPLETED</strong> and invite the client to leave a review.
             </div>
           </div>
         }
-        confirmText="Complete & Release Funds"
+        confirmText="Mark Completed"
         cancelText="Cancel"
         confirmButtonClassName="bg-blue-600 hover:bg-blue-700 shadow-md shadow-blue-500/20"
         isLoading={isUpdating}

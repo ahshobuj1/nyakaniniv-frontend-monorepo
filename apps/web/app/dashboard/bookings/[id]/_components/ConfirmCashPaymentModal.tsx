@@ -34,17 +34,15 @@ export function ConfirmCashPaymentModal({
         <DialogHeader>
           <DialogTitle className="text-xl font-bold text-gray-900 flex items-center gap-2">
             <CheckCircle2 className="w-5 h-5 text-emerald-600" />
-            Confirm Cash Payment Received
+            Confirm Direct Payment Received
           </DialogTitle>
         </DialogHeader>
         <div className="space-y-4 pt-2">
           <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-900 text-sm leading-relaxed">
-            <strong>Important:</strong> Marking this payment as received will immediately mark the
-            invoice as <strong>PAID</strong> and transition this booking to{' '}
-            <strong>COMPLETED</strong> status.
+            <strong>Direct Settlement:</strong> Confirming this payment verifies that you have received the agreed performance fee directly from the client (via Cash, Bank Transfer, or Mobile Money).
           </div>
           <p className="text-sm text-gray-600">
-            To prevent accidental completion, please confirm by typing{' '}
+            To prevent accidental verification, please confirm by typing{' '}
             <span className="font-bold text-gray-900 bg-gray-100 px-1.5 py-0.5 rounded border">
               PAID
             </span>{' '}
@@ -77,7 +75,7 @@ export function ConfirmCashPaymentModal({
               disabled={isLoading || confirmationText.trim().toUpperCase() !== 'PAID'}
               className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl h-10 px-5 font-bold shadow-md shadow-emerald-500/20 disabled:opacity-50"
             >
-              {isLoading ? 'Completing Booking...' : 'Confirm Cash Received'}
+              {isLoading ? 'Verifying...' : 'Confirm Payment Received'}
             </Button>
           </div>
         </div>

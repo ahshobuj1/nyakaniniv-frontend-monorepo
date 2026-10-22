@@ -45,7 +45,10 @@ export default function UserBookingPage() {
           ...tenant.config?.content?.navbar,
           djName: tenant.stageName || tenant.config?.content?.navbar?.djName || template.defaultContent.navbar?.djName || 'KENZO',
         },
-        tenantId: tenant.id
+        tenantId: tenant.id,
+        country: tenant.country,
+        currencyCode: tenant.currencyCode,
+        timezone: tenant.timezone,
       }}
       theme={{
         ...template.defaultTheme,

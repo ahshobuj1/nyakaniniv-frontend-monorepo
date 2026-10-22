@@ -7,17 +7,68 @@ import {
   MessageCircle,
   ExternalLink,
 } from 'lucide-react';
-import type { DjContactInfo } from './types';
-
-interface DjContactCardProps {
-  contact: DjContactInfo;
-}
+import type { DjContactCardProps } from './types';
 
 /**
- * Renders the artist/DJ contact details panel with email, phone, WhatsApp,
- * and a link to their public profile.
+ * Renders contact details panel.
+ * If viewer is DJ, renders the Client's details.
+ * If viewer is Client, renders the DJ's details.
+ * If viewer is Admin, renders both for full audit transparency.
  */
-export function DjContactCard({ contact }: DjContactCardProps) {
+export function DjContactCard({
+  contact,
+  clientContact,
+  viewerRole = 'CLIENT',
+}: DjContactCardProps) {
+  // If DJ viewing, prioritize showing Client info
+  if (viewerRole === 'DJ' && clientContact) {
+    const cleanClientPhone = clientContact.phone ? clientContact.phone.replace(/[^\d+]/g, '') : '';
+    return (
+      <div className="space-y-3">
+        <h2 className="text-xs font-bold text-gray-400 uppercase tracking-wider">
+          Client Information
+        </h2>
+
+        <div className="space-y-3 bg-gray-50/70 p-4 rounded-sm border border-gray-200/80 text-xs">
+          <div className="flex items-start gap-3">
+            <User className="w-4 h-4 text-gray-400 mt-0.5 shrink-0" />
+            <div>
+              <span className="text-[10px] font-medium text-gray-400 uppercase block">Client Name</span>
+              <span className="font-semibold text-gray-900 mt-0.5 block">{clientContact.name}</span>
+            </div>
+          </div>
+
+          {clientContact.email && (
+            <div className="flex items-start gap-3">
+              <Mail className="w-4 h-4 text-gray-400 mt-0.5 shrink-0" />
+              <div>
+                <span className="text-[10px] font-medium text-gray-400 uppercase block">Client Email</span>
+                <a
+                  href={`mailto:${clientContact.email}`}
+                  className="font-semibold text-primary hover:underline mt-0.5 block">
+                  {clientContact.email}
+                </a>
+              </div>
+            </div>
+          )}
+
+          {clientContact.phone && (
+            <div className="flex items-start gap-3">
+              <Phone className="w-4 h-4 text-gray-400 mt-0.5 shrink-0" />
+              <div>
+                <span className="text-[10px] font-medium text-gray-400 uppercase block">Client Phone</span>
+                <a
+                  href={`tel:${cleanClientPhone}`}
+                  className="font-semibold text-gray-900 hover:underline mt-0.5 block">
+                  {clientContact.phone}
+                </a>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="space-y-3">
       <h2 className="text-xs font-bold text-gray-400 uppercase tracking-wider">

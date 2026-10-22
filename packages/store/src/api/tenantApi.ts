@@ -71,6 +71,21 @@ export const tenantApi = baseApi.injectEndpoints({
         };
       },
     }),
+    getPaymentInstructions: builder.query<BaseResponse<Record<string, any> | null>, void>({
+      query: () => ({
+        url: '/tenant/v1/payment-instructions',
+        method: 'GET',
+      }),
+      providesTags: ['Tenant'],
+    }),
+    updatePaymentInstructions: builder.mutation<BaseResponse<Record<string, any>>, Record<string, any>>({
+      query: (body) => ({
+        url: '/tenant/v1/payment-instructions',
+        method: 'PATCH',
+        body,
+      }),
+      invalidatesTags: ['Tenant'],
+    }),
   }),
   overrideExisting: false,
 });
@@ -81,4 +96,7 @@ export const {
   useUpdateTenantProfileMutation,
   useAssignThemeMutation,
   useUploadTenantMediaMutation,
+  useGetPaymentInstructionsQuery,
+  useUpdatePaymentInstructionsMutation,
 } = tenantApi;
+

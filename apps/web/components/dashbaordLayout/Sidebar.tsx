@@ -11,7 +11,6 @@ import {
   CalendarCheck,
   FileText,
   CreditCard,
-  Wallet,
   ExternalLink,
   Headphones,
   X,
@@ -19,7 +18,10 @@ import {
 } from 'lucide-react';
 import {useSidebar} from './SidebarContext';
 import Image from 'next/image';
-import { useGetCurrentProfileQuery, useGetLandingPageContentQuery } from '@repo/store';
+import {
+  useGetCurrentProfileQuery,
+  useGetLandingPageContentQuery,
+} from '@repo/store';
 
 const sidebarGroups = [
   {
@@ -47,7 +49,6 @@ const sidebarGroups = [
     title: 'Account',
     items: [
       {label: 'Billing & Plans', url: '/dashboard/billing', icon: CreditCard},
-      {label: 'Wallet & Payouts', url: '/dashboard/wallet', icon: Wallet},
     ],
   },
 ];
@@ -55,20 +56,21 @@ const sidebarGroups = [
 export function Sidebar() {
   const pathname = usePathname();
   const {isCollapsed, isMobileOpen, closeMobile} = useSidebar();
-  const { data: profileResponse } = useGetCurrentProfileQuery();
-  const { data: landingResponse } = useGetLandingPageContentQuery();
+  const {data: profileResponse} = useGetCurrentProfileQuery();
+  const {data: landingResponse} = useGetLandingPageContentQuery();
   const subdomain = profileResponse?.data?.tenant?.subdomain || 'demo';
-  const logoUrl = landingResponse?.data?.settings?.headerLogoUrl || '/auth.logo.png';
-  
+  const logoUrl =
+    landingResponse?.data?.settings?.headerLogoUrl || '/auth.logo.png';
+
   const getLiveWebsiteUrl = () => {
     if (typeof window === 'undefined') return '#';
     const hostname = window.location.hostname;
     const port = window.location.port ? `:${window.location.port}` : '';
-    
+
     if (hostname === 'localhost' || hostname === '127.0.0.1') {
       return `http://${subdomain}.localhost${port}`;
     }
-    
+
     return `https://${subdomain}.deejay.africa`;
   };
 
@@ -100,20 +102,28 @@ export function Sidebar() {
                 width={200}
                 height={200}
                 className="w-10 h-10 object-contain"
-                unoptimized={Boolean(logoUrl && (logoUrl.startsWith('http') || logoUrl.endsWith('.svg')))}
+                unoptimized={Boolean(
+                  logoUrl &&
+                  (logoUrl.startsWith('http') || logoUrl.endsWith('.svg')),
+                )}
               />
               {profileResponse?.data?.firstName || 'Upbeat'}
             </h1>
           </Link>
           {/* Logo icon for desktop collapsed state */}
-          <Link href={'/'} className={`hidden ${isCollapsed ? 'md:flex' : 'md:hidden'} items-center justify-center`}>
+          <Link
+            href={'/'}
+            className={`hidden ${isCollapsed ? 'md:flex' : 'md:hidden'} items-center justify-center`}>
             <Image
               src={logoUrl}
               alt="Logo"
               width={40}
               height={40}
               className="w-10 h-10 object-contain"
-              unoptimized={Boolean(logoUrl && (logoUrl.startsWith('http') || logoUrl.endsWith('.svg')))}
+              unoptimized={Boolean(
+                logoUrl &&
+                (logoUrl.startsWith('http') || logoUrl.endsWith('.svg')),
+              )}
             />
           </Link>
 

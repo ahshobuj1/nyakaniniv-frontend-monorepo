@@ -2,7 +2,7 @@
 
 import {motion} from 'framer-motion';
 import {useForm} from 'react-hook-form';
-import {useState} from 'react';
+import {useEffect, useState} from 'react';
 import {zodResolver} from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import {toast} from 'sonner';
@@ -39,14 +39,27 @@ export default function BookingPage({content}: any) {
     },
   };
 
-  const [initiateBooking, {isLoading: isInitiating}] = useInitiateBookingMutation();
+  const [initiateBooking, {isLoading: isInitiating}] =
+    useInitiateBookingMutation();
   const tenantId = content?.tenantId || '';
-  const [submitStatus, setSubmitStatus] = useState<{type: 'success' | 'error', message: string} | null>(null);
+  const [submitStatus, setSubmitStatus] = useState<{
+    type: 'success' | 'error';
+    message: string;
+  } | null>(null);
 
   // OTP Modal state
   const [otpModalOpen, setOtpModalOpen] = useState(false);
   const [verificationToken, setVerificationToken] = useState('');
   const [pendingClientEmail, setPendingClientEmail] = useState('');
+  const [detectedTimezone, setDetectedTimezone] = useState('');
+
+  useEffect(() => {
+    if (typeof Intl !== 'undefined') {
+      setDetectedTimezone(
+        Intl.DateTimeFormat().resolvedOptions().timeZone || '',
+      );
+    }
+  }, []);
 
   const {
     register,
@@ -67,7 +80,7 @@ export default function BookingPage({content}: any) {
       duration: '4 Hours',
       eventType: '',
       details: '',
-    }
+    },
   });
 
   const selectedDateValue = watch('eventDate');
@@ -77,7 +90,10 @@ export default function BookingPage({content}: any) {
     setSubmitStatus(null);
     if (!tenantId) {
       toast.error('Unable to process booking: Tenant ID is missing.');
-      setSubmitStatus({ type: 'error', message: 'Unable to process booking: Tenant ID is missing.' });
+      setSubmitStatus({
+        type: 'error',
+        message: 'Unable to process booking: Tenant ID is missing.',
+      });
       return;
     }
     try {
@@ -85,17 +101,28 @@ export default function BookingPage({content}: any) {
       // Use local timezone to convert to UTC natively
       const localDateTime = new Date(`${data.eventDate}T${timePart}`);
       const formattedDate = localDateTime.toISOString();
-      
-      const clientTz = typeof Intl !== 'undefined' ? Intl.DateTimeFormat().resolvedOptions().timeZone : '';
+
+      const clientTz =
+        typeof Intl !== 'undefined'
+          ? Intl.DateTimeFormat().resolvedOptions().timeZone
+          : '';
       const clientFormattedTime = data.eventTime
-        ? localDateTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
+        ? localDateTime.toLocaleTimeString('en-US', {
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: true,
+          })
         : '';
 
       const enrichedDetails = [
-        data.eventTime ? `Client Local Time: ${clientFormattedTime}${clientTz ? ` (${clientTz})` : ''}` : null,
+        data.eventTime
+          ? `Client Local Time: ${clientFormattedTime}${clientTz ? ` (${clientTz})` : ''}`
+          : null,
         data.duration ? `Duration: ${data.duration}` : null,
         `Requirements: ${data.details}`,
-      ].filter(Boolean).join('\n');
+      ]
+        .filter(Boolean)
+        .join('\n');
 
       const res = await initiateBooking({
         tenantId,
@@ -105,10 +132,11 @@ export default function BookingPage({content}: any) {
         address: data.address,
         eventDate: formattedDate,
         eventTimezone: clientTz || undefined,
+        currencyCode: content?.currencyCode || undefined,
         eventType: data.eventType,
         eventDetails: enrichedDetails,
       }).unwrap();
-      
+
       if (res?.data?.verificationToken) {
         setVerificationToken(res.data.verificationToken);
         setPendingClientEmail(data.email);
@@ -116,19 +144,23 @@ export default function BookingPage({content}: any) {
         toast.success('Verification code sent to your email!');
       }
     } catch (error: any) {
-      const errorMsg = error?.data?.message || 'Failed to send verification code. Please try again.';
+      const errorMsg =
+        error?.data?.message ||
+        'Failed to send verification code. Please try again.';
       toast.error(errorMsg);
-      setSubmitStatus({ type: 'error', message: errorMsg });
+      setSubmitStatus({type: 'error', message: errorMsg});
     }
   };
 
   const handleBookingVerified = () => {
     toast.success('Booking request submitted successfully!', {
-      description: "Your request has been sent to the DJ for review. You'll receive an email once approved.",
+      description:
+        "Your request has been sent to the DJ for review. You'll receive an email once approved.",
     });
     setSubmitStatus({
-      type: 'success', 
-      message: "Your request has been verified and sent to the DJ for review. If your booking is accepted, you'll receive an email with a secure payment link to confirm your reservation."
+      type: 'success',
+      message:
+        "Your booking request has been verified and sent to the DJ for review. Once accepted, you will receive an email with the artist's quotation and access to your booking portal to coordinate your event and view direct settlement instructions.",
     });
     reset();
   };
@@ -145,7 +177,9 @@ export default function BookingPage({content}: any) {
             className="flex flex-col gap-[40px] max-w-[480px]">
             <div>
               <h2 className="text-[36px] md:text-[42px] font-bold text-[#111111] mb-[16px] tracking-tight">
-                {content?.djName ? `Ready to book ${content.djName}?` : bookingData.title}
+                {content?.djName
+                  ? `Ready to book ${content.djName}?`
+                  : bookingData.title}
               </h2>
               <p className="text-[#888888] text-[15px] md:text-[16px] leading-relaxed">
                 {bookingData.description}
@@ -174,7 +208,8 @@ export default function BookingPage({content}: any) {
                     {bookingData.contactInfo?.email?.title || 'Email Us'}
                   </h4>
                   <p className="text-[14px] text-[#888888]">
-                    {bookingData.contactInfo?.email?.value || 'bookings@upbeat.africa'}
+                    {bookingData.contactInfo?.email?.value ||
+                      'bookings@upbeat.africa'}
                   </p>
                 </div>
               </div>
@@ -200,7 +235,8 @@ export default function BookingPage({content}: any) {
                     {bookingData.contactInfo?.location?.title || 'Based In'}
                   </h4>
                   <p className="text-[14px] text-[#888888]">
-                    {bookingData.contactInfo?.location?.value || 'Available for bookings worldwide'}
+                    {bookingData.contactInfo?.location?.value ||
+                      'Available for bookings worldwide'}
                   </p>
                 </div>
               </div>
@@ -217,38 +253,61 @@ export default function BookingPage({content}: any) {
               onSubmit={handleSubmit(onSubmit)}
               className="flex flex-col gap-[20px]"
               noValidate>
-
               {submitStatus && (
-                <motion.div 
-                  initial={{ opacity: 0, y: -10 }} 
-                  animate={{ opacity: 1, y: 0 }}
+                <motion.div
+                  initial={{opacity: 0, y: -10}}
+                  animate={{opacity: 1, y: 0}}
                   className={`text-[14px] font-medium leading-relaxed p-[16px] rounded-sm flex items-start gap-3 ${
-                    submitStatus.type === 'success' 
-                      ? 'bg-emerald-50 text-emerald-900 border border-emerald-200' 
+                    submitStatus.type === 'success'
+                      ? 'bg-emerald-50 text-emerald-900 border border-emerald-200'
                       : 'bg-red-50 text-red-900 border border-red-200'
-                  }`}
-                >
-                  <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${
-                    submitStatus.type === 'success' ? 'bg-emerald-500 text-white' : 'bg-red-500 text-white'
                   }`}>
+                  <div
+                    className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${
+                      submitStatus.type === 'success'
+                        ? 'bg-emerald-500 text-white'
+                        : 'bg-red-500 text-white'
+                    }`}>
                     {submitStatus.type === 'success' ? (
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                      <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="3"
+                        strokeLinecap="round"
+                        strokeLinejoin="round">
                         <polyline points="20 6 9 17 4 12"></polyline>
                       </svg>
                     ) : (
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                      <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="3"
+                        strokeLinecap="round"
+                        strokeLinejoin="round">
                         <line x1="18" y1="6" x2="6" y2="18"></line>
                         <line x1="6" y1="6" x2="18" y2="18"></line>
                       </svg>
                     )}
                   </div>
                   <div className="flex-1">
-                    <p className="font-bold">{submitStatus.type === 'success' ? 'Request Sent Successfully!' : 'Submission Failed'}</p>
-                    <p className="text-[13px] mt-0.5 opacity-90">{submitStatus.message}</p>
+                    <p className="font-bold">
+                      {submitStatus.type === 'success'
+                        ? 'Request Sent Successfully!'
+                        : 'Submission Failed'}
+                    </p>
+                    <p className="text-[13px] mt-0.5 opacity-90">
+                      {submitStatus.message}
+                    </p>
                   </div>
                 </motion.div>
               )}
-              
+
               {/* Row 1: Full Name & Email */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-[20px]">
                 <div className="flex flex-col gap-[6px]">
@@ -313,11 +372,14 @@ export default function BookingPage({content}: any) {
 
                 <div className="flex flex-col gap-[6px]">
                   <label className="text-[13px] font-bold text-[#111111]">
-                    Venue / Event Address <span className="text-red-500">*</span>
+                    Venue / Event Address{' '}
+                    <span className="text-red-500">*</span>
                   </label>
                   <AddressAutocomplete
                     value={currentAddress}
-                    onChange={(val) => setValue('address', val, { shouldValidate: true })}
+                    onChange={(val) =>
+                      setValue('address', val, {shouldValidate: true})
+                    }
                     placeholder="Search venue or address..."
                     inputClassName={`w-full bg-[#fafafa] border ${
                       errors.address ? '!border-red-500' : 'border-[#e5e5e5]'
@@ -344,9 +406,11 @@ export default function BookingPage({content}: any) {
                         const y = d.getFullYear();
                         const m = String(d.getMonth() + 1).padStart(2, '0');
                         const day = String(d.getDate()).padStart(2, '0');
-                        setValue('eventDate', `${y}-${m}-${day}`, { shouldValidate: true });
+                        setValue('eventDate', `${y}-${m}-${day}`, {
+                          shouldValidate: true,
+                        });
                       } else {
-                        setValue('eventDate', '', { shouldValidate: true });
+                        setValue('eventDate', '', {shouldValidate: true});
                       }
                     }}
                     placeholder="Select event date"
@@ -376,11 +440,17 @@ export default function BookingPage({content}: any) {
                         Select event type
                       </option>
                       <option value="Wedding">Wedding</option>
-                      <option value="Club / Lounge Gig">Club / Lounge Gig</option>
+                      <option value="Club / Lounge Gig">
+                        Club / Lounge Gig
+                      </option>
                       <option value="Corporate">Corporate</option>
                       <option value="Private">Private</option>
-                      <option value="Concert / Festival">Concert / Festival</option>
-                      <option value="Birthday Celebration">Birthday Celebration</option>
+                      <option value="Concert / Festival">
+                        Concert / Festival
+                      </option>
+                      <option value="Birthday Celebration">
+                        Birthday Celebration
+                      </option>
                       <option value="Other">Other</option>
                     </select>
                     <div className="absolute inset-y-0 right-[16px] flex items-center pointer-events-none">
@@ -408,8 +478,13 @@ export default function BookingPage({content}: any) {
               {/* Row 4: Event Start Time & Duration */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-[20px]">
                 <div className="flex flex-col gap-[6px]">
-                  <label className="text-[13px] font-bold text-[#111111]">
-                    Start Time
+                  <label className="text-[13px] font-bold text-[#111111] flex items-center justify-between">
+                    <span>Start Time</span>
+                    {detectedTimezone && (
+                      <span className="text-[11px] font-normal text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">
+                        Local: {detectedTimezone}
+                      </span>
+                    )}
                   </label>
                   <input
                     type="time"
@@ -424,8 +499,7 @@ export default function BookingPage({content}: any) {
                   </label>
                   <select
                     {...register('duration')}
-                    className="w-full bg-[#fafafa] border border-[#e5e5e5] rounded-sm px-[16px] py-[12px] h-[46px] text-[14px] text-[#111111] outline-none focus:border-[var(--primary)] transition-colors cursor-pointer"
-                  >
+                    className="w-full bg-[#fafafa] border border-[#e5e5e5] rounded-sm px-[16px] py-[12px] h-[46px] text-[14px] text-[#111111] outline-none focus:border-[var(--primary)] transition-colors cursor-pointer">
                     <option value="1 Hour">1 Hour</option>
                     <option value="2 Hours">2 Hours</option>
                     <option value="3 Hours">3 Hours</option>
@@ -433,7 +507,9 @@ export default function BookingPage({content}: any) {
                     <option value="5 Hours">5 Hours</option>
                     <option value="6 Hours">6 Hours</option>
                     <option value="8 Hours">8 Hours</option>
-                    <option value="10+ Hours (Full Day)">10+ Hours (Full Day)</option>
+                    <option value="10+ Hours (Full Day)">
+                      10+ Hours (Full Day)
+                    </option>
                   </select>
                 </div>
               </div>
@@ -441,7 +517,8 @@ export default function BookingPage({content}: any) {
               {/* Row 5: Event Details */}
               <div className="flex flex-col gap-[6px]">
                 <label className="text-[13px] font-bold text-[#111111]">
-                  Event Details & Music Preferences <span className="text-red-500">*</span>
+                  Event Details & Music Preferences{' '}
+                  <span className="text-red-500">*</span>
                 </label>
                 <textarea
                   rows={4}
@@ -478,7 +555,7 @@ export default function BookingPage({content}: any) {
                         r="10"
                         stroke="currentColor"
                         strokeWidth="4"></circle>
-                        <path
+                      <path
                         className="opacity-75"
                         fill="currentColor"
                         d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
