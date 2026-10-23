@@ -57,6 +57,14 @@ export interface GatewaySelectionModalProps {
   currency?: string;
   tenantCountry?: string;
   isLoading?: boolean;
+  isUpgrade?: boolean;
+  currentPlanName?: string;
+  remainingDays?: number;
+  unusedCredit?: number;
+  amountToPay?: number;
+  isDowngrade?: boolean;
+  downgradeMessage?: string | null;
+  onInstantUpgrade?: () => Promise<void>;
 }
 
 export interface ConnectPayoutModalProps {

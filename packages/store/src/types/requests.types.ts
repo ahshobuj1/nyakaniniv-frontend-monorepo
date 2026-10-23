@@ -245,7 +245,37 @@ export interface SubscribeRequest {
 }
 
 export interface SubscribeResponse {
-  url: string;
+  url?: string | null;
+  isUpgrade?: boolean;
+  isInstantUpgrade?: boolean;
+  appliedCredit?: number;
+  amountToPay?: number;
+  message?: string;
+}
+
+export interface UpgradePreviewResponse {
+  isUpgrade: boolean;
+  isSamePlanAndCycle: boolean;
+  isDowngrade: boolean;
+  downgradeMessage?: string | null;
+  currentPlan?: {
+    id: number;
+    name: string;
+    billingCycle: 'monthly' | 'annually';
+    pricePaid: number;
+    periodEnd?: string | null;
+    remainingDays: number;
+  } | null;
+  targetPlan: {
+    id: number;
+    name: string;
+    billingCycle: 'monthly' | 'annually';
+    price: number;
+  };
+  unusedCredit: number;
+  appliedCredit: number;
+  amountToPay: number;
+  currency: string;
 }
 
 // --- Paystack Connect Requests ---

@@ -66,7 +66,9 @@ const availableGenres = [
 
 export default function SetupProfilePage() {
   const router = useRouter();
-  const {data: profileData, isLoading: isProfileLoading} = useGetCurrentProfileQuery();
+  const {data: profileData, isLoading: isProfileLoading} = useGetCurrentProfileQuery(undefined, {
+    refetchOnMountOrArgChange: true,
+  });
   const [onboardTenant, {isLoading}] = useOnboardTenantMutation();
 
   // If user already has a tenant profile, redirect immediately to dashboard

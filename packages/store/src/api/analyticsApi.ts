@@ -4,6 +4,7 @@ import { BaseResponse } from '../types';
 export interface TenantAnalyticsResponse {
   totalEarnings: number;
   pendingInvoices: number;
+  currencyCode?: string;
   bookings: {
     pending: number;
     accepted: number;

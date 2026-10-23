@@ -1,5 +1,5 @@
 import { baseApi } from './baseApi';
-import { SubscriptionPlan, Subscription, BaseResponse, SubscribeRequest, SubscribeResponse } from '../types';
+import { SubscriptionPlan, Subscription, BaseResponse, SubscribeRequest, SubscribeResponse, UpgradePreviewResponse } from '../types';
 
 export const subscriptionApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -16,6 +16,12 @@ export const subscriptionApi = baseApi.injectEndpoints({
         method: 'GET',
       }),
       providesTags: ['Subscription'],
+    }),
+    previewUpgrade: builder.query<BaseResponse<UpgradePreviewResponse>, { planId: number; billingCycle: 'monthly' | 'annually' }>({
+      query: ({ planId, billingCycle }) => ({
+        url: `/subscriptions/v1/preview-upgrade?planId=${planId}&billingCycle=${billingCycle}`,
+        method: 'GET',
+      }),
     }),
     subscribe: builder.mutation<BaseResponse<SubscribeResponse>, SubscribeRequest>({
       query: (body) => ({
@@ -66,6 +72,8 @@ export const subscriptionApi = baseApi.injectEndpoints({
 export const {
   useGetPlansQuery,
   useGetMySubscriptionQuery,
+  usePreviewUpgradeQuery,
+  useLazyPreviewUpgradeQuery,
   useSubscribeMutation,
   useCancelSubscriptionMutation,
   useGetAvailableGatewaysQuery,

@@ -57,7 +57,8 @@ export interface Tenant {
   directPaymentInstructions?: Record<string, any> | null;
   stripeAccountId?: string;
   activePlanId?: number;
-  subscriptionStatus?: 'active' | 'past_due' | 'canceled';
+  subscriptionStatus?: 'active' | 'trialing' | 'past_due' | 'canceled' | 'incomplete' | 'incomplete_expired' | 'unpaid' | 'paused';
+  isPublished?: boolean;
   createdAt?: string;
   updatedAt?: string;
 

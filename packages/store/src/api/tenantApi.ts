@@ -15,7 +15,7 @@ export const tenantApi = baseApi.injectEndpoints({
         method: 'POST',
         body,
       }),
-      invalidatesTags: ['Tenant'],
+      invalidatesTags: ['Tenant', 'User'],
     }),
     getPublicProfile: builder.query<BaseResponse<Tenant>, string>({
       query: (subdomain) => ({
@@ -50,7 +50,7 @@ export const tenantApi = baseApi.injectEndpoints({
           body: requestBody,
         };
       },
-      invalidatesTags: ['Tenant'],
+      invalidatesTags: ['Tenant', 'User'],
     }),
     assignTheme: builder.mutation<BaseResponse<Tenant>, AssignThemeRequest>({
       query: (body) => ({
@@ -58,7 +58,7 @@ export const tenantApi = baseApi.injectEndpoints({
         method: 'PUT',
         body,
       }),
-      invalidatesTags: ['Tenant'],
+      invalidatesTags: ['Tenant', 'User'],
     }),
     uploadTenantMedia: builder.mutation<BaseResponse<{ url: string }>, File>({
       query: (file) => {

@@ -32,6 +32,19 @@ export default function UserBookingPage() {
       </div>
     );
   }
+
+  if (tenant.isPublished === false) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-slate-50 text-slate-500 font-sans p-6">
+        <div className="p-8 bg-white rounded-2xl shadow-sm border border-slate-100 text-center max-w-md">
+          <p className="text-xl font-semibold text-slate-800 mb-2">Bookings Unavailable</p>
+          <p className="text-sm text-slate-500">
+            This artist&apos;s booking calendar is currently offline or awaiting active subscription renewal.
+          </p>
+        </div>
+      </div>
+    );
+  }
   
   return (
     <TemplateRenderer
