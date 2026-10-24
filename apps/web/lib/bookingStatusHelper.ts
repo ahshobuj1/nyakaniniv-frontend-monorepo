@@ -17,9 +17,7 @@ export type CanonicalBookingStatus =
   | 'DISPUTED';
 
 export type DirectPaymentStatusType =
-  | 'UNREPORTED'
-  | 'CLIENT_REPORTED'
-  | 'DJ_CONFIRMED';
+  'UNREPORTED' | 'CLIENT_REPORTED' | 'DJ_CONFIRMED';
 
 export interface StatusBadgeConfig {
   label: string;
@@ -31,7 +29,9 @@ export interface StatusBadgeConfig {
 /**
  * Normalizes any legacy or variant status string to the canonical uppercase status.
  */
-export function normalizeBookingStatus(status?: string | null): CanonicalBookingStatus {
+export function normalizeBookingStatus(
+  status?: string | null,
+): CanonicalBookingStatus {
   if (!status) return 'PENDING';
   const clean = status.trim().toUpperCase();
 
@@ -72,10 +72,21 @@ export function normalizeBookingStatus(status?: string | null): CanonicalBooking
 /**
  * Checks if a booking is considered "Upcoming" (Confirmed or Accepted with future event date).
  */
-export function isBookingUpcoming(status?: string | null, eventDate?: string | Date | null): boolean {
+export function isBookingUpcoming(
+  status?: string | null,
+  eventDate?: string | Date | null,
+): boolean {
   const normalized = normalizeBookingStatus(status);
   if (normalized !== 'CONFIRMED' && normalized !== 'ACCEPTED') return false;
   if (!eventDate) return true;
+  return new Date(eventDate).getTime() > Date.now();
+}
+
+/**
+ * Checks if an event is in the future compared to current time.
+ */
+export function isEventInFuture(eventDate?: string | Date | null): boolean {
+  if (!eventDate) return false;
   return new Date(eventDate).getTime() > Date.now();
 }
 
@@ -84,7 +95,7 @@ export function isBookingUpcoming(status?: string | null, eventDate?: string | D
  */
 export function getBookingStatusBadge(
   status?: string | null,
-  eventDate?: string | Date | null
+  eventDate?: string | Date | null,
 ): StatusBadgeConfig {
   const canonical = normalizeBookingStatus(status);
 
@@ -99,10 +110,11 @@ export function getBookingStatusBadge(
 
     case 'ACCEPTED':
       return {
-        label: 'Accepted',
+        label: 'Quote Sent',
         badgeClass: 'bg-sky-50 text-sky-700 border-sky-200/60',
         dotClass: 'bg-sky-500',
-        description: 'Accepted by you. Finalizing quote negotiation and direct payment arrangements.',
+        description:
+          'Initial quotation sent. Finalizing quote negotiation and direct payment arrangements.',
       };
 
     case 'AWAITING_PAYMENT':
@@ -110,7 +122,8 @@ export function getBookingStatusBadge(
         label: 'Awaiting Agreement',
         badgeClass: 'bg-orange-50 text-orange-700 border-orange-200/60',
         dotClass: 'bg-orange-500',
-        description: 'Quote proposed. Awaiting client review and direct payment.',
+        description:
+          'Quote proposed. Awaiting client review and direct payment.',
       };
 
     case 'CONFIRMED': {
@@ -119,7 +132,8 @@ export function getBookingStatusBadge(
         label: upcoming ? 'Confirmed (Upcoming)' : 'Confirmed',
         badgeClass: 'bg-emerald-50 text-emerald-700 border-emerald-200/60',
         dotClass: 'bg-emerald-500',
-        description: 'Direct payment confirmed by you. The date is locked on your schedule.',
+        description:
+          'Direct payment confirmed by you. The date is locked on your schedule.',
       };
     }
 
@@ -178,7 +192,7 @@ export function getBookingStatusBadge(
  */
 export function getClientBookingStatusBadge(
   status?: string | null,
-  eventDate?: string | Date | null
+  eventDate?: string | Date | null,
 ): StatusBadgeConfig {
   const canonical = normalizeBookingStatus(status);
 
@@ -188,15 +202,17 @@ export function getClientBookingStatusBadge(
         label: 'Under Artist Review',
         badgeClass: 'bg-amber-50 text-amber-800 border-amber-200/80',
         dotClass: 'bg-amber-500',
-        description: 'Your booking request is being reviewed by the artist. You will receive an email once accepted with the proposed quotation.',
+        description:
+          'Your booking request is being reviewed by the artist. You will receive an email once accepted with the proposed quotation.',
       };
 
     case 'ACCEPTED':
       return {
-        label: 'Booking Accepted',
+        label: 'Quote Ready',
         badgeClass: 'bg-sky-50 text-sky-800 border-sky-200/80',
         dotClass: 'bg-sky-500',
-        description: 'The artist has accepted your booking. Review the quote and event details.',
+        description:
+          'The artist has accepted your request and proposed an initial quotation. Review and accept the quote below.',
       };
 
     case 'AWAITING_PAYMENT':
@@ -204,7 +220,8 @@ export function getClientBookingStatusBadge(
         label: 'Quotation Ready',
         badgeClass: 'bg-orange-50 text-orange-800 border-orange-200/80',
         dotClass: 'bg-orange-500',
-        description: 'The artist has prepared a quotation. Review the agreed terms and event details.',
+        description:
+          'The artist has prepared a quotation. Review the agreed terms and event details.',
       };
 
     case 'CONFIRMED': {
@@ -213,7 +230,8 @@ export function getClientBookingStatusBadge(
         label: upcoming ? 'Confirmed (Upcoming)' : 'Confirmed',
         badgeClass: 'bg-emerald-50 text-emerald-800 border-emerald-200/80',
         dotClass: 'bg-emerald-500',
-        description: 'Your booking is confirmed with the artist. Event terms and schedule are finalized.',
+        description:
+          'Your booking is confirmed with the artist. Event terms and schedule are finalized.',
       };
     }
 
@@ -222,7 +240,8 @@ export function getClientBookingStatusBadge(
         label: 'Gig In Progress Today',
         badgeClass: 'bg-purple-50 text-purple-800 border-purple-200/80',
         dotClass: 'bg-purple-500 animate-pulse',
-        description: 'Your event performance is scheduled for today. Have a fantastic time!',
+        description:
+          'Your event performance is scheduled for today. Have a fantastic time!',
       };
 
     case 'COMPLETED':
@@ -230,7 +249,8 @@ export function getClientBookingStatusBadge(
         label: 'Event Completed',
         badgeClass: 'bg-blue-50 text-blue-800 border-blue-200/80',
         dotClass: 'bg-blue-500',
-        description: 'This booking has successfully concluded. Leave a review below!',
+        description:
+          'This booking has successfully concluded. Leave a review below!',
       };
 
     case 'CANCELLED':
@@ -246,7 +266,8 @@ export function getClientBookingStatusBadge(
         label: 'Declined by Artist',
         badgeClass: 'bg-rose-50 text-rose-800 border-rose-200/80',
         dotClass: 'bg-rose-500',
-        description: 'The artist was unavailable for this date and was unable to accept this booking request.',
+        description:
+          'The artist was unavailable for this date and was unable to accept this booking request.',
       };
 
     case 'DISPUTED':
@@ -254,7 +275,8 @@ export function getClientBookingStatusBadge(
         label: 'Issue Reported',
         badgeClass: 'bg-rose-50 text-rose-800 border-rose-200/80',
         dotClass: 'bg-rose-500',
-        description: 'An issue has been flagged for this booking. The artist has been notified.',
+        description:
+          'An issue has been flagged for this booking. The artist has been notified.',
       };
 
     case 'EXPIRED':
@@ -279,7 +301,7 @@ export function getClientBookingStatusBadge(
  * Direct Payment Status Badge Config (Informational Only - never gateway verified)
  */
 export function getDirectPaymentStatusBadge(
-  status?: DirectPaymentStatusType | string | null
+  status?: DirectPaymentStatusType | string | null,
 ): StatusBadgeConfig {
   switch (status) {
     case 'CLIENT_REPORTED':
@@ -287,14 +309,16 @@ export function getDirectPaymentStatusBadge(
         label: 'Payment Reported by Client',
         badgeClass: 'bg-amber-50 text-amber-800 border-amber-200',
         dotClass: 'bg-amber-500',
-        description: 'Client reported sending direct payment. Awaiting DJ confirmation.',
+        description:
+          'Client reported sending direct payment. Awaiting DJ confirmation.',
       };
     case 'DJ_CONFIRMED':
       return {
         label: 'Direct Payment Confirmed',
         badgeClass: 'bg-emerald-50 text-emerald-800 border-emerald-200',
         dotClass: 'bg-emerald-500',
-        description: 'DJ confirmed direct payment received outside UpBeat Africa.',
+        description:
+          'DJ confirmed direct payment received outside UpBeat Africa.',
       };
     case 'UNREPORTED':
     default:
@@ -302,7 +326,8 @@ export function getDirectPaymentStatusBadge(
         label: 'Direct Arrangement',
         badgeClass: 'bg-gray-100 text-gray-700 border-gray-200',
         dotClass: 'bg-gray-400',
-        description: 'Payment terms and settlement are handled directly between client and artist.',
+        description:
+          'Payment terms and settlement are handled directly between client and artist.',
       };
   }
 }
@@ -322,7 +347,9 @@ export interface ParsedEventDetails {
 /**
  * Safely parses eventDetails whether it is a string, an object/JSON, or undefined.
  */
-export function parseBookingEventDetails(eventDetails?: unknown): ParsedEventDetails {
+export function parseBookingEventDetails(
+  eventDetails?: unknown,
+): ParsedEventDetails {
   const result: ParsedEventDetails = {
     startTime: '',
     duration: '',
@@ -339,13 +366,18 @@ export function parseBookingEventDetails(eventDetails?: unknown): ParsedEventDet
     else if (details.time) result.startTime = String(details.time).trim();
 
     if (details.duration) result.duration = String(details.duration).trim();
-    if (details.requirements) result.requirements = String(details.requirements).trim();
+    if (details.requirements)
+      result.requirements = String(details.requirements).trim();
 
     if (details.cancelledBy) result.cancelledBy = String(details.cancelledBy);
-    if (details.cancellationReason) result.cancellationReason = String(details.cancellationReason);
-    if (details.refundPercent !== undefined) result.refundPercent = Number(details.refundPercent);
-    if (details.refundAmount !== undefined) result.refundAmount = Number(details.refundAmount);
-    if (details.refundStatus) result.refundStatus = String(details.refundStatus);
+    if (details.cancellationReason)
+      result.cancellationReason = String(details.cancellationReason);
+    if (details.refundPercent !== undefined)
+      result.refundPercent = Number(details.refundPercent);
+    if (details.refundAmount !== undefined)
+      result.refundAmount = Number(details.refundAmount);
+    if (details.refundStatus)
+      result.refundStatus = String(details.refundStatus);
 
     if (details.notes) result.otherDetails.push(String(details.notes).trim());
     return result;
@@ -389,7 +421,8 @@ export interface CancellationRefundPreview {
   refundPercent: number;
   refundAmount: number;
   artistRetentionAmount: number;
-  policyTier: 'FULL_REFUND' | 'PARTIAL_REFUND' | 'NO_REFUND' | 'FREE_CANCELLATION';
+  policyTier:
+    'FULL_REFUND' | 'PARTIAL_REFUND' | 'NO_REFUND' | 'FREE_CANCELLATION';
   tierLabel: string;
   tierDescription: string;
   badgeClass: string;
@@ -398,7 +431,7 @@ export interface CancellationRefundPreview {
 export function calculateCancellationPreview(
   eventDate?: string | Date | null,
   totalAmount: number = 0,
-  isPaid: boolean = false
+  isPaid: boolean = false,
 ): CancellationRefundPreview {
   if (!isPaid) {
     return {
@@ -411,7 +444,8 @@ export function calculateCancellationPreview(
       artistRetentionAmount: 0,
       policyTier: 'FREE_CANCELLATION',
       tierLabel: 'Free Cancellation (Unpaid)',
-      tierDescription: 'This booking has not been paid yet. Cancelling now is free and will immediately release the reserved date with no charges.',
+      tierDescription:
+        'This booking has not been paid yet. Cancelling now is free and will immediately release the reserved date with no charges.',
       badgeClass: 'bg-emerald-50 text-emerald-800 border-emerald-200',
     };
   }
@@ -427,7 +461,8 @@ export function calculateCancellationPreview(
       artistRetentionAmount: 0,
       policyTier: 'FULL_REFUND',
       tierLabel: '100% Full Refund',
-      tierDescription: 'Event date is not set. 100% of your payment will be refunded to your original payment method.',
+      tierDescription:
+        'Event date is not set. 100% of your payment will be refunded to your original payment method.',
       badgeClass: 'bg-emerald-50 text-emerald-800 border-emerald-200',
     };
   }
@@ -459,7 +494,7 @@ export function calculateCancellationPreview(
       badgeClass: 'bg-emerald-50 text-emerald-800 border-emerald-200',
     };
   } else if (hoursUntilEvent >= 24) {
-    const refundAmount = Math.round((totalAmount * 0.5) * 100) / 100;
+    const refundAmount = Math.round(totalAmount * 0.5 * 100) / 100;
     const retention = Math.round((totalAmount - refundAmount) * 100) / 100;
     return {
       hoursUntilEvent,
@@ -489,4 +524,14 @@ export function calculateCancellationPreview(
       badgeClass: 'bg-rose-50 text-rose-800 border-rose-200',
     };
   }
+}
+
+export function getSubscriptionDaysRemaining(
+  periodEnd?: string | Date | null,
+): number | null {
+  if (!periodEnd) return null;
+  const targetTime = new Date(periodEnd).getTime();
+  const diffMs = targetTime - Date.now();
+  if (diffMs <= 0) return 0;
+  return Math.floor(diffMs / (1000 * 60 * 60 * 24));
 }

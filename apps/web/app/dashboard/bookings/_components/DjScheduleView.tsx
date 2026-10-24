@@ -16,6 +16,7 @@ import {
   getBookingStatusBadge,
   getDirectPaymentStatusBadge,
 } from '@/lib/bookingStatusHelper';
+import {BookingStatusBadge} from '@/components/BookingStatusBadge';
 import { formatDateInTz, formatTimeInTz, getBrowserTimezone } from '@/lib/timezone';
 
 type ScheduleTab = 'needsAction' | 'today' | 'tomorrow' | 'upcoming' | 'past';
@@ -130,10 +131,7 @@ export function DjScheduleView() {
                         {b.eventType || 'DJ Performance'}
                       </h3>
                     </div>
-                    <span
-                      className={`text-[10px] px-2 py-0.5 rounded-full font-semibold border shrink-0 ${statusBadge.badgeClass}`}>
-                      {statusBadge.label}
-                    </span>
+                    <BookingStatusBadge status={b.status} label={statusBadge.label} size="sm" />
                   </div>
 
                   {/* Client Info */}

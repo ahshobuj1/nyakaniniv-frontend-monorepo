@@ -356,6 +356,8 @@ export interface Invoice {
   cardBrand?: string | null;
   cardLast4?: string | null;
   paidAt?: string | null;
+  transactionId?: string | null;
+  gatewayReference?: string | null;
 
   user?: InvoiceUser | null;
   tenant?: InvoiceTenant | null;

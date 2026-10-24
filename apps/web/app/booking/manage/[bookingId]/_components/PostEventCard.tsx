@@ -15,6 +15,7 @@ import {
   useReportIssueMutation,
   useSubmitReviewMutation,
 } from '@repo/store';
+import { isEventInFuture } from '@/lib/bookingStatusHelper';
 import type { PostEventCardProps } from './types';
 
 export function PostEventCard({
@@ -100,44 +101,84 @@ export function PostEventCard({
 
       {/* Disputed State */}
       {isDisputed && (
-        <div className="p-4 rounded-sm bg-rose-50 border border-rose-200 text-xs text-rose-900 space-y-2">
+        <div className="p-4 rounded-sm bg-rose-50 border border-rose-200 text-xs text-rose-900 space-y-3">
           <div className="flex items-center gap-2 font-bold">
             <AlertCircle className="w-4 h-4 text-rose-600" />
             <span>Issue Reported for this Booking</span>
           </div>
-          <p className="text-rose-800">
+          <p className="text-rose-800 leading-relaxed">
             {booking.issueDescription || 'An issue was reported by the client regarding this performance.'}
           </p>
           <span className="text-[11px] text-rose-600 block">
             Reported on: {booking.issueReportedAt ? new Date(booking.issueReportedAt).toLocaleDateString() : 'Recently'}
           </span>
+
+          <div className="pt-2.5 border-t border-rose-200/70 space-y-2">
+            <p className="text-[11px] text-rose-700">
+              Has this issue been resolved with the artist? Confirm completion below to finalize the booking and leave a review.
+            </p>
+            <div className="flex flex-wrap items-center gap-2.5">
+              <button
+                onClick={handleConfirmCompletion}
+                disabled={isConfirming}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-xs font-bold rounded-sm shadow-xs transition-colors cursor-pointer">
+                <CheckCircle className="w-4 h-4" />
+                <span>{isConfirming ? 'Confirming...' : 'Issue Resolved - Confirm Event Concluded'}</span>
+              </button>
+              <button
+                onClick={() => setShowIssueModal(true)}
+                className="inline-flex items-center gap-1.5 px-3 py-2 border border-rose-300 text-rose-800 hover:bg-rose-100 text-xs font-semibold rounded-sm transition-colors cursor-pointer">
+                <Flag className="w-3.5 h-3.5" />
+                <span>Update Issue Note</span>
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
       {/* Can Confirm or Report Issue */}
       {canConfirmOrDispute && (
-        <div className="space-y-4">
-          <p className="text-xs text-gray-600 leading-relaxed">
-            Has the event concluded? Confirm below to finalize the booking and leave a rating for the artist.
-          </p>
-
-          <div className="flex flex-wrap items-center gap-3">
-            <button
-              onClick={handleConfirmCompletion}
-              disabled={isConfirming}
-              className="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-xs font-bold rounded-sm shadow-xs transition-colors cursor-pointer">
-              <CheckCircle className="w-4 h-4" />
-              <span>{isConfirming ? 'Confirming...' : 'Confirm Event Concluded'}</span>
-            </button>
-
+        isEventInFuture(booking.eventDate) ? (
+          <div className="space-y-3">
+            <div className="p-3 bg-gray-50 border border-gray-200 rounded-sm text-xs text-gray-600">
+              <span className="font-semibold text-gray-800 block">
+                Upcoming Event on {booking.eventDate ? new Date(booking.eventDate).toLocaleDateString() : 'scheduled date'}
+              </span>
+              <span className="text-[11px] text-gray-500 mt-0.5 block">
+                Once the event concludes, you will be able to confirm completion and leave a review for the artist here.
+              </span>
+            </div>
             <button
               onClick={() => setShowIssueModal(true)}
-              className="inline-flex items-center gap-1.5 px-3 py-2 border border-rose-200 text-rose-700 hover:bg-rose-50 text-xs font-semibold rounded-sm transition-colors cursor-pointer">
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-rose-200 text-rose-700 hover:bg-rose-50 text-xs font-semibold rounded-sm transition-colors cursor-pointer">
               <Flag className="w-3.5 h-3.5" />
               <span>Report an Issue</span>
             </button>
           </div>
-        </div>
+        ) : (
+          <div className="space-y-4">
+            <p className="text-xs text-gray-600 leading-relaxed">
+              Has the event concluded? Confirm below to finalize the booking and leave a rating for the artist.
+            </p>
+
+            <div className="flex flex-wrap items-center gap-3">
+              <button
+                onClick={handleConfirmCompletion}
+                disabled={isConfirming}
+                className="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-xs font-bold rounded-sm shadow-xs transition-colors cursor-pointer">
+                <CheckCircle className="w-4 h-4" />
+                <span>{isConfirming ? 'Confirming...' : 'Confirm Event Concluded'}</span>
+              </button>
+
+              <button
+                onClick={() => setShowIssueModal(true)}
+                className="inline-flex items-center gap-1.5 px-3 py-2 border border-rose-200 text-rose-700 hover:bg-rose-50 text-xs font-semibold rounded-sm transition-colors cursor-pointer">
+                <Flag className="w-3.5 h-3.5" />
+                <span>Report an Issue</span>
+              </button>
+            </div>
+          </div>
+        )
       )}
 
       {/* Completed State: Review Display or Form */}

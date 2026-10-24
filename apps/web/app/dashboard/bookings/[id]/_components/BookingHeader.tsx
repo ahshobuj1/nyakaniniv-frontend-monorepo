@@ -5,6 +5,7 @@ import {Button} from '@repo/ui';
 import {DownloadIcon, ArrowLeft} from 'lucide-react';
 import {Booking} from '@repo/store';
 
+import {BookingStatusBadge} from '@/components/BookingStatusBadge';
 import {getBookingStatusBadge} from '@/lib/bookingStatusHelper';
 
 interface BookingHeaderProps {
@@ -37,13 +38,10 @@ export function BookingHeader({
               {booking.eventType || 'Event Performance'} with{' '}
               {booking.client?.name || 'Client'}
             </h1>
-            <span
-              className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider border ${badgeConfig.badgeClass}`}>
-              <span
-                className={`w-1.5 h-1.5 rounded-full ${badgeConfig.dotClass}`}
-              />
-              {badgeConfig.label}
-            </span>
+            <BookingStatusBadge
+              status={booking.status}
+              label={badgeConfig.label}
+            />
           </div>
           <p className="text-xs text-[#6B7280] mt-1 font-mono">
             Ref:{' '}

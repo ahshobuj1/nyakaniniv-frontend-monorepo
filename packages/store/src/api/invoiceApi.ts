@@ -16,6 +16,17 @@ export const invoiceApi = baseApi.injectEndpoints({
       }),
       providesTags: ['Invoice'],
     }),
+    getAllInvoices: builder.query<
+      PaginatedResponse<UnifiedInvoice> & {meta?: any},
+      Record<string, any> | void
+    >({
+      query: (params) => ({
+        url: '/invoices/v1/all',
+        method: 'GET',
+        params: params ? {...params} : undefined,
+      }),
+      providesTags: ['Invoice'],
+    }),
     getInvoiceById: builder.query<BaseResponse<UnifiedInvoice>, string>({
       query: (id) => ({
         url: `/invoices/v1/${id}`,
@@ -49,6 +60,7 @@ export const invoiceApi = baseApi.injectEndpoints({
 
 export const {
   useGetMyInvoicesQuery,
+  useGetAllInvoicesQuery,
   useGetInvoiceByIdQuery,
   usePayBookingMutation,
   useMarkBookingPaidMutation,

@@ -42,6 +42,7 @@ import Link from 'next/link';
 import {toast} from 'sonner';
 import {ConfirmationDialog} from '@/components/ConfirmationDialog';
 import {DeclineBookingModal} from '@/components/DeclineBookingModal';
+import {BookingStatusBadge} from '@/components/BookingStatusBadge';
 import {formatDateInTz, formatTimeInTz} from '@/lib/timezone';
 
 // ==========================================
@@ -270,7 +271,7 @@ export default function DashboardOverview() {
       subtitle: 'completed bookings',
     },
     {
-      title: 'Pending Invoices',
+      title: 'Pending',
       value: `${djCurrency} ${Number(analytics?.pendingInvoices || 0).toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 2})}`,
       trend: 'Unpaid',
       isPositive: false,
@@ -768,31 +769,7 @@ export default function DashboardOverview() {
                                 setPriceInput('');
                               }}
                               className="focus:outline-none focus:ring-2 cursor-pointer focus:ring-primary/20 rounded-md transition-transform hover:scale-105 active:scale-95">
-                              {booking.status?.toLowerCase() === 'completed' ? (
-                                <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-[#10B981] text-white text-[13px] font-medium">
-                                  <CheckCircle2 className="w-3.5 h-3.5" />
-                                  Completed
-                                </div>
-                              ) : booking.status?.toLowerCase() ===
-                                'accepted' ? (
-                                <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-blue-500 text-white text-[13px] font-medium">
-                                  <CheckCircle2 className="w-3.5 h-3.5" />
-                                  Accepted
-                                </div>
-                              ) : booking.status?.toLowerCase() ===
-                                  'canceled' ||
-                                booking.status?.toLowerCase() === 'rejected' ? (
-                                <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-red-500 text-white text-[13px] font-medium">
-                                  <XCircle className="w-3.5 h-3.5" />
-                                  {booking.status.charAt(0).toUpperCase() +
-                                    booking.status.slice(1)}
-                                </div>
-                              ) : (
-                                <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-[#F59E0B] text-white text-[13px] font-medium">
-                                  <Clock className="w-3.5 h-3.5" />
-                                  Pending
-                                </div>
-                              )}
+                              <BookingStatusBadge status={booking.status} />
                             </button>
 
                             {isPendingCashRequest && (

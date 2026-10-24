@@ -9,6 +9,7 @@ import {
   Settings,
   CalendarDays,
   CalendarCheck,
+  CalendarClock,
   FileText,
   CreditCard,
   ExternalLink,
@@ -21,12 +22,16 @@ import Image from 'next/image';
 import {
   useGetCurrentProfileQuery,
   useGetLandingPageContentQuery,
+  useGetDjScheduleQuery,
 } from '@repo/store';
 
 const sidebarGroups = [
   {
     title: 'Overview',
-    items: [{label: 'Dashboard', url: '/dashboard', icon: LayoutDashboard}],
+    items: [
+      {label: 'Dashboard', url: '/dashboard', icon: LayoutDashboard},
+      {label: 'Schedule', url: '/dashboard/schedule', icon: CalendarClock},
+    ],
   },
   {
     title: 'My Website',
@@ -58,6 +63,10 @@ export function Sidebar() {
   const {isCollapsed, isMobileOpen, closeMobile} = useSidebar();
   const {data: profileResponse} = useGetCurrentProfileQuery();
   const {data: landingResponse} = useGetLandingPageContentQuery();
+  const {data: scheduleResponse} = useGetDjScheduleQuery();
+  const todayCount = Array.isArray(scheduleResponse?.data?.today)
+    ? scheduleResponse.data.today.length
+    : 0;
   const subdomain = profileResponse?.data?.tenant?.subdomain || 'demo';
   const logoUrl =
     landingResponse?.data?.settings?.headerLogoUrl || '/auth.logo.png';
@@ -150,13 +159,15 @@ export function Sidebar() {
                 {group.items.map((item, itemIndex) => {
                   const Icon = item.icon;
                   const isActive = pathname === item.url;
+                  const isSchedule = item.url === '/dashboard/schedule';
+                  const showCountBadge = isSchedule && todayCount > 0;
 
                   return (
                     <li key={itemIndex}>
                       <Link
                         href={item.url}
                         onClick={() => window.innerWidth < 768 && closeMobile()}
-                        className={`flex items-center ${isCollapsed ? 'md:justify-center py-3' : 'gap-3 px-3 py-2.5'} rounded-md font-medium text-sm transition-colors ${
+                        className={`relative flex items-center ${isCollapsed ? 'md:justify-center py-3' : 'gap-3 px-3 py-2.5'} rounded-md font-medium text-sm transition-colors ${
                           isActive
                             ? 'bg-primary/10 text-primary'
                             : 'text-gray-600 hover:bg-primary/10 hover:text-primary'
@@ -170,6 +181,24 @@ export function Sidebar() {
                           className={`whitespace-nowrap overflow-hidden ${isCollapsed ? 'md:hidden' : 'block'}`}>
                           {item.label}
                         </span>
+
+                        {showCountBadge && (
+                          <>
+                            <span
+                              className={`ml-auto hidden ${isCollapsed ? 'md:hidden' : 'md:inline-flex'} items-center justify-center px-1.5 py-0.5 text-[10px] font-bold font-mono rounded-full bg-emerald-600 text-white shadow-2xs`}>
+                              {todayCount}
+                            </span>
+                            <span className="md:hidden ml-auto inline-flex items-center justify-center px-1.5 py-0.5 text-[10px] font-bold font-mono rounded-full bg-emerald-600 text-white shadow-2xs">
+                              {todayCount}
+                            </span>
+                            {isCollapsed && (
+                              <span
+                                className="hidden md:block absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-emerald-600 ring-2 ring-white"
+                                title={`${todayCount} Active Gig Today`}
+                              />
+                            )}
+                          </>
+                        )}
                       </Link>
                     </li>
                   );

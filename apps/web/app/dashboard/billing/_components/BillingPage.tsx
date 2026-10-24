@@ -12,26 +12,13 @@ import {
   CheckCircle2,
   ArrowRight,
   Receipt,
+  ShieldCheck,
 } from 'lucide-react';
-import {
-  Card,
-  CardContent,
-  Button,
-  Badge,
-  NumberFlow,
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@repo/ui';
+import {Card, CardContent, Badge, NumberFlow} from '@repo/ui';
 import {
   useGetPlansQuery,
   useGetMySubscriptionQuery,
   useSubscribeMutation,
-  useCancelSubscriptionMutation,
   useGetMyInvoicesQuery,
   SubscriptionPlan,
   useGetCurrentProfileQuery,
@@ -40,6 +27,7 @@ import {
 } from '@repo/store';
 import GatewaySelectionModal from './GatewaySelectionModal';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import {getSubscriptionDaysRemaining} from '@/lib/bookingStatusHelper';
 
 const ALL_FEATURES = [
   {key: 'CUSTOM_SUBDOMAIN', label: 'Custom Subdomain'},
@@ -61,7 +49,6 @@ import {toast} from 'sonner';
 
 export default function BillingSubscriptionPage() {
   const [frequency, setFrequency] = useState<'monthly' | 'yearly'>('monthly');
-  const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
 
   // Fetch API data
   const {data: plansResponse, isLoading: isLoadingPlans} = useGetPlansQuery();
@@ -79,8 +66,6 @@ export default function BillingSubscriptionPage() {
     .toLowerCase();
 
   const [subscribe, {isLoading: isSubscribing}] = useSubscribeMutation();
-  const [cancelSubscription, {isLoading: isCanceling}] =
-    useCancelSubscriptionMutation();
 
   const [triggerPreview, {isFetching: isPreviewing}] =
     useLazyPreviewUpgradeQuery();
@@ -90,14 +75,17 @@ export default function BillingSubscriptionPage() {
   const plans = plansResponse?.data || [];
   const activeSubscription = subResponse?.data;
 
+  const daysRemaining = getSubscriptionDaysRemaining(
+    activeSubscription?.periodEnd,
+  );
+
   // Filter only PAID subscription purchases for subscription history
   const rawInvoices = Array.isArray(invoicesResponse?.data)
     ? invoicesResponse.data
     : (invoicesResponse as any)?.data?.data || [];
   const subscriptionHistory = rawInvoices.filter(
     (inv: any) =>
-      inv.type === 'SUBSCRIPTION' &&
-      inv.status?.toLowerCase() === 'paid',
+      inv.type === 'SUBSCRIPTION' && inv.status?.toLowerCase() === 'paid',
   );
 
   const [gatewayModalOpen, setGatewayModalOpen] = useState(false);
@@ -159,21 +147,6 @@ export default function BillingSubscriptionPage() {
     setGatewayModalOpen(false);
   };
 
-  const handleCancel = async () => {
-    try {
-      await cancelSubscription().unwrap();
-      toast.success('Subscription cancelled successfully');
-      setCancelDialogOpen(false);
-      refetchSub();
-    } catch (error: any) {
-      toast.error(
-        error?.data?.error?.message ||
-          error?.data?.message ||
-          'Failed to cancel subscription',
-      );
-    }
-  };
-
   const selectedPlan = plans.find((p: any) => p.id === selectedPlanId);
 
   return (
@@ -185,7 +158,8 @@ export default function BillingSubscriptionPage() {
             Billing & Subscription
           </h1>
           <p className="text-[#787878] text-[14px]">
-            Manage your plan, upgrade anytime with prorated credit, and review invoices.
+            Manage your plan, upgrade anytime with prorated credit, and review
+            invoices.
           </p>
         </div>
 
@@ -219,42 +193,53 @@ export default function BillingSubscriptionPage() {
                     </p>
                   </div>
                 </div>
-                <div className="flex flex-col md:flex-row items-center gap-3 w-full md:w-auto">
-                  <Dialog
-                    open={cancelDialogOpen}
-                    onOpenChange={setCancelDialogOpen}>
-                    <DialogTrigger asChild>
-                      <Button
-                        variant="secondary"
-                        disabled={isCanceling}
-                        className="flex-1 md:flex-none bg-[#E5E7EB] hover:bg-[#D1D5DB] text-[#111620] font-semibold h-10 rounded-sm cursor-pointer">
-                        {isCanceling ? 'Canceling...' : 'Cancel Plan'}
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="rounded-sm">
-                      <DialogHeader>
-                        <DialogTitle>Cancel Subscription</DialogTitle>
-                        <DialogDescription>
-                          Are you sure you want to cancel your subscription? Your
-                          public DJ profile and booking links will go offline immediately.
-                        </DialogDescription>
-                      </DialogHeader>
-                      <DialogFooter className="mt-4 gap-2">
-                        <Button
-                          variant="outline"
-                          className="rounded-sm"
-                          onClick={() => setCancelDialogOpen(false)}>
-                          Keep Subscription
-                        </Button>
-                        <Button
-                          onClick={handleCancel}
-                          disabled={isCanceling}
-                          className="bg-red-500 hover:bg-red-600 text-white rounded-sm cursor-pointer">
-                          {isCanceling ? 'Canceling...' : 'Yes, Cancel Plan'}
-                        </Button>
-                      </DialogFooter>
-                    </DialogContent>
-                  </Dialog>
+                <div className="flex flex-wrap items-center gap-2.5 w-full md:w-auto">
+                  {daysRemaining !== null && (
+                    <div className="flex items-center gap-2 bg-[#F9FAFB] border border-[#E5E7EB] px-3.5 py-2 rounded-sm text-[13px] text-[#374151]">
+                      <Calendar className="w-4 h-4 text-[#6B7280]" />
+                      <span>
+                        {daysRemaining > 0 ? (
+                          <>
+                            <strong className="font-semibold text-[#111620]">
+                              {daysRemaining}
+                            </strong>{' '}
+                            {daysRemaining === 1
+                              ? 'day remaining'
+                              : 'days remaining'}
+                          </>
+                        ) : (
+                          <span className="font-semibold text-amber-600">
+                            Expires today
+                          </span>
+                        )}
+                      </span>
+                    </div>
+                  )}
+
+                  <div className="flex items-center gap-2 bg-[#F0FDF4] border border-[#DCFCE7] px-3.5 py-2 rounded-sm text-[13px] text-[#166534]">
+                    <span className="w-2 h-2 rounded-full bg-[#22C55E] animate-pulse" />
+                    <span className="font-medium">Portfolio Live</span>
+                  </div>
+
+                  <div className="flex items-center gap-2 bg-[#F9FAFB] border border-[#E5E7EB] px-3.5 py-2 rounded-sm text-[13px] text-[#6B7280]">
+                    <ShieldCheck className="w-4 h-4 text-[#059669]" />
+                    <span>Prepaid (No Auto-Debit)</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Informative footer bar */}
+              <div className="bg-[#FAFBFB] px-6 md:px-8 py-3.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-[13px] text-[#6B7280]">
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-[#059669] shrink-0" />
+                  <span>
+                    Your subscription is active for the full prepaid term
+                    without recurring charges. Upgrade anytime with automatic
+                    prorated credit.
+                  </span>
+                </div>
+                <div className="shrink-0 text-[12px] font-medium text-[#9CA3AF]">
+                  Non-recurring billing
                 </div>
               </div>
             </CardContent>
@@ -276,8 +261,8 @@ export default function BillingSubscriptionPage() {
                     </Badge>
                   </div>
                   <p className="text-[#787878] text-[14px]">
-                    Your DJ portfolio website is currently offline. Choose a plan
-                    below to publish your portfolio.
+                    Your DJ portfolio website is currently offline. Choose a
+                    plan below to publish your portfolio.
                   </p>
                 </div>
               </div>
@@ -293,7 +278,8 @@ export default function BillingSubscriptionPage() {
                 Available Plans
               </h2>
               <p className="text-[#787878] text-[14px]">
-                Upgrade anytime. Unused days on your current plan will be credited automatically.
+                Upgrade anytime. Unused days on your current plan will be
+                credited automatically.
               </p>
             </div>
 
@@ -409,7 +395,9 @@ export default function BillingSubscriptionPage() {
                       <button
                         onClick={() => {
                           if (isActivePlan) {
-                            toast.info('You are already subscribed to this plan.');
+                            toast.info(
+                              'You are already subscribed to this plan.',
+                            );
                             return;
                           }
                           handleSubscribeClick(plan.id);
@@ -520,17 +508,30 @@ export default function BillingSubscriptionPage() {
                     </tr>
                   ) : subscriptionHistory.length > 0 ? (
                     subscriptionHistory.map((item: any, index: number) => {
-                      const startDate = new Date(item.createdAt).toLocaleDateString('en-GB');
+                      const startDate = new Date(
+                        item.createdAt,
+                      ).toLocaleDateString('en-GB');
 
                       // Calculate or format end date
                       let endDate = '30 Days';
                       if (item.dueDate) {
-                        endDate = new Date(item.dueDate).toLocaleDateString('en-GB');
-                      } else if (activeSubscription?.planId === item.planId && activeSubscription?.periodEnd) {
-                        endDate = new Date(activeSubscription.periodEnd).toLocaleDateString('en-GB');
+                        endDate = new Date(item.dueDate).toLocaleDateString(
+                          'en-GB',
+                        );
+                      } else if (
+                        activeSubscription?.planId === item.planId &&
+                        activeSubscription?.periodEnd
+                      ) {
+                        endDate = new Date(
+                          activeSubscription.periodEnd,
+                        ).toLocaleDateString('en-GB');
                       } else {
-                        const isAnnual = Number(item.amount) >= Number(item.plan?.priceAnnually || 999999);
-                        const endMs = new Date(item.createdAt).getTime() + (isAnnual ? 365 : 30) * 86400000;
+                        const isAnnual =
+                          Number(item.amount) >=
+                          Number(item.plan?.priceAnnually || 999999);
+                        const endMs =
+                          new Date(item.createdAt).getTime() +
+                          (isAnnual ? 365 : 30) * 86400000;
                         endDate = new Date(endMs).toLocaleDateString('en-GB');
                       }
 
@@ -550,7 +551,9 @@ export default function BillingSubscriptionPage() {
                           <td className="py-4 px-6 text-[14px] text-[#787878]">
                             <div className="flex items-center gap-1.5">
                               <Calendar className="w-3.5 h-3.5 text-emerald-600" />
-                              <span className="font-medium text-gray-900">{endDate}</span>
+                              <span className="font-medium text-gray-900">
+                                {endDate}
+                              </span>
                             </div>
                           </td>
                           <td className="py-4 px-6 text-[14px] font-mono font-bold text-[#111620]">

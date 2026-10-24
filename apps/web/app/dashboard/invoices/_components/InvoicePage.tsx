@@ -101,7 +101,7 @@ export default function InvoicesPage() {
           description="Manage your gig bookings and subscription invoices in one organized workspace."
           search={search}
           setSearch={setSearch}
-          searchPlaceholder="Search by client, email, invoice ID..."
+          searchPlaceholder="Search by invoice ID, transaction reference, client..."
           filter={filter}
           onFilter={(v) => handleFilterChange(v as InvoiceFilterType)}
           filterOptions={statusFilterOptions}
@@ -183,18 +183,23 @@ export default function InvoicesPage() {
                           <td className="py-4 px-6 text-[14px] text-[#787878] w-8">
                             {rowSn}
                           </td>
-                          <td className="py-4 px-6 text-[14px] font-semibold text-[#111620]">
+                          <td className="py-4 px-6 text-[14px]">
                             {invoice.type === 'SUBSCRIPTION' ? (
-                              <span className="flex items-center gap-1.5 text-primary">
+                              <span className="flex items-center gap-1.5 font-semibold text-primary">
                                 <Receipt className="w-4 h-4" />
                                 Subscription
                               </span>
                             ) : (
-                              <span className="flex items-center gap-1.5 text-[#111620]">
+                              <span className="flex items-center gap-1.5 font-semibold text-[#111620]">
                                 <Music className="w-4 h-4" />
                                 Event Booking
                               </span>
                             )}
+                            <span
+                              className="text-[12px] font-mono text-[#6B7280] block mt-0.5"
+                              title={invoice.id}>
+                              #{invoice.id.substring(0, 8)}
+                            </span>
                           </td>
                           <td className="py-4 px-6">
                             <div className="flex flex-col">
@@ -255,6 +260,13 @@ export default function InvoicesPage() {
                                 <span className="text-[12px] text-[#787878] pl-5">
                                   {paymentInfo.methodLabel}
                                 </span>
+                                {invoice.gatewayReference && (
+                                  <span
+                                    className="text-[11px] font-mono text-[#9CA3AF] pl-5 block truncate max-w-[170px]"
+                                    title={invoice.gatewayReference}>
+                                    Ref: {invoice.gatewayReference}
+                                  </span>
+                                )}
                               </div>
                             ) : (
                               <span className="inline-flex items-center px-2.5 py-1 rounded-sm bg-gray-50 border border-gray-200 text-gray-700 text-[12px] font-medium capitalize">
