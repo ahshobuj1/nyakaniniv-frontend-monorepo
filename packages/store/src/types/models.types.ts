@@ -72,9 +72,28 @@ export interface Tenant {
   bookingReviews?: BookingReview[];
 }
 
+export interface SubscriptionPlanPrice {
+  id: string;
+  planId: number;
+  currencyCode: string;
+  priceMonthly: number | string;
+  priceAnnually: number | string;
+  isActive: boolean;
+}
+
+export interface CurrencyItem {
+  id: number;
+  code: string;
+  name: string;
+  symbol?: string;
+  decimals: number;
+  isActive: boolean;
+}
+
 export interface SubscriptionPlan {
   id: number;
   name?: string;
+  currencyCode?: string;
   priceMonthly?: number | string;
   priceAnnually?: number | string;
   stripeMonthlyPriceId?: string;
@@ -83,6 +102,8 @@ export interface SubscriptionPlan {
   features?: any;
   createdAt?: string;
   updatedAt?: string;
+  prices?: SubscriptionPlanPrice[];
+  availablePrices?: SubscriptionPlanPrice[];
 
   subscriptions?: Subscription[];
 }

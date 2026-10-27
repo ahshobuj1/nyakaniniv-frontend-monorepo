@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
-import {useState} from 'react';
+import {useState, useMemo} from 'react';
 import Link from 'next/link';
 
 import {
@@ -28,6 +28,7 @@ import {
 import GatewaySelectionModal from './GatewaySelectionModal';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import {getSubscriptionDaysRemaining} from '@/lib/bookingStatusHelper';
+import {getCurrencyForCountry} from '@/lib/currency';
 
 const ALL_FEATURES = [
   {key: 'CUSTOM_SUBDOMAIN', label: 'Custom Subdomain'},
@@ -49,9 +50,38 @@ import {toast} from 'sonner';
 
 export default function BillingSubscriptionPage() {
   const [frequency, setFrequency] = useState<'monthly' | 'yearly'>('monthly');
+  const {data: profileResponse} = useGetCurrentProfileQuery();
+  const tenant = profileResponse?.data?.tenant;
+  const tenantCountry = (tenant?.country || '').trim();
+  const tenantCurrency = (tenant?.currencyCode || '').trim().toUpperCase();
 
-  // Fetch API data
-  const {data: plansResponse, isLoading: isLoadingPlans} = useGetPlansQuery();
+  // Dynamically resolve DJ's billing currency based on their profile country/currency
+  // (e.g. South Africa ZA -> ZAR, Ghana GH -> GHS, Nigeria NG -> NGN, Kenya KE -> KES)
+  const resolvedCurrency = (
+    tenantCurrency ||
+    getCurrencyForCountry(tenantCountry) ||
+    'USD'
+  ).toUpperCase();
+
+  const SUPPORTED_BILLING_CURRENCIES = [
+    'KES',
+    'NGN',
+    'GHS',
+    'ZAR',
+    'UGX',
+    'TZS',
+    'RWF',
+    'USD',
+  ];
+  const selectedCurrency = SUPPORTED_BILLING_CURRENCIES.includes(
+    resolvedCurrency,
+  )
+    ? resolvedCurrency
+    : 'USD';
+
+  const {data: plansResponse, isLoading: isLoadingPlans} = useGetPlansQuery({
+    currency: selectedCurrency,
+  });
   const {
     data: subResponse,
     isLoading: isLoadingSub,
@@ -60,11 +90,6 @@ export default function BillingSubscriptionPage() {
   const {data: invoicesResponse, isLoading: isLoadingInvoices} =
     useGetMyInvoicesQuery();
 
-  const {data: profileResponse} = useGetCurrentProfileQuery();
-  const tenantCountry = (profileResponse?.data?.tenant?.country || '')
-    .trim()
-    .toLowerCase();
-
   const [subscribe, {isLoading: isSubscribing}] = useSubscribeMutation();
 
   const [triggerPreview, {isFetching: isPreviewing}] =
@@ -72,7 +97,12 @@ export default function BillingSubscriptionPage() {
   const [upgradePreview, setUpgradePreview] =
     useState<UpgradePreviewResponse | null>(null);
 
-  const plans = plansResponse?.data || [];
+  const plans = useMemo(() => {
+    const raw = plansResponse?.data || [];
+    return [...raw].sort(
+      (a: any, b: any) => (Number(a.id) || 0) - (Number(b.id) || 0),
+    );
+  }, [plansResponse?.data]);
   const activeSubscription = subResponse?.data;
 
   const daysRemaining = getSubscriptionDaysRemaining(
@@ -98,6 +128,7 @@ export default function BillingSubscriptionPage() {
         const res = await triggerPreview({
           planId,
           billingCycle: frequency === 'monthly' ? 'monthly' : 'annually',
+          currency: selectedCurrency,
         }).unwrap();
         setUpgradePreview(res?.data || null);
       } catch (err: any) {
@@ -119,6 +150,7 @@ export default function BillingSubscriptionPage() {
       const result = await subscribe({
         planId: selectedPlanId,
         billingCycle: frequency === 'monthly' ? 'monthly' : 'annually',
+        currency: selectedCurrency,
         successUrl: window.location.origin + '/dashboard/billing?success=true',
         cancelUrl: window.location.origin + '/dashboard/billing?canceled=true',
         gateway,
@@ -135,7 +167,7 @@ export default function BillingSubscriptionPage() {
       }
 
       if (result?.data?.url) {
-        window.location.href = result.data.url;
+        window.location.assign(result.data.url);
       }
     } catch (error: any) {
       toast.error(
@@ -283,26 +315,33 @@ export default function BillingSubscriptionPage() {
               </p>
             </div>
 
-            {/* Toggle Monthly/Yearly */}
-            <div className="bg-[#E5E7EB] p-1 rounded-sm inline-flex items-center">
-              <button
-                onClick={() => setFrequency('monthly')}
-                className={`px-5 py-2 rounded-sm text-[13px] font-bold transition-all duration-300 cursor-pointer ${
-                  frequency === 'monthly'
-                    ? 'bg-primary text-white shadow-sm'
-                    : 'text-[#787878] hover:text-[#111620]'
-                }`}>
-                Monthly
-              </button>
-              <button
-                onClick={() => setFrequency('yearly')}
-                className={`px-5 py-2 rounded-sm text-[13px] font-bold flex items-center gap-2 cursor-pointer transition-all duration-300 ${
-                  frequency === 'yearly'
-                    ? 'bg-primary text-white shadow-sm'
-                    : 'text-[#787878] hover:text-[#111620]'
-                }`}>
-                Annual
-              </button>
+            <div className="flex items-center gap-3">
+              {/* <div className="flex items-center gap-1.5 bg-white border border-gray-200 rounded-sm px-3 py-1.5 shadow-xs">
+                <span className="text-[12px] text-[#787878] font-medium">Currency:</span>
+                <span className="text-[13px] font-bold text-[#111620]">{selectedCurrency}</span>
+              </div> */}
+
+              {/* Toggle Monthly/Yearly */}
+              <div className="bg-[#E5E7EB] p-1 rounded-sm inline-flex items-center">
+                <button
+                  onClick={() => setFrequency('monthly')}
+                  className={`px-5 py-2 rounded-sm text-[13px] font-bold transition-all duration-300 cursor-pointer ${
+                    frequency === 'monthly'
+                      ? 'bg-primary text-white shadow-sm'
+                      : 'text-[#787878] hover:text-[#111620]'
+                  }`}>
+                  Monthly
+                </button>
+                <button
+                  onClick={() => setFrequency('yearly')}
+                  className={`px-5 py-2 rounded-sm text-[13px] font-bold flex items-center gap-2 cursor-pointer transition-all duration-300 ${
+                    frequency === 'yearly'
+                      ? 'bg-primary text-white shadow-sm'
+                      : 'text-[#787878] hover:text-[#111620]'
+                  }`}>
+                  Annual
+                </button>
+              </div>
             </div>
           </div>
 
@@ -372,11 +411,13 @@ export default function BillingSubscriptionPage() {
 
                       <div className="flex items-baseline mb-8">
                         <span className="text-[#111620] flex items-center tracking-tight">
-                          KES
+                          <span className="text-[20px] font-bold text-[#111620] mr-1.5">
+                            {plan.currencyCode || selectedCurrency}
+                          </span>
                           <NumberFlow
                             value={price}
                             format={{useGrouping: false}}
-                            className="font-bold text-[48px] ml-1"
+                            className="font-bold text-[48px]"
                           />
                         </span>
                         <span className="text-[#787878] text-[14px] ml-1 font-medium">
@@ -557,7 +598,7 @@ export default function BillingSubscriptionPage() {
                             </div>
                           </td>
                           <td className="py-4 px-6 text-[14px] font-mono font-bold text-[#111620]">
-                            {item.currencyCode || 'KES'}{' '}
+                            {item.currencyCode || selectedCurrency}{' '}
                             {Number(item.amount).toLocaleString()}
                           </td>
                           <td className="py-4 px-6">
@@ -600,7 +641,7 @@ export default function BillingSubscriptionPage() {
                 : Number(selectedPlan.priceAnnually)
             }
             billingCycle={frequency === 'monthly' ? 'monthly' : 'annually'}
-            currency={upgradePreview?.currency || 'KES'}
+            currency={upgradePreview?.currency || selectedCurrency}
             tenantCountry={tenantCountry}
             isLoading={isSubscribing || isPreviewing}
             isUpgrade={Boolean(upgradePreview?.isUpgrade)}

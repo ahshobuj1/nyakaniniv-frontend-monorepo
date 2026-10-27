@@ -235,13 +235,23 @@ export interface UpdatePaymentInstructionsRequest {
   notes?: string;
 }
 
-// --- Subscription Requests ---
 export interface SubscribeRequest {
   planId: number;
   billingCycle: 'monthly' | 'annually';
+  currency?: string;
   successUrl?: string;
   cancelUrl?: string;
   gateway?: string;
+}
+
+export interface SetPlanPriceRequest {
+  priceMonthly: number;
+  priceAnnually: number;
+  isActive?: boolean;
+}
+
+export interface ToggleCurrencyRequest {
+  isActive: boolean;
 }
 
 export interface SubscribeResponse {

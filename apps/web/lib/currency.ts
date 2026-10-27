@@ -176,12 +176,12 @@ export const COUNTRY_CURRENCY_MAP: Record<string, string> = {
 
 /**
  * Automatically resolves the standard currency code from country name or 2-letter ISO code.
- * Falls back to 'KES' if country is unspecified.
+ * Falls back to 'USD' if country is unspecified.
  */
 export function getCurrencyForCountry(country?: string | null): string {
-  if (!country) return 'KES';
+  if (!country) return 'USD';
   const clean = country.trim().toUpperCase();
-  return COUNTRY_CURRENCY_MAP[clean] || 'KES';
+  return COUNTRY_CURRENCY_MAP[clean] || 'USD';
 }
 
 /**

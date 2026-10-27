@@ -28,8 +28,8 @@ export default function VerificationPage() {
   const [otp, setOtp] = useState<string[]>(new Array(6).fill(''));
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
-  const [verifyOtp, { isLoading: isVerifying }] = useVerifyOtpMutation();
-  const [resendOtp, { isLoading: isResending }] = useResendOtpMutation();
+  const [verifyOtp, {isLoading: isVerifying}] = useVerifyOtpMutation();
+  const [resendOtp, {isLoading: isResending}] = useResendOtpMutation();
 
   const {
     handleSubmit,
@@ -92,12 +92,15 @@ export default function VerificationPage() {
       return;
     }
     try {
-      const response = await verifyOtp({ email, otp: data.code }).unwrap();
+      const response = await verifyOtp({email, otp: data.code}).unwrap();
       toast.success(response.message || 'Verification successful!');
       router.push('/auth/setup-profile');
     } catch (error: unknown) {
       const err = error as ApiErrorResponse;
-      const errorMsg = err?.data?.error?.message || err?.data?.message || 'Failed to verify OTP.';
+      const errorMsg =
+        err?.data?.error?.message ||
+        err?.data?.message ||
+        'Failed to verify OTP.';
       toast.error(errorMsg);
     }
   };
@@ -108,11 +111,14 @@ export default function VerificationPage() {
       return;
     }
     try {
-      const response = await resendOtp({ email }).unwrap();
+      const response = await resendOtp({email}).unwrap();
       toast.success(response.message || 'OTP resent successfully!');
     } catch (error: unknown) {
       const err = error as ApiErrorResponse;
-      const errorMsg = err?.data?.error?.message || err?.data?.message || 'Failed to resend OTP.';
+      const errorMsg =
+        err?.data?.error?.message ||
+        err?.data?.message ||
+        'Failed to resend OTP.';
       toast.error(errorMsg);
     }
   };

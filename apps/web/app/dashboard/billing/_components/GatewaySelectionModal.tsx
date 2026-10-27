@@ -30,7 +30,7 @@ export default function GatewaySelectionModal({
   planName = 'DJ Pro Plan',
   price,
   billingCycle = 'monthly',
-  currency = 'KES',
+  currency = 'USD',
   tenantCountry = '',
   isLoading = false,
   isUpgrade = false,
@@ -57,45 +57,35 @@ export default function GatewaySelectionModal({
     'rw',
   ].includes(normalizedCountry);
 
-  const defaultGateway = 'paystack';
-  const [userSelectedGateway, setUserSelectedGateway] = useState<string | null>(
-    null,
-  );
-  const selectedGateway = userSelectedGateway || defaultGateway;
-
-  if (!isOpen) return null;
-
-  const finalPayable = amountToPay !== undefined ? amountToPay : price || 0;
-  const isInstantUpgrade = isUpgrade && finalPayable === 0 && !isDowngrade;
+  const isWestOrSouthAfrica = ['ghana', 'gh', 'nigeria', 'ng', 'south africa', 'za'].includes(normalizedCountry) || ['GHS', 'NGN', 'ZAR'].includes(currency);
 
   const gateways: GatewayCardOption[] = [
+    {
+      id: 'flutterwave',
+      name: 'Flutterwave',
+      title: 'Flutterwave Pan-African Checkout',
+      description:
+        'Local Cards, Mobile Money (MTN, Vodafone, AirtelTigo, M-Pesa) & Bank Transfer',
+      badge: isWestOrSouthAfrica ? 'Recommended Gateway' : 'Pan-African Multi-Currency',
+      currencies: ['GHS', 'NGN', 'ZAR', 'USD', 'KES', 'TZS', 'UGX', 'RWF'],
+      isRecommended: isWestOrSouthAfrica,
+      paymentMethods: ['Mobile Money', 'Visa', 'Mastercard', 'Bank Transfer', 'Apple Pay'],
+    },
     {
       id: 'paystack',
       name: 'Paystack',
       title: 'Paystack Direct Checkout',
       description:
-        'Instant card payments, direct bank transfer, Apple Pay & Verve debit',
-      badge: 'Recommended Gateway',
+        'Instant card payments, direct bank transfer & Apple Pay',
+      badge: 'Cards & Apple Pay',
       currencies: ['KES', 'NGN', 'GHS', 'ZAR', 'USD'],
-      isRecommended: true,
+      isRecommended: currency === 'KES' && !isEastAfrica,
       paymentMethods: [
         'Visa',
         'Mastercard',
         'Bank Transfer',
         'Apple Pay',
-        'Verve',
       ],
-    },
-    {
-      id: 'flutterwave',
-      name: 'Flutterwave',
-      title: 'Flutterwave Pan-African',
-      description:
-        'Pan-African payments across 15+ currencies with local cards and bank wires',
-      badge: 'Pan-African Multi-Currency',
-      currencies: ['KES', 'NGN', 'GHS', 'ZAR', 'USD', 'TZS', 'UGX', 'RWF'],
-      isRecommended: false,
-      paymentMethods: ['Visa', 'Mastercard', 'Mobile Money', 'Bank Wire'],
     },
     {
       id: 'pesapal',
@@ -106,8 +96,8 @@ export default function GatewaySelectionModal({
       badge: isEastAfrica
         ? 'East Africa Local Checkout'
         : 'East Africa Mobile Money',
-      currencies: ['TZS', 'KES', 'UGX', 'USD'],
-      isRecommended: false,
+      currencies: ['TZS', 'KES', 'UGX', 'USD', 'RWF'],
+      isRecommended: isEastAfrica || currency === 'KES',
       paymentMethods: [
         'M-Pesa',
         'Tigo Pesa',
@@ -117,6 +107,30 @@ export default function GatewaySelectionModal({
       ],
     },
   ];
+
+  const availableGateways = gateways.filter((gw) => {
+    return gw.currencies.includes(currency);
+  });
+
+  const defaultGateway =
+    (currency === 'KES' || isEastAfrica) &&
+    availableGateways.some((gw) => gw.id === 'pesapal')
+      ? 'pesapal'
+      : availableGateways[0]?.id || 'paystack';
+
+  const [userSelectedGateway, setUserSelectedGateway] = useState<string | null>(
+    null,
+  );
+  const selectedGateway =
+    userSelectedGateway &&
+    availableGateways.some((gw) => gw.id === userSelectedGateway)
+      ? userSelectedGateway
+      : defaultGateway;
+
+  if (!isOpen) return null;
+
+  const finalPayable = amountToPay !== undefined ? amountToPay : price || 0;
+  const isInstantUpgrade = isUpgrade && finalPayable === 0 && !isDowngrade;
 
   const handleProceed = async () => {
     if (isDowngrade) return;
@@ -300,7 +314,7 @@ export default function GatewaySelectionModal({
             <p className="text-xs font-semibold text-gray-700">
               Select Payment Gateway:
             </p>
-            {gateways.map((gw) => {
+            {availableGateways.map((gw) => {
               const isSelected = selectedGateway === gw.id;
               return (
                 <div

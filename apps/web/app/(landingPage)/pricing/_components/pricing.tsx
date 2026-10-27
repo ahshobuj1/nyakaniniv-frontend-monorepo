@@ -6,6 +6,7 @@ import {Check, X, Zap} from 'lucide-react';
 import {NumberFlow} from '@repo/ui';
 import {
   useGetPlansQuery,
+  useGetCurrenciesQuery,
   useGetCurrentProfileQuery,
   SubscriptionPlan,
 } from '@repo/store';
@@ -32,7 +33,14 @@ const ALL_FEATURES = [
 
 export default function PricingSection() {
   const [frequency, setFrequency] = useState<'monthly' | 'yearly'>('monthly');
-  const {data: plansResponse, isLoading} = useGetPlansQuery();
+  const [selectedCurrency, setSelectedCurrency] = useState<string>('USD');
+
+  const {data: currenciesResponse} = useGetCurrenciesQuery();
+  const currencies = (currenciesResponse?.data || []).filter((c) => c.isActive);
+
+  const {data: plansResponse, isLoading} = useGetPlansQuery({
+    currency: selectedCurrency,
+  });
   const {data: profileResponse, isLoading: isProfileLoading} =
     useGetCurrentProfileQuery();
   const router = useRouter();
@@ -70,10 +78,26 @@ export default function PricingSection() {
           Choose your plan
         </h1>
         <p className="text-center text-gray-500 mb-8">
-          Start free, scale as you grow. All prices shown in KES.
+          Start free, scale as you grow. Transparent pricing across Africa.
         </p>
 
-        <div className="flex justify-center mb-16">
+        <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mb-16">
+          {currencies.length > 0 && (
+            <div className="flex items-center gap-1.5 bg-white border border-gray-200 rounded px-3 py-2 shadow-xs">
+              <span className="text-xs text-gray-500 font-medium">Currency:</span>
+              <select
+                value={selectedCurrency}
+                onChange={(e) => setSelectedCurrency(e.target.value)}
+                className="text-xs font-bold text-gray-900 bg-transparent focus:outline-none cursor-pointer">
+                {currencies.map((c) => (
+                  <option key={c.code} value={c.code}>
+                    {c.code} ({c.symbol || c.code})
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
           <div className="bg-white p-1.5 rounded shadow-sm inline-flex items-center">
             <button
               onClick={() => setFrequency('monthly')}
@@ -154,7 +178,9 @@ export default function PricingSection() {
                     </p>
                     <div className="flex items-baseline mb-8">
                       <span className="text-gray-900 flex items-center tracking-tight">
-                        KES
+                        <span className="text-2xl font-bold mr-1.5">
+                          {plan.currencyCode || selectedCurrency}
+                        </span>
                         <NumberFlow
                           value={price}
                           format={{useGrouping: false}}
