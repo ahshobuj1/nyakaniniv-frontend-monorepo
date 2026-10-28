@@ -1,8 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
-import {useState, useMemo} from 'react';
+import {useState, useMemo, useEffect, useRef} from 'react';
 import Link from 'next/link';
+import {useRouter, useSearchParams} from 'next/navigation';
 
 import {
   Zap,
@@ -24,6 +25,7 @@ import {
   useGetCurrentProfileQuery,
   useLazyPreviewUpgradeQuery,
   UpgradePreviewResponse,
+  useVerifyPaymentMutation,
 } from '@repo/store';
 import GatewaySelectionModal from './GatewaySelectionModal';
 import LoadingSpinner from '@/components/LoadingSpinner';
@@ -55,14 +57,6 @@ export default function BillingSubscriptionPage() {
   const tenantCountry = (tenant?.country || '').trim();
   const tenantCurrency = (tenant?.currencyCode || '').trim().toUpperCase();
 
-  // Dynamically resolve DJ's billing currency based on their profile country/currency
-  // (e.g. South Africa ZA -> ZAR, Ghana GH -> GHS, Nigeria NG -> NGN, Kenya KE -> KES)
-  const resolvedCurrency = (
-    tenantCurrency ||
-    getCurrencyForCountry(tenantCountry) ||
-    'USD'
-  ).toUpperCase();
-
   const SUPPORTED_BILLING_CURRENCIES = [
     'KES',
     'NGN',
@@ -73,11 +67,23 @@ export default function BillingSubscriptionPage() {
     'RWF',
     'USD',
   ];
-  const selectedCurrency = SUPPORTED_BILLING_CURRENCIES.includes(
-    resolvedCurrency,
-  )
-    ? resolvedCurrency
-    : 'USD';
+
+  // Resolve country's currency from country code
+  const countryCurrency = (getCurrencyForCountry(tenantCountry) || '').toUpperCase();
+
+  // If the country has a supported local billing currency, use it (e.g. Kenya -> KES, Nigeria -> NGN, Ghana -> GHS).
+  // If the country is outside supported billing currency regions (e.g. Bangladesh -> BDT, USA, UK, India, etc.),
+  // it MUST fall back to USD!
+  let selectedCurrency = 'USD';
+  if (SUPPORTED_BILLING_CURRENCIES.includes(countryCurrency)) {
+    selectedCurrency = countryCurrency;
+  } else if (
+    tenantCurrency &&
+    SUPPORTED_BILLING_CURRENCIES.includes(tenantCurrency) &&
+    (!tenantCountry || tenantCurrency === countryCurrency)
+  ) {
+    selectedCurrency = tenantCurrency;
+  }
 
   const {data: plansResponse, isLoading: isLoadingPlans} = useGetPlansQuery({
     currency: selectedCurrency,
@@ -96,6 +102,48 @@ export default function BillingSubscriptionPage() {
     useLazyPreviewUpgradeQuery();
   const [upgradePreview, setUpgradePreview] =
     useState<UpgradePreviewResponse | null>(null);
+
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const [verifyPayment] = useVerifyPaymentMutation();
+  const hasVerifiedRef = useRef(false);
+
+  useEffect(() => {
+    if (hasVerifiedRef.current) return;
+
+    const success = searchParams.get('success');
+    const orderTrackingId =
+      searchParams.get('OrderTrackingId') || searchParams.get('orderTrackingId');
+    const reference =
+      searchParams.get('reference') ||
+      searchParams.get('OrderMerchantReference') ||
+      searchParams.get('orderMerchantReference');
+
+    if (orderTrackingId || (success === 'true' && reference)) {
+      hasVerifiedRef.current = true;
+      const toastId = toast.loading('Verifying subscription payment...');
+      verifyPayment({
+        orderTrackingId: orderTrackingId || undefined,
+        reference: reference || undefined,
+      })
+        .unwrap()
+        .then(() => {
+          toast.success('Payment verified! Your subscription is now active.', {
+            id: toastId,
+          });
+          refetchSub();
+          router.replace('/dashboard/billing');
+        })
+        .catch((err: any) => {
+          toast.info(
+            err?.data?.message ||
+              'Payment received. Refreshing subscription status...',
+            {id: toastId},
+          );
+          refetchSub();
+        });
+    }
+  }, [searchParams, verifyPayment, refetchSub, router]);
 
   const plans = useMemo(() => {
     const raw = plansResponse?.data || [];

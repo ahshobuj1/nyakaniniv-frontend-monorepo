@@ -1,4 +1,4 @@
-import { baseApi } from './baseApi';
+import {baseApi} from './baseApi';
 import {
   SubscriptionPlan,
   Subscription,
@@ -13,10 +13,14 @@ import {
 
 export const subscriptionApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
-    getPlans: builder.query<BaseResponse<SubscriptionPlan[]>, { currency?: string; all?: boolean } | string | void>({
+    getPlans: builder.query<
+      BaseResponse<SubscriptionPlan[]>,
+      {currency?: string; all?: boolean} | string | void
+    >({
       query: (arg) => {
         const currency = typeof arg === 'string' ? arg : arg?.currency;
-        const all = typeof arg === 'object' && arg !== null ? arg.all : undefined;
+        const all =
+          typeof arg === 'object' && arg !== null ? arg.all : undefined;
         const queryParams = new URLSearchParams();
         if (currency) queryParams.append('currency', currency);
         if (all) queryParams.append('all', 'true');
@@ -35,26 +39,34 @@ export const subscriptionApi = baseApi.injectEndpoints({
       }),
       providesTags: ['Subscription'],
     }),
-    getPlanPrices: builder.query<BaseResponse<SubscriptionPlanPrice[]>, number>({
-      query: (planId) => ({
-        url: `/subscriptions/v1/plans/${planId}/prices`,
-        method: 'GET',
-      }),
-      providesTags: ['Subscription'],
-    }),
-    setPlanPrice: builder.mutation<BaseResponse<SubscriptionPlanPrice>, { planId: number; currencyCode: string; body: SetPlanPriceRequest }>({
-      query: ({ planId, currencyCode, body }) => ({
+    getPlanPrices: builder.query<BaseResponse<SubscriptionPlanPrice[]>, number>(
+      {
+        query: (planId) => ({
+          url: `/subscriptions/v1/plans/${planId}/prices`,
+          method: 'GET',
+        }),
+        providesTags: ['Subscription'],
+      },
+    ),
+    setPlanPrice: builder.mutation<
+      BaseResponse<SubscriptionPlanPrice>,
+      {planId: number; currencyCode: string; body: SetPlanPriceRequest}
+    >({
+      query: ({planId, currencyCode, body}) => ({
         url: `/subscriptions/v1/plans/${planId}/prices/${currencyCode}`,
         method: 'PUT',
         body,
       }),
       invalidatesTags: ['Subscription'],
     }),
-    toggleCurrency: builder.mutation<BaseResponse<CurrencyItem>, { code: string; isActive: boolean }>({
-      query: ({ code, isActive }) => ({
+    toggleCurrency: builder.mutation<
+      BaseResponse<CurrencyItem>,
+      {code: string; isActive: boolean}
+    >({
+      query: ({code, isActive}) => ({
         url: `/subscriptions/v1/currencies/${code}`,
         method: 'PATCH',
-        body: { isActive },
+        body: {isActive},
       }),
       invalidatesTags: ['Subscription'],
     }),
@@ -65,8 +77,11 @@ export const subscriptionApi = baseApi.injectEndpoints({
       }),
       providesTags: ['Subscription'],
     }),
-    previewUpgrade: builder.query<BaseResponse<UpgradePreviewResponse>, { planId: number; billingCycle: 'monthly' | 'annually'; currency?: string }>({
-      query: ({ planId, billingCycle, currency }) => {
+    previewUpgrade: builder.query<
+      BaseResponse<UpgradePreviewResponse>,
+      {planId: number; billingCycle: 'monthly' | 'annually'; currency?: string}
+    >({
+      query: ({planId, billingCycle, currency}) => {
         const queryParams = new URLSearchParams({
           planId: String(planId),
           billingCycle,
@@ -78,7 +93,10 @@ export const subscriptionApi = baseApi.injectEndpoints({
         };
       },
     }),
-    subscribe: builder.mutation<BaseResponse<SubscribeResponse>, SubscribeRequest>({
+    subscribe: builder.mutation<
+      BaseResponse<SubscribeResponse>,
+      SubscribeRequest
+    >({
       query: (body) => ({
         url: '/subscriptions/v1/subscribe',
         method: 'POST',
@@ -93,32 +111,51 @@ export const subscriptionApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ['Subscription'],
     }),
-    getAvailableGateways: builder.query<BaseResponse<Array<{
-      id: string;
-      name: string;
-      title: string;
-      description: string;
-      currencies: string[];
-      isRecommended: boolean;
-      badge: string;
-      paymentMethods: string[];
-    }>>, string | void>({
+    getAvailableGateways: builder.query<
+      BaseResponse<
+        Array<{
+          id: string;
+          name: string;
+          title: string;
+          description: string;
+          currencies: string[];
+          isRecommended: boolean;
+          badge: string;
+          paymentMethods: string[];
+        }>
+      >,
+      string | void
+    >({
       query: (country) => ({
         url: `/subscriptions/v1/gateways${country ? `?country=${country}` : ''}`,
         method: 'GET',
       }),
     }),
-    validatePayoutAccount: builder.mutation<BaseResponse<{ valid: boolean; accountName?: string; message?: string }>, {
-      gateway: string;
-      bankCode?: string;
-      accountNumber: string;
-      country?: string;
-    }>({
+    validatePayoutAccount: builder.mutation<
+      BaseResponse<{valid: boolean; accountName?: string; message?: string}>,
+      {
+        gateway: string;
+        bankCode?: string;
+        accountNumber: string;
+        country?: string;
+      }
+    >({
       query: (body) => ({
         url: '/subscriptions/v1/validate-payout',
         method: 'POST',
         body,
       }),
+    }),
+    verifyPayment: builder.mutation<
+      BaseResponse<any>,
+      {orderTrackingId?: string; reference?: string}
+    >({
+      query: (body) => ({
+        url: '/subscriptions/v1/verify-payment',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['Subscription'],
     }),
   }),
   overrideExisting: false,
@@ -137,5 +174,5 @@ export const {
   useCancelSubscriptionMutation,
   useGetAvailableGatewaysQuery,
   useValidatePayoutAccountMutation,
+  useVerifyPaymentMutation,
 } = subscriptionApi;
-

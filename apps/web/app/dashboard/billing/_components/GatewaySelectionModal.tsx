@@ -61,31 +61,31 @@ export default function GatewaySelectionModal({
 
   const gateways: GatewayCardOption[] = [
     {
-      id: 'flutterwave',
-      name: 'Flutterwave',
-      title: 'Flutterwave Pan-African Checkout',
-      description:
-        'Local Cards, Mobile Money (MTN, Vodafone, AirtelTigo, M-Pesa) & Bank Transfer',
-      badge: isWestOrSouthAfrica ? 'Recommended Gateway' : 'Pan-African Multi-Currency',
-      currencies: ['GHS', 'NGN', 'ZAR', 'USD', 'KES', 'TZS', 'UGX', 'RWF'],
-      isRecommended: isWestOrSouthAfrica,
-      paymentMethods: ['Mobile Money', 'Visa', 'Mastercard', 'Bank Transfer', 'Apple Pay'],
-    },
-    {
       id: 'paystack',
       name: 'Paystack',
       title: 'Paystack Direct Checkout',
       description:
         'Instant card payments, direct bank transfer & Apple Pay',
-      badge: 'Cards & Apple Pay',
+      badge: 'Primary Gateway',
       currencies: ['KES', 'NGN', 'GHS', 'ZAR', 'USD'],
-      isRecommended: currency === 'KES' && !isEastAfrica,
+      isRecommended: true,
       paymentMethods: [
         'Visa',
         'Mastercard',
         'Bank Transfer',
         'Apple Pay',
       ],
+    },
+    {
+      id: 'flutterwave',
+      name: 'Flutterwave',
+      title: 'Flutterwave Pan-African Checkout',
+      description:
+        'Local Cards, Mobile Money (MTN, Vodafone, AirtelTigo, M-Pesa) & Bank Transfer',
+      badge: isWestOrSouthAfrica ? 'Recommended Multi-Currency' : 'Pan-African Multi-Currency',
+      currencies: ['GHS', 'NGN', 'ZAR', 'USD', 'KES', 'TZS', 'UGX', 'RWF'],
+      isRecommended: !['KES', 'USD'].includes(currency),
+      paymentMethods: ['Mobile Money', 'Visa', 'Mastercard', 'Bank Transfer', 'Apple Pay'],
     },
     {
       id: 'pesapal',
@@ -97,7 +97,7 @@ export default function GatewaySelectionModal({
         ? 'East Africa Local Checkout'
         : 'East Africa Mobile Money',
       currencies: ['TZS', 'KES', 'UGX', 'USD', 'RWF'],
-      isRecommended: isEastAfrica || currency === 'KES',
+      isRecommended: currency === 'TZS',
       paymentMethods: [
         'M-Pesa',
         'Tigo Pesa',
@@ -113,10 +113,9 @@ export default function GatewaySelectionModal({
   });
 
   const defaultGateway =
-    (currency === 'KES' || isEastAfrica) &&
-    availableGateways.some((gw) => gw.id === 'pesapal')
-      ? 'pesapal'
-      : availableGateways[0]?.id || 'paystack';
+    availableGateways.some((gw) => gw.id === 'paystack')
+      ? 'paystack'
+      : availableGateways[0]?.id || 'flutterwave';
 
   const [userSelectedGateway, setUserSelectedGateway] = useState<string | null>(
     null,
