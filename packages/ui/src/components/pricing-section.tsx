@@ -183,7 +183,7 @@ export function PricingCard({
             className="font-extrabold text-3xl [&::part(suffix)]:font-normal [&::part(suffix)]:text-base [&::part(suffix)]:text-muted-foreground"
             format={{
               style: 'currency',
-              currency: 'USD',
+              currency: 'KES',
               notation: 'compact',
             }}
             suffix="/month"

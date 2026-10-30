@@ -83,7 +83,7 @@ export default function ProfileContent() {
         currencyCode:
           tenant?.currencyCode ||
           getCurrencyForCountry(tenant?.country) ||
-          'USD',
+          'KES',
         city: tenant?.city || '',
         genres: tenant?.genres || [],
         socialLinks: {

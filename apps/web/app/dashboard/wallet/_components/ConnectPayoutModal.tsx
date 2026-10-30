@@ -58,8 +58,8 @@ const GATEWAY_OPTIONS: PayoutGatewayOption[] = [
     id: 'PAYSTACK',
     name: 'Paystack Bank Direct',
     headline: 'Commercial Bank Direct Deposit',
-    description: 'Instant settlement directly into your local bank account.',
-    recommendedFor: ['NG', 'GH', 'ZA', 'KE'],
+    description: 'Instant settlement directly into your local bank account in KES.',
+    recommendedFor: ['KE'],
   },
   {
     id: 'PESAPAL',

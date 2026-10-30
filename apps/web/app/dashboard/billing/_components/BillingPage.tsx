@@ -65,16 +65,14 @@ export default function BillingSubscriptionPage() {
     'UGX',
     'TZS',
     'RWF',
-    'USD',
   ];
 
   // Resolve country's currency from country code
   const countryCurrency = (getCurrencyForCountry(tenantCountry) || '').toUpperCase();
 
   // If the country has a supported local billing currency, use it (e.g. Kenya -> KES, Nigeria -> NGN, Ghana -> GHS).
-  // If the country is outside supported billing currency regions (e.g. Bangladesh -> BDT, USA, UK, India, etc.),
-  // it MUST fall back to USD!
-  let selectedCurrency = 'USD';
+  // If the country is outside supported regional billing currencies, it defaults to KES.
+  let selectedCurrency = 'KES';
   if (SUPPORTED_BILLING_CURRENCIES.includes(countryCurrency)) {
     selectedCurrency = countryCurrency;
   } else if (

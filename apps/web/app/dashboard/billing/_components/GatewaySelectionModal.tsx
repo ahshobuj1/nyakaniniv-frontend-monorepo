@@ -30,7 +30,7 @@ export default function GatewaySelectionModal({
   planName = 'DJ Pro Plan',
   price,
   billingCycle = 'monthly',
-  currency = 'USD',
+  currency = 'KES',
   tenantCountry = '',
   isLoading = false,
   isUpgrade = false,
@@ -46,70 +46,74 @@ export default function GatewaySelectionModal({
   const [validationError, setValidationError] = useState<string | null>(null);
 
   const normalizedCountry = (tenantCountry || '').trim().toLowerCase();
-  const isEastAfrica = [
-    'tanzania',
-    'tz',
-    'kenya',
-    'ke',
-    'uganda',
-    'ug',
-    'rwanda',
-    'rw',
-  ].includes(normalizedCountry);
+  
 
   const isWestOrSouthAfrica = ['ghana', 'gh', 'nigeria', 'ng', 'south africa', 'za'].includes(normalizedCountry) || ['GHS', 'NGN', 'ZAR'].includes(currency);
 
-  const gateways: GatewayCardOption[] = [
+  // Open Recommendation Architecture:
+  // Show available gateways without artificially hiding them from users.
+  // KES -> Paystack (Recommended lowest fee) | Flutterwave & Pesapal (Available alternatives)
+  // TZS -> Pesapal (Recommended M-Pesa/Tigo Pesa) | Flutterwave (Available alternative)
+  // UGX -> Flutterwave (Recommended) | Pesapal (Available alternative)
+  // RWF -> Flutterwave (Pesapal excluded as Pesapal v3 lacks Rwanda local support)
+  // GHS / NGN / ZAR -> Flutterwave (Recommended native currency) | Paystack (Available for cards in KES equivalent)
+
+  const isKes = currency === 'KES';
+  const isTzs = currency === 'TZS';
+  const isRwf = currency === 'RWF';
+
+  const allGateways: GatewayCardOption[] = [
     {
       id: 'paystack',
       name: 'Paystack',
-      title: 'Paystack Direct Checkout',
-      description:
-        'Instant card payments, direct bank transfer & Apple Pay',
-      badge: 'Primary Gateway',
-      currencies: ['KES', 'NGN', 'GHS', 'ZAR', 'USD'],
-      isRecommended: true,
-      paymentMethods: [
-        'Visa',
-        'Mastercard',
-        'Bank Transfer',
-        'Apple Pay',
-      ],
+      title: 'Paystack Checkout',
+      description: isKes
+        ? 'Instant local card checkout, Apple Pay & direct bank transfer'
+        : 'International Visa/Mastercard & Apple Pay (billed in KES equivalent)',
+      badge: isKes ? 'Recommended for Kenya' : 'Cards & Apple Pay',
+      currencies: ['KES', 'NGN', 'GHS', 'ZAR', 'TZS', 'UGX', 'RWF'],
+      isRecommended: isKes,
+      paymentMethods: ['Visa', 'Mastercard', 'Bank Transfer', 'Apple Pay'],
     },
     {
       id: 'flutterwave',
       name: 'Flutterwave',
       title: 'Flutterwave Pan-African Checkout',
       description:
-        'Local Cards, Mobile Money (MTN, Vodafone, AirtelTigo, M-Pesa) & Bank Transfer',
-      badge: isWestOrSouthAfrica ? 'Recommended Multi-Currency' : 'Pan-African Multi-Currency',
-      currencies: ['GHS', 'NGN', 'ZAR', 'USD', 'KES', 'TZS', 'UGX', 'RWF'],
-      isRecommended: !['KES', 'USD'].includes(currency),
+        'Local Cards, Mobile Money (MTN, AirtelTigo, Vodacom, Safaricom) & Bank Transfer',
+      badge: isWestOrSouthAfrica || isRwf ? 'Recommended' : 'Pan-African Multi-Currency',
+      currencies: ['GHS', 'NGN', 'ZAR', 'KES', 'TZS', 'UGX', 'RWF'],
+      isRecommended: !isKes && !isTzs,
       paymentMethods: ['Mobile Money', 'Visa', 'Mastercard', 'Bank Transfer', 'Apple Pay'],
     },
-    {
-      id: 'pesapal',
-      name: 'Pesapal',
-      title: 'Pesapal Mobile Money & Cards',
-      description:
-        'Instant local checkout via M-Pesa, Tigo Pesa, Airtel Money & Visa/Mastercard',
-      badge: isEastAfrica
-        ? 'East Africa Local Checkout'
-        : 'East Africa Mobile Money',
-      currencies: ['TZS', 'KES', 'UGX', 'USD', 'RWF'],
-      isRecommended: currency === 'TZS',
-      paymentMethods: [
-        'M-Pesa',
-        'Tigo Pesa',
-        'Airtel Money',
-        'Visa',
-        'Mastercard',
-      ],
-    },
+    // Pesapal is excluded specifically for Rwanda (RWF) as Pesapal official v3 API does not support RWF
+    ...(isRwf
+      ? []
+      : [
+          {
+            id: 'pesapal',
+            name: 'Pesapal',
+            title: 'Pesapal Mobile Money & Cards',
+            description:
+              'Direct local checkout via M-Pesa, Tigo Pesa, Airtel Money & Cards',
+            badge: isTzs ? 'Recommended for Tanzania' : 'East Africa Local Checkout',
+            currencies: ['TZS', 'KES', 'UGX'],
+            isRecommended: isTzs,
+            paymentMethods: [
+              'M-Pesa',
+              'Tigo Pesa',
+              'Airtel Money',
+              'Visa',
+              'Mastercard',
+            ],
+          },
+        ]),
   ];
 
-  const availableGateways = gateways.filter((gw) => {
-    return gw.currencies.includes(currency);
+  // Gateways are not hidden; recommended gateway is surfaced first
+  const availableGateways = allGateways.sort((a, b) => {
+    if (a.isRecommended === b.isRecommended) return 0;
+    return a.isRecommended ? -1 : 1;
   });
 
   const defaultGateway =
@@ -463,7 +467,7 @@ export default function GatewaySelectionModal({
                 <>
                   <span>
                     Pay {currency} {finalPayable.toLocaleString()} via{' '}
-                    {gateways.find((g) => g.id === selectedGateway)?.name ||
+                    {allGateways.find((g: GatewayCardOption) => g.id === selectedGateway)?.name ||
                       'Checkout'}
                   </span>
                   <ArrowRight className="w-4 h-4" />

@@ -12,7 +12,7 @@ const faqsData: FAQ[] = [
   {
     question: '2. What currencies are supported for payments?',
     answer:
-      'We support USD, EUR, GBP, and various local African currencies depending on your payment gateway. You can configure this in your dashboard.',
+      'We support local African currencies including KES, NGN, GHS, ZAR, TZS, UGX, and RWF directly through our secure regional payment gateways. You can configure this in your dashboard.',
   },
   {
     question: '3. Is there a free trial for Pro?',

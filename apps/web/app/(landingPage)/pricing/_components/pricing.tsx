@@ -33,7 +33,7 @@ const ALL_FEATURES = [
 
 export default function PricingSection() {
   const [frequency, setFrequency] = useState<'monthly' | 'yearly'>('monthly');
-  const [selectedCurrency, setSelectedCurrency] = useState<string>('USD');
+  const [selectedCurrency, setSelectedCurrency] = useState<string>('KES');
 
   const {data: currenciesResponse} = useGetCurrenciesQuery();
   const currencies = (currenciesResponse?.data || []).filter((c) => c.isActive);
@@ -84,7 +84,9 @@ export default function PricingSection() {
         <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mb-16">
           {currencies.length > 0 && (
             <div className="flex items-center gap-1.5 bg-white border border-gray-200 rounded px-3 py-2 shadow-xs">
-              <span className="text-xs text-gray-500 font-medium">Currency:</span>
+              <span className="text-xs text-gray-500 font-medium">
+                Currency:
+              </span>
               <select
                 value={selectedCurrency}
                 onChange={(e) => setSelectedCurrency(e.target.value)}
@@ -126,10 +128,15 @@ export default function PricingSection() {
           <div className="grid md:grid-cols-3 gap-6 items-start">
             {plans.map((plan: SubscriptionPlan, idx: number) => {
               const isPopular = idx === 1; // Highlight the middle plan
-              const price =
-                frequency === 'monthly'
-                  ? Number(plan.priceMonthly)
-                  : Number(plan.priceAnnually);
+              const monthlyPrice = Number(plan.priceMonthly || 0);
+              const annualPrice = Number(plan.priceAnnually || 0);
+              const price = frequency === 'monthly' ? monthlyPrice : annualPrice;
+
+              // Dynamically compute annual discount percentage based on active currency prices
+              const dynamicDiscount =
+                monthlyPrice > 0 && annualPrice > 0
+                  ? Math.max(0, Math.round(((monthlyPrice * 12 - annualPrice) / (monthlyPrice * 12)) * 100))
+                  : (plan.discountPercentage || 0);
 
               let featuresObj: any = {};
               if (typeof plan.features === 'string') {
@@ -176,25 +183,28 @@ export default function PricingSection() {
                     <p className="text-gray-500 text-sm mb-6 min-h-10">
                       Elevate your DJ career with our powerful tools.
                     </p>
-                    <div className="flex items-baseline mb-8">
-                      <span className="text-gray-900 flex items-center tracking-tight">
-                        <span className="text-2xl font-bold mr-1.5">
-                          {plan.currencyCode || selectedCurrency}
+                    <div className="mb-8">
+                      <div className="flex items-baseline flex-wrap gap-x-1.5 gap-y-1">
+                        <span className="text-gray-900 flex items-baseline tracking-tight">
+                          <span className="text-2xl font-bold mr-1">
+                            {plan.currencyCode || selectedCurrency}
+                          </span>
+                          <NumberFlow
+                            value={price}
+                            format={{useGrouping: false}}
+                            className="text-5xl font-bold"
+                          />
                         </span>
-                        <NumberFlow
-                          value={price}
-                          format={{useGrouping: false}}
-                          className="text-6xl font-bold ml-1"
-                        />
-                      </span>
 
-                      <span className="text-gray-500 ml-1">
-                        /{frequency === 'monthly' ? 'month' : 'year'}
-                      </span>
-                      {plan.discountPercentage ? (
-                        <div className="ml-auto flex items-center">
-                          <span className="bg-rose-100 text-rose-600 border border-rose-200 px-2.5 py-1 text-[11px] font-extrabold capitalize tracking-widest rounded-full shadow-sm animate-pulse">
-                            Yearly Save {plan.discountPercentage}%
+                        <span className="text-gray-500 text-sm font-medium">
+                          /{frequency === 'monthly' ? 'month' : 'year'}
+                        </span>
+                      </div>
+
+                      {dynamicDiscount > 0 ? (
+                        <div className="mt-2.5">
+                          <span className="inline-flex items-center bg-rose-50 text-rose-600 border border-rose-200/80 px-2.5 py-0.5 text-[11px] font-bold rounded-sm shadow-2xs whitespace-nowrap">
+                            Save {dynamicDiscount}% on Annual
                           </span>
                         </div>
                       ) : null}
