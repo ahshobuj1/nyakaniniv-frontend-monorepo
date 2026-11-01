@@ -116,10 +116,7 @@ export default function GatewaySelectionModal({
     return a.isRecommended ? -1 : 1;
   });
 
-  const defaultGateway =
-    availableGateways.some((gw) => gw.id === 'paystack')
-      ? 'paystack'
-      : availableGateways[0]?.id || 'flutterwave';
+  const defaultGateway = availableGateways[0]?.id || 'flutterwave';
 
   const [userSelectedGateway, setUserSelectedGateway] = useState<string | null>(
     null,
