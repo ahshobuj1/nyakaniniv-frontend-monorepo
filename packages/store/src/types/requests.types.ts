@@ -265,6 +265,7 @@ export interface SubscribeResponse {
 
 export interface UpgradePreviewResponse {
   isUpgrade: boolean;
+  isRenewal?: boolean;
   isSamePlanAndCycle: boolean;
   isDowngrade: boolean;
   downgradeMessage?: string | null;

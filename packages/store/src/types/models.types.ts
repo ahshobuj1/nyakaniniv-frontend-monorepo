@@ -115,6 +115,11 @@ export interface Subscription {
   stripeSubId?: string;
   status?: 'active' | 'past_due' | 'canceled';
   periodEnd?: string;
+  billingCycle?: 'monthly' | 'annually';
+  remainingDays?: number;
+  isGracePeriod?: boolean;
+  graceDaysRemaining?: number;
+  canRenew?: boolean;
   createdAt?: string;
   updatedAt?: string;
 

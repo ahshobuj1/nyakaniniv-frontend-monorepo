@@ -14,6 +14,7 @@ import {
   ArrowRight,
   Receipt,
   ShieldCheck,
+  AlertTriangle,
 } from 'lucide-react';
 import {Card, CardContent, Badge, NumberFlow} from '@repo/ui';
 import {
@@ -68,7 +69,9 @@ export default function BillingSubscriptionPage() {
   ];
 
   // Resolve country's currency from country code
-  const countryCurrency = (getCurrencyForCountry(tenantCountry) || '').toUpperCase();
+  const countryCurrency = (
+    getCurrencyForCountry(tenantCountry) || ''
+  ).toUpperCase();
 
   // If the country has a supported local billing currency, use it (e.g. Kenya -> KES, Nigeria -> NGN, Ghana -> GHS).
   // If the country is outside supported regional billing currencies, it defaults to KES.
@@ -111,7 +114,8 @@ export default function BillingSubscriptionPage() {
 
     const success = searchParams.get('success');
     const orderTrackingId =
-      searchParams.get('OrderTrackingId') || searchParams.get('orderTrackingId');
+      searchParams.get('OrderTrackingId') ||
+      searchParams.get('orderTrackingId');
     const reference =
       searchParams.get('reference') ||
       searchParams.get('OrderMerchantReference') ||
@@ -153,6 +157,17 @@ export default function BillingSubscriptionPage() {
 
   const daysRemaining = getSubscriptionDaysRemaining(
     activeSubscription?.periodEnd,
+  );
+
+  const isGracePeriod = Boolean(
+    activeSubscription?.isGracePeriod ||
+    activeSubscription?.status === 'past_due',
+  );
+  const canRenew = Boolean(
+    activeSubscription &&
+    (isGracePeriod ||
+      activeSubscription.canRenew ||
+      (daysRemaining !== null && daysRemaining <= 7)),
   );
 
   // Filter only PAID subscription purchases for subscription history
@@ -241,6 +256,37 @@ export default function BillingSubscriptionPage() {
           </p>
         </div>
 
+        {/* Grace Period Warning Banner */}
+        {activeSubscription && isGracePeriod && (
+          <div className="bg-amber-500/10 border border-amber-500/30 text-amber-950 p-4 md:p-5 rounded-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xs animate-in fade-in">
+            <div className="flex items-start gap-3.5">
+              <div className="w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center shrink-0 mt-0.5 text-amber-600">
+                <AlertTriangle className="w-5 h-5" />
+              </div>
+              <div className="space-y-0.5">
+                <p className="font-bold text-[15px] text-amber-950">
+                  7-Day Grace Period Active (
+                  {activeSubscription.graceDaysRemaining || 7} Days Left)
+                </p>
+                <p className="text-[13px] text-amber-900/80 leading-relaxed">
+                  Your subscription cycle has ended. Your public DJ portfolio
+                  website remains <strong>online</strong> during this 7-day
+                  grace period. Renew now to avoid any interruption.
+                </p>
+              </div>
+            </div>
+            {activeSubscription.planId && (
+              <button
+                onClick={() => handleSubscribeClick(activeSubscription.planId!)}
+                disabled={isSubscribing || isPreviewing}
+                className="bg-primary hover:bg-[#d62828] text-white font-bold text-[13px] px-5 py-2.5 rounded-sm shrink-0 shadow-sm cursor-pointer transition-colors flex items-center gap-2">
+                <Zap className="w-4 h-4" />
+                <span>Renew Plan Now</span>
+              </button>
+            )}
+          </div>
+        )}
+
         {/* Current Plan & Usage Section */}
         {isLoadingSub ? (
           <LoadingSpinner smallHeight />
@@ -258,21 +304,51 @@ export default function BillingSubscriptionPage() {
                       <h2 className="text-[20px] font-bold text-[#111620]">
                         {activeSubscription.plan?.name || 'Active Plan'}
                       </h2>
-                      <Badge className="bg-primary hover:bg-primary text-white text-[10px] font-bold px-2 py-0.5 rounded-sm uppercase">
-                        {activeSubscription.status === 'active'
-                          ? 'ACTIVE'
-                          : activeSubscription.status}
+                      <Badge
+                        variant="outline"
+                        className="text-[11px] font-bold px-2 py-0.5 rounded-sm border-gray-300 text-gray-700 bg-gray-50 capitalize">
+                        {activeSubscription.billingCycle === 'annually'
+                          ? 'Annual Plan'
+                          : 'Monthly Plan'}
+                      </Badge>
+                      <Badge
+                        className={`text-white text-[10px] font-bold px-2 py-0.5 rounded-sm uppercase ${
+                          isGracePeriod
+                            ? 'bg-amber-600 hover:bg-amber-600'
+                            : activeSubscription.status === 'active'
+                              ? 'bg-primary hover:bg-primary'
+                              : 'bg-gray-600 hover:bg-gray-600'
+                        }`}>
+                        {isGracePeriod
+                          ? 'GRACE PERIOD'
+                          : activeSubscription.status === 'active'
+                            ? 'ACTIVE'
+                            : activeSubscription.status}
                       </Badge>
                     </div>
                     <p className="text-[#787878] text-[14px]">
-                      {activeSubscription.periodEnd
-                        ? `Valid until ${new Date(activeSubscription.periodEnd).toLocaleDateString('en-GB')}`
-                        : 'Prepaid Active'}
+                      {isGracePeriod && activeSubscription.periodEnd
+                        ? `Expired on ${new Date(activeSubscription.periodEnd).toLocaleDateString('en-GB')} (Grace period active)`
+                        : activeSubscription.periodEnd
+                          ? `Valid until ${new Date(activeSubscription.periodEnd).toLocaleDateString('en-GB')}`
+                          : 'Prepaid Active'}
                     </p>
                   </div>
                 </div>
                 <div className="flex flex-wrap items-center gap-2.5 w-full md:w-auto">
-                  {daysRemaining !== null && (
+                  {canRenew && activeSubscription.planId && (
+                    <button
+                      onClick={() =>
+                        handleSubscribeClick(activeSubscription.planId!)
+                      }
+                      disabled={isSubscribing || isPreviewing}
+                      className="bg-primary hover:bg-[#d62828] text-white font-bold text-[13px] px-4 py-2 rounded-sm shadow-xs cursor-pointer transition-colors flex items-center gap-1.5 shrink-0">
+                      <Zap className="w-4 h-4" />
+                      <span>Renew Subscription</span>
+                    </button>
+                  )}
+
+                  {daysRemaining !== null && !isGracePeriod && (
                     <div className="flex items-center gap-2 bg-[#F9FAFB] border border-[#E5E7EB] px-3.5 py-2 rounded-sm text-[13px] text-[#374151]">
                       <Calendar className="w-4 h-4 text-[#6B7280]" />
                       <span>
@@ -397,7 +473,19 @@ export default function BillingSubscriptionPage() {
             <div className="grid lg:grid-cols-3 gap-6 items-start">
               {plans.map((plan: SubscriptionPlan, idx: number) => {
                 const isPopular = idx === 1;
-                const isActivePlan = activeSubscription?.planId === plan.id;
+                const isCurrentCycle =
+                  activeSubscription?.billingCycle || 'monthly';
+                const isSelectedCycle =
+                  frequency === 'monthly' ? 'monthly' : 'annually';
+                const isSameCycle = isCurrentCycle === isSelectedCycle;
+                const isActivePlan = Boolean(
+                  activeSubscription?.planId === plan.id && isSameCycle,
+                );
+                const isUpgradeToAnnual = Boolean(
+                  activeSubscription?.planId === plan.id &&
+                  isCurrentCycle === 'monthly' &&
+                  isSelectedCycle === 'annually',
+                );
                 const price =
                   frequency === 'monthly'
                     ? Number(plan.priceMonthly)
@@ -479,36 +567,56 @@ export default function BillingSubscriptionPage() {
                         ) : null}
                       </div>
 
-                      <button
-                        onClick={() => {
-                          if (isActivePlan) {
-                            toast.info(
-                              'You are already subscribed to this plan.',
-                            );
-                            return;
-                          }
-                          handleSubscribeClick(plan.id);
-                        }}
-                        disabled={isSubscribing || isPreviewing}
-                        className={`w-full py-3.5 rounded-sm font-bold mb-8 transition-colors duration-300 text-[15px] ${
-                          isActivePlan
-                            ? 'bg-green-50 text-green-600 border border-green-200 cursor-default'
-                            : activeSubscription
-                              ? 'bg-primary text-white hover:bg-primary/90 cursor-pointer shadow-sm'
-                              : isPopular
-                                ? 'bg-primary text-white hover:bg-primary/90 cursor-pointer shadow-sm'
-                                : 'bg-[#E5E7EB] text-[#111620] hover:bg-[#D1D5DB] cursor-pointer'
-                        }`}>
-                        {isActivePlan
-                          ? 'Current Plan'
-                          : activeSubscription
-                            ? isPreviewing && selectedPlanId === plan.id
+                      {isActivePlan && canRenew ? (
+                        <button
+                          onClick={() => handleSubscribeClick(plan.id)}
+                          disabled={isSubscribing || isPreviewing}
+                          className="w-full py-3.5 rounded-sm font-bold mb-8 transition-colors duration-300 text-[15px] bg-primary hover:bg-[#d62828] text-white cursor-pointer shadow-sm flex items-center justify-center gap-2">
+                          <Zap className="w-4 h-4" />
+                          <span>
+                            {isPreviewing && selectedPlanId === plan.id
                               ? 'Calculating...'
-                              : 'Upgrade to this Plan'
-                            : isSubscribing && selectedPlanId === plan.id
-                              ? 'Processing...'
-                              : 'Subscribe'}
-                      </button>
+                              : 'Renew This Plan'}
+                          </span>
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => {
+                            if (isActivePlan) {
+                              toast.info(
+                                `Your subscription is active with ${daysRemaining || 0} days remaining. Renewals open 7 days prior to expiration.`,
+                              );
+                              return;
+                            }
+                            handleSubscribeClick(plan.id);
+                          }}
+                          disabled={
+                            isActivePlan || isSubscribing || isPreviewing
+                          }
+                          className={`w-full py-3.5 rounded-sm font-bold mb-8 transition-colors duration-300 text-[15px] ${
+                            isActivePlan
+                              ? 'bg-green-50 text-green-600 border border-green-200 cursor-default'
+                              : activeSubscription
+                                ? 'bg-primary text-white hover:bg-primary/90 cursor-pointer shadow-sm'
+                                : isPopular
+                                  ? 'bg-primary text-white hover:bg-primary/90 cursor-pointer shadow-sm'
+                                  : 'bg-[#E5E7EB] text-[#111620] hover:bg-[#D1D5DB] cursor-pointer'
+                          }`}>
+                          {isActivePlan
+                            ? 'Current Plan'
+                            : isUpgradeToAnnual
+                              ? isPreviewing && selectedPlanId === plan.id
+                                ? 'Calculating...'
+                                : 'Switch to Annual (Save Discount)'
+                              : activeSubscription
+                                ? isPreviewing && selectedPlanId === plan.id
+                                  ? 'Calculating...'
+                                  : 'Upgrade to this Plan'
+                                : isSubscribing && selectedPlanId === plan.id
+                                  ? 'Processing...'
+                                  : 'Subscribe'}
+                        </button>
+                      )}
 
                       <ul className="space-y-4 grow">
                         {renderedFeatures.map((feature: any, index: number) => (
@@ -599,6 +707,16 @@ export default function BillingSubscriptionPage() {
                         item.createdAt,
                       ).toLocaleDateString('en-GB');
 
+                      const tx = item.transactions?.[0];
+                      const txCycle =
+                        (tx?.metadata as any)?.billingCycle ||
+                        item.billingCycle;
+                      const isAnnual =
+                        txCycle === 'annually' ||
+                        (item.plan?.priceAnnually &&
+                          Number(item.amount) >
+                            Number(item.plan?.priceMonthly || 0) * 2);
+
                       // Calculate or format end date
                       let endDate = '30 Days';
                       if (item.dueDate) {
@@ -613,12 +731,10 @@ export default function BillingSubscriptionPage() {
                           activeSubscription.periodEnd,
                         ).toLocaleDateString('en-GB');
                       } else {
-                        const isAnnual =
-                          Number(item.amount) >=
-                          Number(item.plan?.priceAnnually || 999999);
+                        const durationDays = isAnnual ? 365 : 30;
                         const endMs =
                           new Date(item.createdAt).getTime() +
-                          (isAnnual ? 365 : 30) * 86400000;
+                          durationDays * 86400000;
                         endDate = new Date(endMs).toLocaleDateString('en-GB');
                       }
 
@@ -627,7 +743,14 @@ export default function BillingSubscriptionPage() {
                           key={item.id}
                           className={`${index % 2 === 0 ? 'bg-[#F9FAFB]' : 'bg-white'} hover:bg-gray-100/50 transition-colors border-b border-gray-100 last:border-none`}>
                           <td className="py-4 px-6 text-[14px] font-bold text-[#111620]">
-                            {item.plan?.name || 'Subscription Plan'}
+                            <div className="flex items-center gap-2">
+                              <span>
+                                {item.plan?.name || 'Subscription Plan'}
+                              </span>
+                              <span className="text-[11px] font-medium px-2 py-0.5 rounded-sm bg-gray-100 text-gray-700 border border-gray-200">
+                                {isAnnual ? 'Annual' : 'Monthly'}
+                              </span>
+                            </div>
                           </td>
                           <td className="py-4 px-6 text-[14px] text-[#787878]">
                             <div className="flex items-center gap-1.5">
@@ -691,6 +814,7 @@ export default function BillingSubscriptionPage() {
             tenantCountry={tenantCountry}
             isLoading={isSubscribing || isPreviewing}
             isUpgrade={Boolean(upgradePreview?.isUpgrade)}
+            isRenewal={Boolean(upgradePreview?.isRenewal)}
             unusedCredit={upgradePreview?.unusedCredit || 0}
             amountToPay={upgradePreview?.amountToPay}
             isDowngrade={Boolean(upgradePreview?.isDowngrade)}

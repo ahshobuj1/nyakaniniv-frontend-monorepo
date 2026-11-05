@@ -34,6 +34,7 @@ export default function GatewaySelectionModal({
   tenantCountry = '',
   isLoading = false,
   isUpgrade = false,
+  isRenewal = false,
   currentPlanName,
   remainingDays,
   unusedCredit = 0,
@@ -193,12 +194,18 @@ export default function GatewaySelectionModal({
               ) : null}
             </div>
             <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight text-[#111620]">
-              {isUpgrade ? 'Confirm Plan Upgrade' : 'Select Payment Method'}
+              {isRenewal
+                ? 'Renew Subscription'
+                : isUpgrade
+                  ? 'Confirm Plan Upgrade'
+                  : 'Select Payment Method'}
             </h2>
             <p className="text-gray-500 text-xs sm:text-sm mt-0.5">
-              {isUpgrade
-                ? 'Review your prorated upgrade breakdown and confirm agreement to proceed.'
-                : 'Select your preferred gateway and confirm agreement to activate your subscription.'}
+              {isRenewal
+                ? 'Renew your plan seamlessly without interrupting your public DJ portfolio.'
+                : isUpgrade
+                  ? 'Review your prorated upgrade breakdown and confirm agreement to proceed.'
+                  : 'Select your preferred gateway and confirm agreement to activate your subscription.'}
             </p>
           </div>
 

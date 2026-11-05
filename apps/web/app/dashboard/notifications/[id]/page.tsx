@@ -109,17 +109,27 @@ export default function NotificationDetailsPage() {
           </div>
           
           <div className="mt-8 pt-6 border-t border-gray-100 flex flex-wrap gap-3">
-            {notification.referenceId && (
-              <Link 
-                href={notification.type === 'payment' 
-                  ? `/dashboard/invoices/${notification.referenceId}` 
-                  : `/dashboard/bookings/${notification.referenceId}`}
-              >
+            {notification.type === 'payment' && notification.referenceId ? (
+              <Link href={`/dashboard/invoices/${notification.referenceId}`}>
                 <Button variant="outline" className="border-gray-200 hover:bg-gray-50 text-[#111827]">
-                  {notification.type === 'payment' ? 'View Invoice Details' : 'View Related Booking'}
+                  View Invoice Details
                 </Button>
               </Link>
-            )}
+            ) : (notification.title?.toLowerCase().includes('subscription') ||
+                 notification.title?.toLowerCase().includes('plan') ||
+                 notification.title?.toLowerCase().includes('grace')) ? (
+              <Link href="/dashboard/billing">
+                <Button variant="outline" className="border-gray-200 hover:bg-gray-50 text-[#111827]">
+                  Go to Billing & Subscription
+                </Button>
+              </Link>
+            ) : notification.referenceId ? (
+              <Link href={`/dashboard/bookings/${notification.referenceId}`}>
+                <Button variant="outline" className="border-gray-200 hover:bg-gray-50 text-[#111827]">
+                  View Related Booking
+                </Button>
+              </Link>
+            ) : null}
              <Link href="/dashboard/notifications">
               <Button className="bg-[#111827] hover:bg-gray-800 text-white">
                 Back to Inbox

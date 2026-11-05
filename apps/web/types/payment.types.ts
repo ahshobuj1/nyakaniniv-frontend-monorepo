@@ -58,6 +58,7 @@ export interface GatewaySelectionModalProps {
   tenantCountry?: string;
   isLoading?: boolean;
   isUpgrade?: boolean;
+  isRenewal?: boolean;
   currentPlanName?: string;
   remainingDays?: number;
   unusedCredit?: number;

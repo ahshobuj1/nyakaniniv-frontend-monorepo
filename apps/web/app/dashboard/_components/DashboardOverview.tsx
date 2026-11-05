@@ -75,6 +75,7 @@ import {
   useUpdateBookingStatusMutation,
   useHandleCashRequestDecisionMutation,
   useMarkCashAsPaidMutation,
+  useGetMySubscriptionQuery,
 } from '@repo/store';
 
 export default function DashboardOverview() {
@@ -241,6 +242,8 @@ export default function DashboardOverview() {
   };
 
   const {data: profileResponse} = useGetCurrentProfileQuery();
+  const {data: subResponse} = useGetMySubscriptionQuery();
+  const subscription = subResponse?.data;
   const subdomain = profileResponse?.data?.tenant?.subdomain || 'demo';
   const stageName = profileResponse?.data?.tenant?.stageName || 'DJ';
   const {data: analyticsResponse} = useGetTenantAnalyticsQuery();
@@ -258,9 +261,14 @@ export default function DashboardOverview() {
     analytics?.currencyCode ||
     profileResponse?.data?.tenant?.currencyCode ||
     'KES';
+  const isGracePeriod = Boolean(
+    subscription?.isGracePeriod ||
+    profileResponse?.data?.tenant?.subscriptionStatus === 'past_due',
+  );
   const isSubscribed =
     profileResponse?.data?.tenant?.subscriptionStatus === 'active' ||
     profileResponse?.data?.tenant?.subscriptionStatus === 'trialing';
+  const hasLiveWebsite = isSubscribed || isGracePeriod;
 
   const summaryStats = [
     {
@@ -331,7 +339,30 @@ export default function DashboardOverview() {
     <div className="w-full bg-[#F5F5F5] min-h-screen p-4 md:p-4">
       <div className="mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
         {/* Subscription Notice */}
-        {profileResponse?.data?.tenant && !isSubscribed && (
+        {profileResponse?.data?.tenant && isGracePeriod ? (
+          <div className="bg-amber-500/10 border border-amber-500/30 text-amber-950 px-5 py-4 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm animate-in fade-in">
+            <div className="flex items-center gap-3.5">
+              <div className="w-9 h-9 rounded-full bg-amber-500/20 flex items-center justify-center shrink-0 text-amber-700 font-bold">
+                ⚠️
+              </div>
+              <div>
+                <p className="text-[14px] font-bold text-amber-950">
+                  7-Day Grace Period Active ({subscription?.graceDaysRemaining || 6} Days Left)
+                </p>
+                <p className="text-[13px] text-amber-900/80">
+                  Your subscription cycle has ended. Your public DJ portfolio website remains <strong>online</strong> during this grace period. Renew now to avoid interruption.
+                </p>
+              </div>
+            </div>
+            <Link href="/dashboard/billing">
+              <Button
+                size="sm"
+                className="bg-primary hover:bg-[#d62828] text-white font-semibold whitespace-nowrap cursor-pointer">
+                Renew Subscription
+              </Button>
+            </Link>
+          </div>
+        ) : profileResponse?.data?.tenant && !hasLiveWebsite ? (
           <div className="bg-[#FFF8E6] border border-[#FDE68A] text-[#92400E] px-5 py-4 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm">
             <div className="flex items-center gap-3">
               <AlertCircle className="w-5 h-5 text-[#D97706] shrink-0" />
@@ -353,7 +384,7 @@ export default function DashboardOverview() {
               </Button>
             </Link>
           </div>
-        )}
+        ) : null}
 
         {/* Header Section */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -367,12 +398,17 @@ export default function DashboardOverview() {
           </div>
 
           <div className="flex items-center gap-3">
-            {!isSubscribed && (
+            {isGracePeriod ? (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800">
+                <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+                Grace Period (Website Live)
+              </span>
+            ) : !hasLiveWebsite ? (
               <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800">
                 <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
                 Website Offline
               </span>
-            )}
+            ) : null}
             <Link href={getLiveWebsiteUrl()} target="_blank">
               <Button className="bg-primary hover:bg-primary/90 text-white font-semibold px-6 h-11 rounded-lg shadow-sm transition-all active:scale-[0.98]">
                 View My Website
