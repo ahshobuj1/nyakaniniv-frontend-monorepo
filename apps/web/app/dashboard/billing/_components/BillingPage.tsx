@@ -576,13 +576,15 @@ export default function BillingSubscriptionPage() {
                           <span>
                             {isPreviewing && selectedPlanId === plan.id
                               ? 'Calculating...'
-                              : 'Renew This Plan'}
+                              : isGracePeriod
+                                ? 'Renew This Plan'
+                                : 'Renew This Plan'}
                           </span>
                         </button>
                       ) : (
                         <button
                           onClick={() => {
-                            if (isActivePlan) {
+                            if (isActivePlan && !isGracePeriod) {
                               toast.info(
                                 `Your subscription is active with ${daysRemaining || 0} days remaining. Renewals open 7 days prior to expiration.`,
                               );
@@ -591,10 +593,10 @@ export default function BillingSubscriptionPage() {
                             handleSubscribeClick(plan.id);
                           }}
                           disabled={
-                            isActivePlan || isSubscribing || isPreviewing
+                            (isActivePlan && !isGracePeriod) || isSubscribing || isPreviewing
                           }
                           className={`w-full py-3.5 rounded-sm font-bold mb-8 transition-colors duration-300 text-[15px] ${
-                            isActivePlan
+                            isActivePlan && !isGracePeriod
                               ? 'bg-green-50 text-green-600 border border-green-200 cursor-default'
                               : activeSubscription
                                 ? 'bg-primary text-white hover:bg-primary/90 cursor-pointer shadow-sm'
@@ -602,19 +604,23 @@ export default function BillingSubscriptionPage() {
                                   ? 'bg-primary text-white hover:bg-primary/90 cursor-pointer shadow-sm'
                                   : 'bg-[#E5E7EB] text-[#111620] hover:bg-[#D1D5DB] cursor-pointer'
                           }`}>
-                          {isActivePlan
+                          {isActivePlan && !isGracePeriod
                             ? 'Current Plan'
-                            : isUpgradeToAnnual
+                            : isGracePeriod
                               ? isPreviewing && selectedPlanId === plan.id
                                 ? 'Calculating...'
-                                : 'Switch to Annual (Save Discount)'
-                              : activeSubscription
+                                : 'Switch to This Plan'
+                              : isUpgradeToAnnual
                                 ? isPreviewing && selectedPlanId === plan.id
                                   ? 'Calculating...'
-                                  : 'Upgrade to this Plan'
-                                : isSubscribing && selectedPlanId === plan.id
-                                  ? 'Processing...'
-                                  : 'Subscribe'}
+                                  : 'Switch to Annual (Save Discount)'
+                                : activeSubscription
+                                  ? isPreviewing && selectedPlanId === plan.id
+                                    ? 'Calculating...'
+                                    : 'Upgrade to this Plan'
+                                  : isSubscribing && selectedPlanId === plan.id
+                                    ? 'Processing...'
+                                    : 'Subscribe'}
                         </button>
                       )}
 

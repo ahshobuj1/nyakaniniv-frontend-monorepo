@@ -38,6 +38,7 @@ import {
   DialogTitle,
   Input,
 } from '@repo/ui';
+import { getCurrencyForCountry } from '@/lib/currency';
 import Link from 'next/link';
 import {toast} from 'sonner';
 import {ConfirmationDialog} from '@/components/ConfirmationDialog';
@@ -257,10 +258,14 @@ export default function DashboardOverview() {
     (typeof window !== 'undefined'
       ? Intl.DateTimeFormat().resolvedOptions().timeZone
       : 'Africa/Nairobi');
+  const tenantCountry = profileResponse?.data?.tenant?.country;
+  const countryCurrency = tenantCountry ? getCurrencyForCountry(tenantCountry) : null;
+  const tenantRawCurrency = profileResponse?.data?.tenant?.currencyCode;
   const djCurrency =
     analytics?.currencyCode ||
-    profileResponse?.data?.tenant?.currencyCode ||
-    'KES';
+    (tenantRawCurrency && tenantRawCurrency !== 'KES'
+      ? tenantRawCurrency
+      : (countryCurrency || tenantRawCurrency || 'KES'));
   const isGracePeriod = Boolean(
     subscription?.isGracePeriod ||
     profileResponse?.data?.tenant?.subscriptionStatus === 'past_due',
