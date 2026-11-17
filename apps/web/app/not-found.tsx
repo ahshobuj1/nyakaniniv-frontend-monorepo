@@ -126,7 +126,7 @@ export default function NotFound() {
 
       {/* Footer minimal */}
       <footer className="w-full max-w-7xl mx-auto px-6 py-6 text-center text-xs text-gray-500 border-t border-white/5 relative z-10">
-        © {new Date().getFullYear()} UpBeat Entertainment Africa. All rights reserved.
+        © {new Date().getFullYear()} UpBeat Entertainment Africa by BExpand Limited. All rights reserved.
       </footer>
     </div>
   );
